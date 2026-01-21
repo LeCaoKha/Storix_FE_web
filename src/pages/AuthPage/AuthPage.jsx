@@ -15,7 +15,7 @@ const AuthPage = () => {
           className={`absolute top-0 left-0 h-full w-1/2 flex flex-col items-center justify-center px-12 transition-all duration-500 ease-in-out z-20
           ${status === "signUp" ? "translate-x-full opacity-0 z-10" : "translate-x-0 opacity-100 z-20"}`}
         >
-          <h2 className="text-3xl font-bold mb-4 text-gray-800">Sign In</h2>
+          <h2 className="text-3xl font-bold mb-4 text-gray-800">Sign Innn</h2>
           <div className="flex gap-3 mb-5">
             <div className="w-10 h-10 rounded-full border flex items-center justify-center hover:bg-gray-50 cursor-pointer">
               f
