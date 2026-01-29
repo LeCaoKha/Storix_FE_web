@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import LoginComponent from "./components/LoginComponent";
 import RegisterComponent from "./components/RegisterComponent";
@@ -10,8 +10,14 @@ const AuthPage = () => {
   const status = searchParams.get("mode") === "signUp" ? "signUp" : "signIn";
 
   const setMode = (mode) => {
-    setSearchParams({ mode });
+    setSearchParams({ mode }, { replace: true });
   };
+
+  useEffect(() => {
+    if (!searchParams.get("mode")) {
+      setSearchParams({ mode: "signIn" }, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
 
   // ===== FORM STATE =====
   const [form, setForm] = useState({
