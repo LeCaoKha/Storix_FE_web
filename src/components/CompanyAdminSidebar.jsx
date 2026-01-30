@@ -7,6 +7,7 @@ import {
   ArrowDownCircle,
   ArrowUpCircle,
   FileText,
+  Warehouse,
 } from "lucide-react";
 import chooseImage from "../assets/images";
 
@@ -66,7 +67,7 @@ const CompanyAdminSidebar = () => {
 
           <SidebarItem
             to="warehouse-management"
-            icon={<Box size={20} />}
+            icon={<Warehouse size={20} />}
             label="Warehouse"
           />
 

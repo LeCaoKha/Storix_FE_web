@@ -5,17 +5,17 @@ import CompanyAdminHeader from "../../components/CompanyAdminHeader"; // Import 
 import { authorizeRole } from "../../utils/utils";
 
 const CompanyAdminApp = () => {
-  const navigate = useNavigate();
-  const token = localStorage.getItem("token");
-  const roleId = localStorage.getItem("roleId");
+  // const navigate = useNavigate();
+  // const token = localStorage.getItem("token");
+  // const roleId = localStorage.getItem("roleId");
 
-  useEffect(() => {
-    if (token && roleId) {
-      authorizeRole(roleId, navigate);
-    } else if (!token) {
-      navigate("/auth");
-    }
-  }, [token, roleId, navigate]);
+  // useEffect(() => {
+  //   if (token && roleId) {
+  //     authorizeRole(roleId, navigate);
+  //   } else if (!token) {
+  //     navigate("/auth");
+  //   }
+  // }, [token, roleId, navigate]);
 
   return (
     <div className="flex min-h-screen bg-slate-50">
@@ -28,7 +28,7 @@ const CompanyAdminApp = () => {
 
         {/* Main Content */}
         {/* ml-64 để tránh sidebar, pt-20 để tránh header */}
-        <main className="flex-1 ml-64 pt-20 p-8 transition-all duration-300">
+        <main className="flex-1 ml-64 pt-15 transition-all duration-300">
           <div className="max-w-7xl mx-auto">
             <Outlet />
           </div>

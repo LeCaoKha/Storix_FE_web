@@ -15,6 +15,7 @@ import OutboundManagement from "../pages/CompanyAdmin/components/OutboundManagem
 import ProductManagement from "../pages/CompanyAdmin/components/ProductManagement/ProductManagement";
 import ReportManagement from "../pages/CompanyAdmin/components/ReportManagement/ReportManagement";
 import WarehouseManagement from "../pages/CompanyAdmin/components/WarehouseManagement/WarehouseManagement";
+import WarehouseConfiguration from "../pages/CompanyAdmin/components/WarehouseManagement/components/WarehouseConfiguration/WarehouseConfiguration";
 
 const router = createBrowserRouter([
   {
@@ -44,6 +45,10 @@ const router = createBrowserRouter([
     ],
   },
   { path: "warehouse-config", element: <WarehouseConfig /> },
+  {
+    path: "company-admin/warehouse-configuration",
+    element: <WarehouseConfiguration />,
+  },
   { path: "auth", element: <AuthPage /> },
   { path: "*", element: <NotFound /> },
 ]);
