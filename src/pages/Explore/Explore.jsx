@@ -1,5 +1,4 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
 import {
   Box,
   Map as MapIcon,
@@ -11,8 +10,6 @@ import {
 } from "lucide-react";
 
 const ExplorePage = () => {
-  const navigate = useNavigate();
-
   const modules = [
     {
       title: "Interactive Map Designer",
@@ -163,35 +160,6 @@ const ExplorePage = () => {
           </div>
         </div>
       </section>
-
-      {/* --- FOOTER --- */}
-      <footer className="bg-slate-950 py-20 border-t border-slate-900">
-        <div className="max-w-7xl mx-auto px-8 md:px-16 lg:px-24 flex flex-col md:flex-row justify-between items-center gap-8">
-          <div className="text-slate-500 text-sm">
-            <p className="font-bold text-white mb-2 text-xl">
-              Storix <span className="text-[#39C6C6]">Pro</span>
-            </p>
-            <p>
-              © 2026. Transforming the face of logistics through intelligent
-              design.
-            </p>
-          </div>
-          <div className="flex gap-10 text-slate-400 font-medium text-sm">
-            <span
-              className="hover:text-[#39C6C6] cursor-pointer"
-              onClick={() => navigate("/about")}
-            >
-              About Us
-            </span>
-            <span
-              className="hover:text-[#39C6C6] cursor-pointer"
-              onClick={() => navigate("/contact")}
-            >
-              Contact
-            </span>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 };

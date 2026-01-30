@@ -1,9 +1,12 @@
 import React, { useState } from "react";
 import { Input, message, Spin } from "antd"; // Thêm Spin nếu bạn muốn hiện icon loading
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import { authorizeRole } from "../../../utils/utils";
 
 const LoginComponent = ({ form, handleChange }) => {
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleLogin = async () => {
     if (!form.email || !form.password) {
@@ -22,6 +25,14 @@ const LoginComponent = ({ form, handleChange }) => {
 
       message.success("Login successful!");
       console.log("Login Success:", response.data);
+
+      const roleId = response.data.roleId;
+      const token = response.data.token;
+
+      localStorage.setItem("token", token);
+      localStorage.setItem("roleId", roleId);
+
+      authorizeRole(roleId, navigate);
     } catch (error) {
       const errorMsg = error.response?.data?.message || "Login failed!";
       message.error(errorMsg);
