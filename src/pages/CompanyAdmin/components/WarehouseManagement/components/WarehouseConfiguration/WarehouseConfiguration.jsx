@@ -24,6 +24,7 @@ const WarehouseConfiguration = () => {
   const [navNodes, setNavNodes] = useState([]); // Điểm mốc di chuyển
   const [navEdges, setNavEdges] = useState([]); // Đường nối lối đi
   const [designMode, setDesignMode] = useState("OBJECT"); // "OBJECT" hoặc "NAV"
+  const [selectedEntity, setSelectedEntity] = useState(null);
 
   // MỚI: State để hiển thị node đang chọn (giúp visual feedback tốt hơn ref)
   const [activeNodeId, setActiveNodeId] = useState(null);
@@ -45,37 +46,123 @@ const WarehouseConfiguration = () => {
 
   const exportWarehouseConfig = useCallback(() => {
     const configData = {
-      version: "3.0",
+      version: "3.1", // Cập nhật phiên bản để phân biệt cấu trúc có Levels/Bins
       exportDate: new Date().toISOString(),
       metadata: {
-        name: "Warehouse Layout",
+        name: "Warehouse Layout Configuration",
         gridSize: GRID_SIZE,
+        description: "Hệ thống lưu trữ phân cấp Shelf-Level-Bin",
       },
       canvas: {
         width: whSize.width,
         height: whSize.height,
         unit: "meter",
       },
-      // Dữ liệu chính
+      // Toàn bộ dữ liệu Zones bao gồm Shelves và Levels/Bins bên trong
       layout: zones,
+      // Hệ thống đường đi di chuyển
       navigation: {
         nodes: navNodes,
         edges: navEdges,
       },
     };
 
-    // Tạo blob và tải xuống
+    // Chuyển đổi đối tượng sang chuỗi JSON có định dạng thụt lề 2 khoảng trắng
     const dataStr = JSON.stringify(configData, null, 2);
-    const dataUri =
-      "data:application/json;charset=utf-8," + encodeURIComponent(dataStr);
 
-    const exportFileDefaultName = `warehouse_config_${Date.now()}.json`;
+    // Tạo URL từ Blob để trình duyệt có thể tải về
+    const blob = new Blob([dataStr], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
 
+    // Tạo tên file mặc định kèm mốc thời gian
+    const fileName = `warehouse_config_${Date.now()}.json`;
+
+    // Tạo phần tử <a> ẩn để kích hoạt lệnh tải xuống
     const linkElement = document.createElement("a");
-    linkElement.setAttribute("href", dataUri);
-    linkElement.setAttribute("download", exportFileDefaultName);
+    linkElement.href = url;
+    linkElement.download = fileName;
+    document.body.appendChild(linkElement);
     linkElement.click();
+
+    // Dọn dẹp bộ nhớ sau khi tải xong
+    document.body.removeChild(linkElement);
+    URL.revokeObjectURL(url);
   }, [zones, navNodes, navEdges, whSize]);
+
+  const updateShelfProperty = (property, value) => {
+    if (!selectedEntity) return;
+
+    const nextZones = zones.map((z) => {
+      if (z.id !== selectedEntity.zoneId) return z;
+      return {
+        ...z,
+        shelves: z.shelves.map((s) =>
+          s.id === selectedEntity.id ? { ...s, [property]: value } : s,
+        ),
+      };
+    });
+
+    setZones(nextZones);
+    // Cập nhật ngay lập tức vào entity đang chọn để hiển thị lên Sidebar
+    setSelectedEntity((prev) => ({ ...prev, [property]: value }));
+    saveToHistory(nextZones);
+  };
+
+  // 2. Hàm thêm một Level mới vào Shelf
+  const addLevel = () => {
+    if (!selectedEntity) return;
+
+    // Khởi tạo cấu trúc Level mới
+    const newLevel = {
+      id: `LV-${Date.now()}`,
+      name: `Tầng ${(selectedEntity.levels?.length || 0) + 1}`,
+      bins: [],
+    };
+
+    const updatedLevels = [...(selectedEntity.levels || []), newLevel];
+    updateShelfProperty("levels", updatedLevels);
+  };
+
+  // 3. Hàm thêm một Bin vào một Level cụ thể
+  const addBinToLevel = (levelId) => {
+    if (!selectedEntity) return;
+
+    const updatedLevels = selectedEntity.levels.map((lv) => {
+      if (lv.id === levelId) {
+        const newBin = {
+          id: `BIN-${Date.now()}`,
+          code: `B${lv.bins.length + 1}-${lv.name.replace(/\s/g, "")}`,
+        };
+        return { ...lv, bins: [...lv.bins, newBin] };
+      }
+      return lv;
+    });
+
+    updateShelfProperty("levels", updatedLevels);
+  };
+
+  // 4. Hàm xóa một Level
+  const deleteLevel = (levelId) => {
+    const updatedLevels = selectedEntity.levels.filter(
+      (lv) => lv.id !== levelId,
+    );
+    updateShelfProperty("levels", updatedLevels);
+  };
+
+  const deleteBin = (levelId, binId) => {
+    if (!selectedEntity) return;
+
+    const updatedLevels = selectedEntity.levels.map((lv) => {
+      if (lv.id === levelId) {
+        // Lọc bỏ bin có id tương ứng
+        const filteredBins = lv.bins.filter((b) => b.id !== binId);
+        return { ...lv, bins: filteredBins };
+      }
+      return lv;
+    });
+
+    updateShelfProperty("levels", updatedLevels);
+  };
 
   // --- LOGIC LỊCH SỬ (UNDO) ---
   const saveToHistory = useCallback(
@@ -100,6 +187,25 @@ const WarehouseConfiguration = () => {
     }
   }, [history, historyStep]);
 
+  const updateShelfSize = (dim, value) => {
+    if (!selectedEntity) return;
+    const val = Number(value);
+
+    const nextZones = zones.map((z) => {
+      if (z.id !== selectedEntity.zoneId) return z;
+      return {
+        ...z,
+        shelves: z.shelves.map((s) =>
+          s.id === selectedEntity.id ? { ...s, [dim]: val } : s,
+        ),
+      };
+    });
+
+    setZones(nextZones);
+    setSelectedEntity((prev) => ({ ...prev, [dim]: val })); // Cập nhật local state để input mượt mà
+    saveToHistory(nextZones);
+  };
+
   // --- QUẢN LÝ SELECTION (CHỌN NHIỀU) ---
   useEffect(() => {
     if (trRef.current) {
@@ -114,15 +220,25 @@ const WarehouseConfiguration = () => {
 
   const handleSelect = (e, id) => {
     e.cancelBubble = true;
-    if (e.evt.shiftKey) {
-      setSelectedIds((prev) =>
-        prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id],
-      );
-    } else {
-      setSelectedIds([id]);
-    }
+    const isShift = e.evt.shiftKey;
 
-    // MỚI: Cập nhật activeNodeId cho cả state và ref
+    setSelectedIds((prev) =>
+      isShift
+        ? prev.includes(id)
+          ? prev.filter((i) => i !== id)
+          : [...prev, id]
+        : [id],
+    );
+
+    // Tìm đối tượng shelf để sửa kích thước
+    let foundShelf = null;
+    zones.forEach((z) => {
+      const s = z.shelves.find((sh) => sh.id === id);
+      if (s) foundShelf = { ...s, zoneId: z.id };
+    });
+
+    setSelectedEntity(foundShelf); // Nếu click vào Zone hoặc Node thì entity này sẽ là null
+
     if (id.startsWith("NODE-")) {
       lastSelectedNodeId.current = id;
       setActiveNodeId(id);
@@ -141,7 +257,7 @@ const WarehouseConfiguration = () => {
     setNavNodes((prev) => [...prev, newNode]);
     setSelectedIds([newNodeId]);
     lastSelectedNodeId.current = newNodeId;
-    setActiveNodeId(newNodeId); // Cập nhật node đang hoạt động
+    setActiveNodeId(newNodeId);
   };
 
   const connectNavNodes = (fromId, toId) => {
@@ -163,67 +279,108 @@ const WarehouseConfiguration = () => {
   const onStageMouseDown = (e) => {
     const stage = stageRef.current;
     const clickedItem = e.target;
+
+    // Chuyển đổi tọa độ chuột sang tọa độ thực tế (Local Position)
     const pos = stage.getPointerPosition();
     const transform = stage.getAbsoluteTransform().copy().invert();
     const localPos = transform.point(pos);
 
+    // --- CHẾ ĐỘ NAVIGATION (ĐƯỜNG ĐI) ---
     if (designMode === "NAV") {
-      const nodeId = clickedItem.getParent()?.attrs?.id;
+      const nodeId = clickedItem.getParent()?.attrs?.id || clickedItem.attrs.id;
 
-      // Nếu click trúng một Node đã có
-      if (nodeId && nodeId.startsWith("NODE-")) {
-        // MỚI: Xử lý nối node khi giữ Shift và click vào node khác
+      // Nếu click trúng Node cũ
+      if (
+        nodeId &&
+        (nodeId.startsWith("NODE-") || nodeId.startsWith("node-"))
+      ) {
         if (e.evt.shiftKey && activeNodeId && activeNodeId !== nodeId) {
           connectNavNodes(activeNodeId, nodeId);
         }
         handleSelect(e, nodeId);
       } else {
-        const isFloor = clickedItem.id() === "warehouse-floor";
-        const isZone =
-          clickedItem.attrs.id && clickedItem.attrs.id.startsWith("ZONE-");
+        // KIỂM TRA: Chỉ tạo Node nếu click TRONG phạm vi sàn kho
+        const isInside =
+          localPos.x >= 0 &&
+          localPos.x <= whSize.width &&
+          localPos.y >= 0 &&
+          localPos.y <= whSize.height;
 
-        if (clickedItem === stage || isFloor || isZone) {
+        if (isInside) {
           handleNavClick(localPos);
         }
+        // Nếu ngoài sàn kho: Không làm gì cả để Stage tự Drag
       }
       return;
     }
 
-    if (e.target !== stage) return;
-    setSelectionBox({
-      x1: localPos.x,
-      y1: localPos.y,
-      x2: localPos.x,
-      y2: localPos.y,
-    });
-    if (!e.evt.shiftKey) setSelectedIds([]);
+    // --- CHẾ ĐỘ OBJECT (VẬT THỂ) ---
+
+    // Quan trọng: Nếu click vào vùng xám (Stage), hủy selectionBox để Stage có thể Drag
+    if (clickedItem === stage) {
+      setSelectionBox(null);
+      if (!e.evt.shiftKey) {
+        setSelectedIds([]);
+        setSelectedEntity(null);
+      }
+      return;
+    }
+
+    // Nếu click vào Sàn kho hoặc Vật thể cụ thể: Khởi tạo Selection Box
+    if (clickedItem.id() === "warehouse-floor" || clickedItem instanceof Rect) {
+      setSelectionBox({
+        x1: localPos.x,
+        y1: localPos.y,
+        x2: localPos.x,
+        y2: localPos.y,
+      });
+
+      if (!e.evt.shiftKey) {
+        setSelectedIds([]);
+        setSelectedEntity(null);
+      }
+    }
   };
 
   const onStageMouseMove = (e) => {
+    // Nếu không có selectionBox (đang Drag Stage), không làm gì cả
     if (!selectionBox) return;
-    const pos = stageRef.current.getPointerPosition();
-    const transform = stageRef.current.getAbsoluteTransform().copy().invert();
+
+    const stage = stageRef.current;
+    const pos = stage.getPointerPosition();
+    const transform = stage.getAbsoluteTransform().copy().invert();
     const localPos = transform.point(pos);
-    setSelectionBox((prev) => ({ ...prev, x2: localPos.x, y2: localPos.y }));
+
+    setSelectionBox((prev) => ({
+      ...prev,
+      x2: localPos.x,
+      y2: localPos.y,
+    }));
   };
 
   const onStageMouseUp = () => {
     if (!selectionBox) return;
+
     const box = {
       x: Math.min(selectionBox.x1, selectionBox.x2),
       y: Math.min(selectionBox.y1, selectionBox.y2),
       w: Math.abs(selectionBox.x2 - selectionBox.x1),
       h: Math.abs(selectionBox.y2 - selectionBox.y1),
     };
+
     const foundIds = [];
+
+    // Quét Zones
     zones.forEach((z) => {
       if (
         z.x >= box.x &&
         z.x + z.width <= box.x + box.w &&
         z.y >= box.y &&
         z.y + z.height <= box.y + box.h
-      )
+      ) {
         foundIds.push(z.id);
+      }
+      // Quét Shelves bên trong Zones
       z.shelves.forEach((s) => {
         const absX = z.x + s.x;
         const absY = z.y + s.y;
@@ -232,20 +389,28 @@ const WarehouseConfiguration = () => {
           absX + s.width <= box.x + box.w &&
           absY >= box.y &&
           absY + s.height <= box.y + box.h
-        )
+        ) {
           foundIds.push(s.id);
+        }
       });
     });
+
+    // Quét NavNodes
     navNodes.forEach((n) => {
       if (
         n.x >= box.x &&
         n.x <= box.x + box.w &&
         n.y >= box.y &&
         n.y <= box.y + box.h
-      )
+      ) {
         foundIds.push(n.id);
+      }
     });
-    setSelectedIds((prev) => [...new Set([...prev, ...foundIds])]);
+
+    if (foundIds.length > 0) {
+      setSelectedIds((prev) => [...new Set([...prev, ...foundIds])]);
+    }
+
     setSelectionBox(null);
   };
 
@@ -458,6 +623,31 @@ const WarehouseConfiguration = () => {
               }
             />
           </div>
+          {selectedEntity && (
+            <div style={panelStyle}>
+              <p style={labelTitle}>Kích thước Kệ (SH-ID)</p>
+              <div style={{ display: "flex", gap: "5px", marginBottom: "5px" }}>
+                <div style={{ flex: 1 }}>
+                  <small>Rộng (m)</small>
+                  <input
+                    type="number"
+                    style={inputStyle}
+                    value={selectedEntity.width}
+                    onChange={(e) => updateShelfSize("width", e.target.value)}
+                  />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <small>Dài (m)</small>
+                  <input
+                    type="number"
+                    style={inputStyle}
+                    value={selectedEntity.height}
+                    onChange={(e) => updateShelfSize("height", e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         <button style={btnStyle} onClick={addZone}>
@@ -512,7 +702,7 @@ const WarehouseConfiguration = () => {
           scaleY={stageConfig.scale}
           x={stageConfig.x}
           y={stageConfig.y}
-          draggable={!selectionBox && designMode !== "NAV"}
+          draggable={designMode === "OBJECT" && !selectionBox}
           onMouseDown={onStageMouseDown}
           onMouseMove={onStageMouseMove}
           onMouseUp={onStageMouseUp}
@@ -717,11 +907,46 @@ const WarehouseConfiguration = () => {
                   id={n.id}
                   x={n.x}
                   y={n.y}
+                  draggable={designMode === "NAV"}
                   onClick={(e) => handleSelect(e, n.id)}
+                  // Thêm hàm ràng buộc vị trí khi kéo
+                  dragBoundFunc={(pos) => {
+                    // Chuyển đổi tọa độ màn hình sang tọa độ local của Stage
+                    const stage = stageRef.current;
+                    const scale = stage.scaleX();
+                    const stageX = stage.x();
+                    const stageY = stage.y();
+
+                    // Giới hạn trong phạm vi whSize
+                    const x = Math.max(
+                      0,
+                      Math.min((pos.x - stageX) / scale, whSize.width),
+                    );
+                    const y = Math.max(
+                      0,
+                      Math.min((pos.y - stageY) / scale, whSize.height),
+                    );
+
+                    return {
+                      x: x * scale + stageX,
+                      y: y * scale + stageY,
+                    };
+                  }}
+                  onDragEnd={(e) => {
+                    const newNodePos = {
+                      x: Math.round(e.target.x() / GRID_SIZE) * GRID_SIZE,
+                      y: Math.round(e.target.y() / GRID_SIZE) * GRID_SIZE,
+                    };
+
+                    setNavNodes((prev) =>
+                      prev.map((node) =>
+                        node.id === n.id ? { ...node, ...newNodePos } : node,
+                      ),
+                    );
+                  }}
                 >
                   <Circle
                     radius={6}
-                    // MỚI: Node đang hoạt động (last selected) sẽ có màu cam để dễ nhận diện
                     fill={activeNodeId === n.id ? "#e67e22" : COLOR_NAV_NODE}
                     stroke={
                       selectedIds.includes(n.id) ? COLOR_SELECTION : "#fff"
@@ -755,6 +980,122 @@ const WarehouseConfiguration = () => {
           </Layer>
         </Stage>
       </div>
+
+      {/* RIGHT SIDEBAR  */}
+      {/* Sidebar Phải: Chỉ hiện khi chọn Shelf */}
+      {selectedEntity && (
+        <div style={sidebarRightStyle}>
+          {/* Header */}
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: "20px",
+            }}
+          >
+            <h3 style={{ margin: 0, fontSize: "16px", color: "#2c3e50" }}>
+              Cấu hình Kệ
+            </h3>
+            <button
+              onClick={() => setSelectedEntity(null)}
+              style={closeBtnStyle}
+            >
+              ✕
+            </button>
+          </div>
+
+          {/* Phần 1: Kích thước */}
+          <div style={panelStyle}>
+            <p style={labelTitle}>Kích thước (mét)</p>
+            <div style={{ display: "flex", gap: "10px" }}>
+              <div style={{ flex: 1 }}>
+                <small style={smallLabelStyle}>Rộng</small>
+                <input
+                  type="number"
+                  style={inputStyle}
+                  value={selectedEntity.width}
+                  onChange={(e) => updateShelfSize("width", e.target.value)}
+                />
+              </div>
+              <div style={{ flex: 1 }}>
+                <small style={smallLabelStyle}>Dài</small>
+                <input
+                  type="number"
+                  style={inputStyle}
+                  value={selectedEntity.height}
+                  onChange={(e) => updateShelfSize("height", e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Phần 2: Cấu trúc Level & Bin */}
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginTop: "10px",
+            }}
+          >
+            <p style={labelTitle}>Danh sách Tầng</p>
+            <button onClick={addLevel} style={addBtnStyle}>
+              +
+            </button>
+          </div>
+
+          <div style={scrollAreaStyle}>
+            {selectedEntity.levels && selectedEntity.levels.length > 0 ? (
+              selectedEntity.levels.map((lv) => (
+                <details key={lv.id} style={levelBoxStyle}>
+                  <summary style={levelSummaryStyle}>
+                    <span>{lv.name}</span>
+                    <small style={{ color: "#7f8c8d", fontWeight: "normal" }}>
+                      {" "}
+                      ({lv.bins.length} ô)
+                    </small>
+                  </summary>
+
+                  <div style={{ padding: "10px", backgroundColor: "#fff" }}>
+                    <button
+                      onClick={() => addBinToLevel(lv.id)}
+                      style={addBinBtnStyle}
+                    >
+                      + Thêm Bin
+                    </button>
+
+                    <div style={binGridStyle}>
+                      {lv.bins.map((bin) => (
+                        <div key={bin.id} style={binBadgeStyle}>
+                          <span style={{ flex: 1, fontSize: "10px" }}>
+                            {bin.code}
+                          </span>
+                          <button
+                            onClick={() => deleteBin(lv.id, bin.id)}
+                            style={deleteBinIconStyle}
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+
+                    <button
+                      onClick={() => deleteLevel(lv.id)}
+                      style={deleteLevelLinkStyle}
+                    >
+                      Xóa tầng này
+                    </button>
+                  </div>
+                </details>
+              ))
+            ) : (
+              <div style={emptyStateStyle}>Chưa có tầng nào.</div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -820,6 +1161,114 @@ const helpBox = {
   background: "#f1f2f6",
   borderRadius: "6px",
   border: "1px solid #ccc",
+};
+const sidebarRightStyle = {
+  width: "300px",
+  backgroundColor: "#fff",
+  padding: "20px",
+  display: "flex",
+  flexDirection: "column",
+  borderLeft: "2px solid #ddd",
+  height: "100vh",
+  boxShadow: "-2px 0 10px rgba(0,0,0,0.05)",
+  zIndex: 10,
+};
+const addBtnStyle = {
+  width: "24px",
+  height: "24px",
+  backgroundColor: "#27ae60",
+  color: "#fff",
+  border: "none",
+  borderRadius: "4px",
+  cursor: "pointer",
+  fontSize: "16px",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+};
+const levelBoxStyle = {
+  backgroundColor: "#f8f9fa",
+  border: "1px solid #e1e4e8",
+  borderRadius: "6px",
+  marginBottom: "10px",
+  overflow: "hidden",
+};
+const levelSummaryStyle = {
+  padding: "10px",
+  cursor: "pointer",
+  fontSize: "13px",
+  fontWeight: "bold",
+  outline: "none",
+};
+const addBinBtnStyle = {
+  width: "100%",
+  padding: "5px",
+  fontSize: "11px",
+  backgroundColor: "#3498db",
+  color: "#fff",
+  border: "none",
+  borderRadius: "3px",
+  cursor: "pointer",
+};
+const binBadgeStyle = {
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
+  padding: "4px 8px",
+  backgroundColor: "#fff",
+  border: "1px solid #d1d8e0",
+  borderRadius: "4px",
+  fontSize: "11px",
+  color: "#2f3542",
+  gap: "5px",
+};
+const scrollAreaStyle = {
+  overflowY: "auto",
+  flex: 1,
+  marginTop: "10px",
+  paddingRight: "5px",
+};
+const binGridStyle = {
+  display: "grid",
+  gridTemplateColumns: "1fr 1fr",
+  gap: "6px",
+  marginTop: "10px",
+};
+const deleteBinIconStyle = {
+  border: "none",
+  background: "none",
+  color: "#e74c3c",
+  cursor: "pointer",
+  fontSize: "10px",
+  fontWeight: "bold",
+};
+const deleteLevelLinkStyle = {
+  color: "#e74c3c",
+  border: "none",
+  background: "none",
+  fontSize: "10px",
+  marginTop: "12px",
+  cursor: "pointer",
+  display: "block",
+};
+const smallLabelStyle = {
+  fontSize: "10px",
+  color: "#7f8c8d",
+  display: "block",
+  marginBottom: "2px",
+};
+const closeBtnStyle = {
+  border: "none",
+  background: "none",
+  cursor: "pointer",
+  fontSize: "18px",
+  color: "#95a5a6",
+};
+const emptyStateStyle = {
+  textAlign: "center",
+  color: "#bdc3c7",
+  fontSize: "12px",
+  marginTop: "20px",
 };
 
 export default WarehouseConfiguration;
