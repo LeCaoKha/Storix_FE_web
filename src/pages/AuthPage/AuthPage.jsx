@@ -1,10 +1,24 @@
 import React, { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import LoginComponent from "./components/LoginComponent";
 import RegisterComponent from "./components/RegisterComponent";
+import { authorizeRole } from "../../utils/utils";
 
 const AuthPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
+
+  const navigate = useNavigate();
+
+  const token = localStorage.getItem("token");
+  const roleId = localStorage.getItem("roleId");
+
+  useEffect(() => {
+    if (token && roleId) {
+      authorizeRole(roleId, navigate);
+    } else if (!token) {
+      navigate("/auth");
+    }
+  }, []);
 
   // ===== SOURCE OF TRUTH =====
   const status = searchParams.get("mode") === "signUp" ? "signUp" : "signIn";

@@ -8,6 +8,7 @@ import {
   Clock,
   CheckCircle2,
   TrendingUp,
+  Users,
 } from "lucide-react";
 
 const AboutPage = () => {
@@ -34,6 +35,30 @@ const AboutPage = () => {
     },
   ];
 
+  // Danh sách đội ngũ phát triển mới
+  const developers = [
+    {
+      name: "Phùng Minh Nhật",
+      role: "Leader Backend Dev",
+      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Nhat",
+    },
+    {
+      name: "Lê Cao Kha",
+      role: "Vice Leader Frontend Dev",
+      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Kha",
+    },
+    {
+      name: "Nguyễn Di Thiên",
+      role: "Backend Dev",
+      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Thien",
+    },
+    {
+      name: "Nguyễn Bách Duy Hoàng",
+      role: "Frontend Dev",
+      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Hoang",
+    },
+  ];
+
   return (
     <div className="bg-slate-50 min-h-screen font-sans text-slate-900 overflow-x-hidden">
       {/* --- HERO SECTION --- */}
@@ -43,7 +68,7 @@ const AboutPage = () => {
           <div className="absolute -bottom-[10%] -right-[10%] w-[40%] h-[40%] bg-[#39c6c6]/10 rounded-full blur-[100px]"></div>
         </div>
 
-        <div className="max-w-7xl px-8 md:px-16 lg:px-24 relative z-10">
+        <div className="max-w-7xl px-8 md:px-16 lg:px-24 relative z-10 mx-auto">
           <div className="max-w-4xl">
             <h1 className="text-5xl md:text-7xl font-black text-white mb-10 tracking-tighter leading-[1.1]">
               Managing Your Warehouse <br />
@@ -143,106 +168,56 @@ const AboutPage = () => {
         </div>
       </section>
 
-      {/* --- SIMPLICITY SECTION --- */}
-      <section className="py-32">
+      {/* --- THE TEAM (Updated Developer Section) --- */}
+      <section className="py-32 bg-white overflow-hidden">
         <div className="max-w-7xl mx-auto px-8 md:px-16 lg:px-24">
-          <div className="bg-gradient-to-br from-white to-slate-100 p-12 md:p-20 rounded-[4rem] flex flex-col lg:flex-row justify-between items-center gap-16 border border-slate-200">
-            <div className="lg:w-1/2">
-              <h2 className="text-4xl font-bold text-slate-800 mb-8">
-                Works Where You Work
-              </h2>
-              <p className="text-slate-600 text-lg leading-relaxed mb-8">
-                Whether you're sitting at your desk or walking the warehouse
-                floor with a tablet, Storix Pro stays in sync. Our goal is to
-                make your workday feel lighter and more productive.
-              </p>
-              <div className="space-y-4">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-white rounded-xl shadow-sm flex items-center justify-center text-[#39c6c6]">
-                    <MousePointer2 className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <p className="font-bold">Point & Click</p>
-                    <p className="text-sm text-slate-500">
-                      Simple controls for everyone.
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-white rounded-xl shadow-sm flex items-center justify-center text-[#39c6c6]">
-                    <Clock className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <p className="font-bold">Real-Time Updates</p>
-                    <p className="text-sm text-slate-500">
-                      Information that is always fresh.
-                    </p>
+          <div className="text-center mb-20">
+            <h2 className="text-4xl font-bold text-slate-800 mb-4">
+              Meet Our Developers
+            </h2>
+            <p className="text-slate-500">
+              The talented team behind Storix Pro
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12">
+            {developers.map((dev, idx) => (
+              <div key={idx} className="flex flex-col items-center group">
+                <div className="relative mb-8">
+                  {/* Decorative background shape */}
+                  <div className="absolute inset-0 bg-[#39c6c6] rounded-[2.5rem] rotate-6 group-hover:rotate-12 transition-transform duration-300"></div>
+                  {/* Avatar container */}
+                  <div className="relative w-40 h-40 rounded-[2.2rem] overflow-hidden bg-slate-100 border-4 border-white shadow-xl">
+                    <img
+                      src={dev.avatar}
+                      alt={dev.name}
+                      className="w-full h-full object-cover"
+                    />
                   </div>
                 </div>
+                <h3 className="text-xl font-bold text-slate-800 mb-1 text-center">
+                  {dev.name}
+                </h3>
+                <p className="text-[#39c6c6] font-bold tracking-wider uppercase text-[10px] italic">
+                  {dev.role}
+                </p>
               </div>
-            </div>
-            <div className="lg:w-1/2 w-full">
-              <div className="aspect-video bg-slate-200 rounded-3xl overflow-hidden shadow-inner flex items-center justify-center italic text-slate-400">
-                [Clean Image of User Interface]
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* --- THE DEVELOPER --- */}
-      <section className="py-32 text-center bg-white">
-        <div className="max-w-7xl mx-auto px-8 md:px-16 lg:px-24">
-          <h2 className="text-3xl font-bold text-slate-800 mb-20">
-            The Person Behind Storix
+      {/* --- CTA SECTION --- */}
+      <section className="pb-32 px-8">
+        <div className="max-w-5xl mx-auto bg-[#39c6c6] rounded-[3rem] p-12 md:p-20 text-center text-white shadow-2xl shadow-[#39c6c6]/30">
+          <h2 className="text-3xl md:text-5xl font-black mb-8">
+            Ready to optimize your space?
           </h2>
-          <div className="inline-block group">
-            <div className="relative mb-8">
-              <div className="absolute inset-0 bg-[#39c6c6] rounded-[3rem] rotate-6"></div>
-              <div className="relative w-48 h-48 rounded-[2.5rem] overflow-hidden bg-slate-100 border-4 border-white shadow-xl">
-                <img
-                  src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix"
-                  alt="Le Cao Thang"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            </div>
-            <h3 className="text-3xl font-bold text-slate-800 mb-2">
-              Lê Cao Thắng
-            </h3>
-            <p className="text-[#39c6c6] font-bold mb-6 tracking-widest uppercase text-sm italic">
-              Project Founder
-            </p>
-            <p className="text-slate-500 max-w-sm mx-auto leading-relaxed">
-              Dedicated to creating simple and helpful tools that make a real
-              difference for warehouse teams everywhere.
-            </p>
-          </div>
+          <button className="bg-white text-[#39c6c6] px-12 py-5 rounded-2xl font-black text-lg hover:bg-slate-50 transition-colors shadow-xl shadow-black/5">
+            Start Your Free Trial
+          </button>
         </div>
       </section>
-
-      {/* --- FOOTER --- */}
-      <footer className="bg-slate-950 py-20 border-t border-slate-900">
-        <div className="max-w-7xl mx-auto px-8 md:px-16 lg:px-24 flex flex-col md:flex-row justify-between items-center gap-10">
-          <div className="text-slate-500 text-sm">
-            <p className="font-bold text-white mb-2 text-xl">
-              Storix <span className="text-[#39c6c6]">Pro</span>
-            </p>
-            <p>© 2026. Making logistics simple and stress-free.</p>
-          </div>
-          <div className="flex gap-10 text-slate-400 font-medium">
-            <a href="#" className="hover:text-[#39c6c6] transition-colors">
-              Support
-            </a>
-            <a href="#" className="hover:text-[#39c6c6] transition-colors">
-              Privacy
-            </a>
-            <a href="#" className="hover:text-[#39c6c6] transition-colors">
-              Contact
-            </a>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 };

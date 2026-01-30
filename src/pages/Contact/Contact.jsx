@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import {
   Mail,
   MapPin,
@@ -11,7 +10,6 @@ import {
 } from "lucide-react";
 
 const ContactPage = () => {
-  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -205,32 +203,6 @@ const ContactPage = () => {
           </div>
         </div>
       </section>
-
-      {/* --- FOOTER --- */}
-      <footer className="bg-slate-950 py-16 border-t border-slate-900">
-        <div className="max-w-7xl mx-auto px-8 md:px-16 lg:px-24 flex flex-col md:flex-row justify-between items-center gap-8 text-center md:text-left">
-          <div className="text-slate-500 text-sm">
-            <p className="font-bold text-white mb-2 text-xl tracking-tight">
-              Storix <span className="text-[#39C6C6]">Pro</span>
-            </p>
-            <p>© 2026. A graduation project by Le Cao Thang.</p>
-          </div>
-          <div className="flex gap-10 text-slate-400 font-medium text-sm">
-            <span
-              className="hover:text-[#39C6C6] cursor-pointer"
-              onClick={() => navigate("/")}
-            >
-              Home
-            </span>
-            <span
-              className="hover:text-[#39C6C6] cursor-pointer"
-              onClick={() => navigate("/about")}
-            >
-              About Us
-            </span>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 };
