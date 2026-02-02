@@ -4,6 +4,8 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { authorizeRole } from "../../../utils/utils";
 
+const apiUrl = import.meta.env.VITE_API_URL;
+
 const LoginComponent = ({ form, handleChange }) => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -15,22 +17,23 @@ const LoginComponent = ({ form, handleChange }) => {
 
     setLoading(true);
     try {
-      const response = await axios.post(
-        "https://storix-docker.onrender.com/api/Home/Login",
-        {
-          email: form.email,
-          password: form.password,
-        },
-      );
+      const response = await axios.post(`${apiUrl}/Home/Login`, {
+        email: form.email,
+        password: form.password,
+      });
 
       message.success("Login successful!");
       console.log("Login Success:", response.data);
 
       const roleId = response.data.roleId;
       const token = response.data.token;
+      const companyId = response.data.companyId;
+      const userId = response.data.userId;
 
       localStorage.setItem("token", token);
       localStorage.setItem("roleId", roleId);
+      localStorage.setItem("companyId", companyId);
+      localStorage.setItem("userId", userId);
 
       authorizeRole(roleId, navigate);
     } catch (error) {

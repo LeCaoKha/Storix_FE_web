@@ -21,7 +21,7 @@ const CompanyAdminHeader = () => {
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("roleId");
-    navigate("/auth");
+    navigate("/");
     console.log("Logged out successfully");
   };
 
