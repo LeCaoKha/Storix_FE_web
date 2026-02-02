@@ -49,8 +49,8 @@ const router = createBrowserRouter([
       { path: "report-management", element: <ReportManagement /> },
       { path: "account-management", element: <AccountManagement /> },
       { path: "warehouse-management", element: <WarehouseManagement /> },
-      { path: "profile", element: <Profile /> },
-      { path: "profile/edit/:id", element: <EditProfile /> },
+      { path: "profile/:id", element: <Profile /> },
+      { path: "profile/:id/edit", element: <EditProfile /> },
     ],
   },
   {

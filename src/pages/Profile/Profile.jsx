@@ -115,9 +115,7 @@ const ProfilePage = () => {
 
                 <div className="w-full space-y-4">
                   <button
-                    onClick={() =>
-                      navigate(`edit/${urlUserId || storedUserId}`)
-                    }
+                    onClick={() => navigate("edit")}
                     className="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold flex items-center justify-center gap-3 hover:bg-slate-800 transition-all active:scale-95 shadow-lg shadow-slate-900/10"
                   >
                     <Settings className="w-5 h-5" /> Account Settings
