@@ -6,26 +6,44 @@ import {
   LogOut,
   User,
   Settings,
-  AlertCircle, // Thêm icon cảnh báo
+  AlertCircle,
 } from "lucide-react";
+import api from "../api/axios"; // Đảm bảo đường dẫn này đúng
 
 const CompanyAdminHeader = () => {
   const navigate = useNavigate();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false); // State kiểm soát bảng xác nhận
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [userProfile, setUserProfile] = useState(null); // Lưu trữ thông tin user
   const dropdownRef = useRef(null);
 
-  const userName = localStorage.getItem("userName") || "Lê Cao Kha";
+  const userId = localStorage.getItem("userId");
 
-  // Hàm thực hiện đăng xuất thực sự
+  // 1. Fetch User Profile từ API
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      if (!userId) return;
+      try {
+        const res = await api.get(`/Users/get-user-profile/${userId}`);
+        setUserProfile(res.data);
+      } catch (error) {
+        console.error("Error fetching user profile in header:", error);
+      }
+    };
+
+    fetchUserProfile();
+  }, [userId]);
+
+  // Lấy fullName từ state, nếu chưa có thì dùng tạm tên mặc định
+  const fullName = userProfile?.fullName || "Loading...";
+
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("roleId");
-    navigate("/auth");
-    console.log("Logged out successfully");
+    localStorage.removeItem("userId"); // Nên remove cả userId
+    navigate("/");
   };
 
-  // Đóng dropdown khi click ra ngoài
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -52,16 +70,23 @@ const CompanyAdminHeader = () => {
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
               className="flex items-center gap-3 pl-6 border-l border-slate-100 group cursor-pointer"
             >
+              {/* Hiển thị FullName bên cạnh avatar (tùy chọn) */}
+              <span className="text-sm font-bold text-slate-700 hidden md:block">
+                {fullName}
+              </span>
+
               <div className="w-10 h-10 rounded-xl overflow-hidden border-2 border-[#39c6c6]/50 group-hover:border-[#39c6c6] transition-all shadow-sm">
                 <img
-                  src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${userName}`}
+                  src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${fullName}`}
                   alt="User Avatar"
                   className="w-full h-full object-cover bg-slate-100"
                 />
               </div>
               <ChevronDown
                 size={16}
-                className={`text-slate-400 transition-transform duration-200 ${isDropdownOpen ? "rotate-180" : ""}`}
+                className={`text-slate-400 transition-transform duration-200 ${
+                  isDropdownOpen ? "rotate-180" : ""
+                }`}
               />
             </div>
 
@@ -76,7 +101,8 @@ const CompanyAdminHeader = () => {
 
                 <button
                   onClick={() => {
-                    navigate("/company-admin/profile");
+                    // Chuyển đến trang profile với ID kèm theo
+                    navigate(`/company-admin/profile/${userId}`);
                     setIsDropdownOpen(false);
                   }}
                   className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-600 hover:bg-slate-50 transition-colors"
@@ -90,12 +116,11 @@ const CompanyAdminHeader = () => {
 
                 <div className="h-px bg-slate-50 my-1"></div>
 
-                {/* Nút Logout: Mở bảng xác nhận thay vì thoát ngay */}
                 <div className="flex justify-center items-center">
                   <button
                     onClick={() => {
-                      setShowConfirm(true); // Hiện bảng xác nhận
-                      setIsDropdownOpen(false); // Đóng dropdown
+                      setShowConfirm(true);
+                      setIsDropdownOpen(false);
                     }}
                     className="w-[92%] mt-0.5 rounded-xl flex items-center gap-3 px-2.5 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors font-bold"
                   >
@@ -112,13 +137,11 @@ const CompanyAdminHeader = () => {
       {/* --- CONFIRMATION MODAL --- */}
       {showConfirm && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          {/* Lớp nền mờ (Backdrop) */}
           <div
             className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity"
             onClick={() => setShowConfirm(false)}
           ></div>
 
-          {/* Nội dung Modal */}
           <div className="relative bg-white rounded-[2.5rem] p-8 max-w-sm w-full shadow-2xl transition-all animate-in fade-in zoom-in duration-200">
             <div className="flex flex-col items-center text-center">
               <div className="p-4 bg-red-50 text-red-500 rounded-2xl mb-6">

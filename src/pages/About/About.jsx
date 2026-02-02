@@ -68,7 +68,7 @@ const AboutPage = () => {
           <div className="absolute -bottom-[10%] -right-[10%] w-[40%] h-[40%] bg-[#39c6c6]/10 rounded-full blur-[100px]"></div>
         </div>
 
-        <div className="max-w-7xl px-8 md:px-16 lg:px-24 relative z-10 mx-auto">
+        <div className="mt-6 md:px-16 lg:px-24 relative z-10 mx-auto">
           <div className="max-w-4xl">
             <h1 className="text-5xl md:text-7xl font-black text-white mb-10 tracking-tighter leading-[1.1]">
               Managing Your Warehouse <br />

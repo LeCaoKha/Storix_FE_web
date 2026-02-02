@@ -3,6 +3,8 @@ import { Input, message } from "antd";
 import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios"; // Import axios
 
+const apiUrl = import.meta.env.API_URL;
+
 const RegisterComponent = ({ form, handleChange }) => {
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState(0);
@@ -36,7 +38,7 @@ const RegisterComponent = ({ form, handleChange }) => {
 
     try {
       const response = await axios.post(
-        "https://storix-docker.onrender.com/api/Companies/register",
+        `${apiUrl}/Companies/register`,
         payload,
       );
 

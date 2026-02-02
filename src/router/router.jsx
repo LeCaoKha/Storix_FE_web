@@ -16,6 +16,10 @@ import ProductManagement from "../pages/CompanyAdmin/components/ProductManagemen
 import ReportManagement from "../pages/CompanyAdmin/components/ReportManagement/ReportManagement";
 import WarehouseManagement from "../pages/CompanyAdmin/components/WarehouseManagement/WarehouseManagement";
 import WarehouseConfiguration from "../pages/CompanyAdmin/components/WarehouseManagement/components/WarehouseConfiguration/WarehouseConfiguration";
+import Profile from "../pages/Profile/Profile";
+import CreateProduct from "../pages/CompanyAdmin/components/ProductManagement/components/CreateProduct/CreateProduct";
+import EditProduct from "../pages/CompanyAdmin/components/ProductManagement/components/EditProduct/EditProduct";
+import EditProfile from "../pages/Profile/components/EditProfile";
 
 const router = createBrowserRouter([
   {
@@ -37,18 +41,24 @@ const router = createBrowserRouter([
       { path: "inbound-management", element: <InboundManagement /> },
       { path: "dashboard", element: <Dashboard /> },
       { path: "outbound-management", element: <OutboundManagement /> },
+
       { path: "product-management", element: <ProductManagement /> },
+      { path: "product-management/create", element: <CreateProduct /> },
+      { path: "product-management/edit/:id", element: <EditProduct /> },
+
       { path: "report-management", element: <ReportManagement /> },
       { path: "account-management", element: <AccountManagement /> },
       { path: "warehouse-management", element: <WarehouseManagement /> },
-      // { path: "*", element: <NotFound /> },
+      { path: "profile/:id", element: <Profile /> },
+      { path: "profile/:id/edit", element: <EditProfile /> },
     ],
   },
-  { path: "warehouse-config", element: <WarehouseConfig /> },
   {
     path: "company-admin/warehouse-configuration",
     element: <WarehouseConfiguration />,
   },
+  { path: "profile", element: <Profile /> },
+  { path: "warehouse-config", element: <WarehouseConfig /> },
   { path: "auth", element: <AuthPage /> },
   { path: "*", element: <NotFound /> },
 ]);
