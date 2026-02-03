@@ -20,6 +20,8 @@ import Profile from "../pages/Profile/Profile";
 import CreateProduct from "../pages/CompanyAdmin/components/ProductManagement/components/CreateProduct/CreateProduct";
 import EditProduct from "../pages/CompanyAdmin/components/ProductManagement/components/EditProduct/EditProduct";
 import EditProfile from "../pages/Profile/components/EditProfile";
+import AccountDetails from "../pages/CompanyAdmin/components/AccountManagement/components/AccountDetails/AccountDetails";
+import CreateAccount from "../pages/CompanyAdmin/components/AccountManagement/components/CreateAccount/CreateAccount";
 
 const router = createBrowserRouter([
   {
@@ -48,7 +50,15 @@ const router = createBrowserRouter([
       { path: "product-management/edit/:id", element: <EditProduct /> },
 
       { path: "report-management", element: <ReportManagement /> },
+
+      // ACCOUNT MANAGEMENT
       { path: "account-management", element: <AccountManagement /> },
+      { path: "account-management/create", element: <CreateAccount /> },
+      {
+        path: "account-management/details/:id",
+        element: <AccountDetails />,
+      },
+
       { path: "warehouse-management", element: <WarehouseManagement /> },
 
       // PROFILE MANAGEMENT

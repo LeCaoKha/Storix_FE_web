@@ -124,13 +124,13 @@ const CreateProduct = () => {
               type="text"
               icon={<ArrowLeftOutlined />}
               onClick={() => navigate("/company-admin/product-management")}
-              className="flex items-center justify-center hover:bg-slate-100 rounded-full"
+              className="!flex !items-center !justify-center hover:!bg-slate-100 !rounded-full"
             />
             <span className="font-bold text-gray-700">CREATE NEW PRODUCT</span>
           </div>
         }
         bordered={false}
-        className="shadow-xl rounded-2xl"
+        className="!shadow-xl !rounded-2xl"
       >
         <Form
           form={form}
@@ -202,7 +202,7 @@ const CreateProduct = () => {
                         cancelText="No"
                       >
                         <DeleteOutlined
-                          className="text-slate-400 hover:text-red-500 transition-colors"
+                          className="!text-slate-400 hover:!text-red-500 !transition-colors"
                           onClick={(e) => e.stopPropagation()}
                         />
                       </Popconfirm>
@@ -235,7 +235,7 @@ const CreateProduct = () => {
             <TextArea rows={4} placeholder="Enter product description" />
           </Form.Item>
 
-          <Form.Item className="mb-0">
+          <Form.Item className="!mb-0">
             <Button
               type="primary"
               htmlType="submit"
@@ -267,7 +267,7 @@ const CreateProduct = () => {
           style: { background: "#39c6c6", borderColor: "#39c6c6" },
         }}
       >
-        <Form form={typeForm} layout="vertical" className="mt-4">
+        <Form form={typeForm} layout="vertical" className="!mt-4">
           <Form.Item
             name="typeName"
             label="Type Name"

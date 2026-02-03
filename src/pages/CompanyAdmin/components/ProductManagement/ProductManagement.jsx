@@ -237,7 +237,7 @@ const ProductManagement = () => {
           <Input
             placeholder="Quick search by product name or SKU code..."
             prefix={<Search size={20} className="text-slate-300 mr-3" />}
-            className="!mb-5 !h-12 !bg-slate-50 !rounded-full !text-base !transition-all
+            className="!mb-5 !bg-white !h-12 !bg-slate-50 !rounded-full !text-base !transition-all
                hover:!border-[#39C6C6] 
                focus-within:!border-[#39C6C6] 
                focus-within:!shadow-[0_0_0_2px_rgba(57,198,198,0.2)]"
