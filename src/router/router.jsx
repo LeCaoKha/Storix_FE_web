@@ -42,6 +42,7 @@ const router = createBrowserRouter([
       { path: "dashboard", element: <Dashboard /> },
       { path: "outbound-management", element: <OutboundManagement /> },
 
+      // PRODUCT MANAGEMENT
       { path: "product-management", element: <ProductManagement /> },
       { path: "product-management/create", element: <CreateProduct /> },
       { path: "product-management/edit/:id", element: <EditProduct /> },
@@ -49,6 +50,8 @@ const router = createBrowserRouter([
       { path: "report-management", element: <ReportManagement /> },
       { path: "account-management", element: <AccountManagement /> },
       { path: "warehouse-management", element: <WarehouseManagement /> },
+
+      // PROFILE MANAGEMENT
       { path: "profile/:id", element: <Profile /> },
       { path: "profile/:id/edit", element: <EditProfile /> },
     ],
