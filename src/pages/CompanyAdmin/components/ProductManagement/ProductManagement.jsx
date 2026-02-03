@@ -197,7 +197,7 @@ const ProductManagement = () => {
   );
 
   return (
-    <div className="bg-slate-50 min-h-screen font-sans text-slate-900">
+    <div className="bg-slate-50 font-sans text-slate-900">
       <section className="md:px-16 lg:px-12 pt-7 pb-0">
         {/* --- PAGE HEADER --- */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-8">

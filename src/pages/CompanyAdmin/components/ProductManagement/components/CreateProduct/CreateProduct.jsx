@@ -116,7 +116,7 @@ const CreateProduct = () => {
   };
 
   return (
-    <div className="p-10 max-w-[800px] mx-auto">
+    <div className="pt-6 pl-10 pr-10 max-w-[800px] mx-auto">
       <Card
         title={
           <div className="flex items-center gap-4">
