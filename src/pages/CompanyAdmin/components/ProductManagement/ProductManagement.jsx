@@ -276,7 +276,6 @@ const ProductManagement = () => {
           padding-bottom: 15px !important;
         }
         .storix-custom-table .ant-table-tbody > tr > td {
-          padding: 10px 20px 10px 20px !important;
           border-bottom: 1px solid #dbe5f0 !important;
         }
         .storix-custom-table .ant-table-row:hover > td {

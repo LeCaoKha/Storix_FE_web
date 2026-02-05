@@ -26,11 +26,11 @@ const LoginComponent = ({ form, handleChange }) => {
       console.log("Login Success:", response.data);
 
       const roleId = response.data.roleId;
-      const token = response.data.token;
+      const accessToken = response.data.accessToken;
       const companyId = response.data.companyId;
       const userId = response.data.userId;
 
-      localStorage.setItem("token", token);
+      localStorage.setItem("token", accessToken);
       localStorage.setItem("roleId", roleId);
       localStorage.setItem("companyId", companyId);
       localStorage.setItem("userId", userId);

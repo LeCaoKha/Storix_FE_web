@@ -22,6 +22,7 @@ import EditProduct from "../pages/CompanyAdmin/components/ProductManagement/comp
 import EditProfile from "../pages/Profile/components/EditProfile";
 import AccountDetails from "../pages/CompanyAdmin/components/AccountManagement/components/AccountDetails/AccountDetails";
 import CreateAccount from "../pages/CompanyAdmin/components/AccountManagement/components/CreateAccount/CreateAccount";
+import SupplierManagement from "../pages/CompanyAdmin/components/SupplierManagement/SupplierManagement";
 
 const router = createBrowserRouter([
   {
@@ -58,6 +59,8 @@ const router = createBrowserRouter([
         path: "account-management/details/:id",
         element: <AccountDetails />,
       },
+
+      { path: "supplier-management", element: <SupplierManagement /> },
 
       { path: "warehouse-management", element: <WarehouseManagement /> },
 

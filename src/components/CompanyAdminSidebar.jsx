@@ -9,16 +9,12 @@ import {
   FileText,
   Warehouse,
   Menu,
+  Truck, // Thêm icon Supplier
 } from "lucide-react";
-import { Tooltip } from "antd"; // Import Tooltip từ Ant Design
+import { Tooltip } from "antd";
 import chooseImage from "../assets/images";
 
 const SidebarItem = ({ to, icon, label, isCollapsed }) => (
-  /* Sử dụng Tooltip bọc ngoài cùng. 
-    title: nội dung hiển thị khi hover.
-    placement: hiển thị bên phải icon.
-    open: nếu không collapse thì không bao giờ hiện (disabled)
-  */
   <Tooltip
     title={isCollapsed ? label : ""}
     placement="right"
@@ -46,7 +42,7 @@ const CompanyAdminSidebar = ({ isCollapsed, setIsCollapsed }) => {
   return (
     <aside
       className={`!fixed !left-0 !top-0 !h-screen !bg-white !border-r !border-slate-100 !flex !flex-col !z-50 !transition-all !duration-300 ${
-        isCollapsed ? "!w-20" : "!w-64"
+        isCollapsed ? "!w-20" : "!w-60"
       }`}
     >
       <div
@@ -63,7 +59,6 @@ const CompanyAdminSidebar = ({ isCollapsed, setIsCollapsed }) => {
           />
         )}
 
-        {/* Thêm tooltip cho cả nút đóng/mở sidebar */}
         <Tooltip title={isCollapsed ? "Expand" : "Collapse"} placement="right">
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}
@@ -103,6 +98,13 @@ const CompanyAdminSidebar = ({ isCollapsed, setIsCollapsed }) => {
           to="warehouse-management"
           icon={<Warehouse size={20} />}
           label="Warehouse"
+          isCollapsed={isCollapsed}
+        />
+        {/* TAB SUPPLIER MỚI ĐƯỢC THÊM TẠI ĐÂY */}
+        <SidebarItem
+          to="supplier-management"
+          icon={<Truck size={20} />}
+          label="Supplier"
           isCollapsed={isCollapsed}
         />
 

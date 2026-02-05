@@ -10,28 +10,39 @@ import {
   Tooltip,
   Typography,
   Popconfirm,
+  Select, // Thêm Select để dùng cho filter
 } from "antd";
-import { Plus, Search, Edit3, Trash2, RefreshCw, Users } from "lucide-react";
+import {
+  Plus,
+  Search,
+  RefreshCw,
+  Users,
+  UserX,
+  UserCheck,
+  Filter, // Thêm icon filter cho đẹp
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const { Title } = Typography;
+const { Option } = Select;
 
 const AccountManagement = () => {
   const [accounts, setAccounts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchText, setSearchText] = useState("");
+  // --- THÊM STATE CHO FILTER ---
+  const [filterRole, setFilterRole] = useState("All");
+  const [filterStatus, setFilterStatus] = useState("Active");
+
   const navigate = useNavigate();
 
-  // --- FETCH ACCOUNTS LOGIC ---
   const fetchAccounts = async () => {
     setLoading(true);
     try {
       const response = await api.get("/Users");
       setAccounts(response.data);
     } catch (error) {
-      const errorMsg =
-        error.response?.data?.message || "Failed to fetch accounts";
-      message.error(errorMsg);
+      message.error("Failed to fetch accounts");
     } finally {
       setLoading(false);
     }
@@ -41,35 +52,28 @@ const AccountManagement = () => {
     fetchAccounts();
   }, []);
 
-  // --- DELETE ACCOUNT LOGIC ---
-  const handleDelete = async (accountId) => {
+  const handleToggleStatus = async (record) => {
+    const newStatus = record.status === "Active" ? "Inactive" : "Active";
     try {
-      const adminId = localStorage.getItem("userId");
-      await api.delete(`/Users/delete/${adminId}/${accountId}`);
-      message.success("Account deleted successfully");
+      await api.put(`/Users/${record.id}`, { status: newStatus });
+      message.success(
+        `Account ${newStatus === "Active" ? "unbanned" : "banned"} successfully`,
+      );
       fetchAccounts();
     } catch (error) {
-      message.error(
-        error.response?.data?.message || "Failed to delete account",
-      );
+      message.error(error.response?.data?.message || "Operation failed");
     }
   };
 
-  // --- ROLE FORMATTER & STYLER ---
   const renderRoleTag = (roleName) => {
     if (!roleName)
       return (
         <Tag className="!rounded-full !px-4 !border-none !font-bold">N/A</Tag>
       );
-
-    // 1. Chuyển Company Admin -> Admin
     let displayName = roleName === "Company Administrator" ? "Admin" : roleName;
-
-    // 2. Chỉ viết hoa chữ cái đầu tiên
     displayName =
       displayName.charAt(0).toUpperCase() + displayName.slice(1).toLowerCase();
 
-    // 3. Phân loại màu sắc
     let color = "default";
     if (displayName === "Admin") color = "purple";
     if (displayName === "Manager") color = "blue";
@@ -85,15 +89,14 @@ const AccountManagement = () => {
     );
   };
 
-  // --- ANTD TABLE COLUMNS ---
   const columns = [
     {
       title: "#",
       key: "index",
       width: 60,
       fixed: "left",
-      render: (text, record, index) => (
-        <span className="text-slate-400 font-mono">{index + 1}</span>
+      render: (t, r, i) => (
+        <span className="text-slate-400 font-mono">{i + 1}</span>
       ),
     },
     {
@@ -104,7 +107,6 @@ const AccountManagement = () => {
       render: (text) => (
         <span className="font-bold text-slate-800 text-base">{text}</span>
       ),
-      sorter: (a, b) => a.fullName.localeCompare(b.fullName),
     },
     {
       title: "Email Address",
@@ -134,58 +136,89 @@ const AccountManagement = () => {
       ),
     },
     {
-      title: "Phone",
-      dataIndex: "phone",
-      key: "phone",
-      render: (phone) => (
-        <span className="text-slate-500 font-mono">{phone || "N/A"}</span>
-      ),
-    },
-    {
       title: "Operations",
       key: "actions",
       fixed: "right",
-      width: 130,
-      render: (_, record) => (
-        <Space size="middle">
-          <Tooltip title="Edit Account">
-            <button
-              onClick={() => navigate(`edit/${record.id}`)}
-              className="p-2 hover:bg-[#39C6C6]/10 rounded-xl text-slate-400 hover:text-[#39C6C6] transition-all"
-            >
-              <Edit3 size={18} />
-            </button>
-          </Tooltip>
-
-          <Tooltip title="Remove">
-            <Popconfirm
-              title="Delete Account"
-              onConfirm={() => handleDelete(record.id)}
-              okText="Yes"
-              cancelText="No"
-              okButtonProps={{
-                danger: true,
-                style: { background: "#ff4d4f", borderColor: "#ff4d4f" },
-              }}
-            >
-              <button className="p-2 hover:bg-red-50 rounded-xl text-slate-400 hover:text-red-500 transition-all">
-                <Trash2 size={18} />
-              </button>
-            </Popconfirm>
-          </Tooltip>
-        </Space>
-      ),
+      width: 190,
+      render: (_, record) => {
+        const isActive = record.status === "Active";
+        const isAdmin = record.role?.name === "Company Administrator";
+        return (
+          <Space size="middle">
+            {!isAdmin ? (
+              <div>
+                {isActive ? (
+                  <Tooltip title="Ban Account">
+                    <Popconfirm
+                      title="Ban this user?"
+                      description="User will no longer be able to log in."
+                      onConfirm={() => handleToggleStatus(record)}
+                      okText="Yes, Ban"
+                      cancelText="No"
+                      okButtonProps={{ danger: true, className: "!rounded-lg" }}
+                    >
+                      <button className="cursor-pointer flex px-3 py-1 bg-red-500 hover:bg-red-600 text-white font-bold rounded-xl items-center">
+                        <span className="mr-2">Ban</span> <UserX size={18} />
+                      </button>
+                    </Popconfirm>
+                  </Tooltip>
+                ) : (
+                  <Tooltip title="Restore Account">
+                    <button
+                      onClick={() => handleToggleStatus(record)}
+                      className="cursor-pointer flex px-3 py-1 bg-green-400 hover:bg-green-500 text-white font-bold rounded-xl items-center"
+                    >
+                      <span className="mr-2">Unban</span>
+                      <UserCheck size={18} />
+                    </button>
+                  </Tooltip>
+                )}
+              </div>
+            ) : (
+              <div className="bg-slate-100 px-3 py-2 rounded-xl">
+                <span className="flex items-center text-slate-500 italic text-xs">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="15"
+                    height="15"
+                    viewBox="0 0 24 24"
+                  >
+                    <g
+                      fill="none"
+                      stroke="#62748e"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-miterlimit="10"
+                      stroke-width="1.5"
+                    >
+                      <path d="M12.113 21.98a.33.33 0 0 1-.226 0C10.917 21.64 4 18.94 4 11.252V4.304a.4.4 0 0 1 .303-.389l7.6-1.903a.4.4 0 0 1 .194 0l7.6 1.903a.4.4 0 0 1 .303.389v6.948c0 7.765-6.916 10.397-7.887 10.729" />
+                      <path d="m11.43 10.284l.376-1.508c.05-.202.338-.202.388 0l.377 1.508a.2.2 0 0 0 .145.145l1.508.377c.202.05.202.337 0 .388l-1.508.377a.2.2 0 0 0-.145.145l-.377 1.508c-.05.202-.338.202-.388 0l-.377-1.508a.2.2 0 0 0-.145-.145l-1.508-.377c-.202-.05-.202-.338 0-.388l1.508-.377a.2.2 0 0 0 .145-.146" />
+                    </g>
+                  </svg>
+                  <p className="ml-1">System Protected</p>
+                </span>
+              </div>
+            )}
+          </Space>
+        );
+      },
     },
   ];
 
-  const filteredData = accounts.filter(
-    (a) =>
+  // --- CẬP NHẬT LOGIC FILTER ---
+  const filteredData = accounts.filter((a) => {
+    const matchesSearch =
       a.fullName?.toLowerCase().includes(searchText.toLowerCase()) ||
-      a.email?.toLowerCase().includes(searchText.toLowerCase()),
-  );
+      a.email?.toLowerCase().includes(searchText.toLowerCase());
+
+    const matchesRole = filterRole === "All" || a.role?.name === filterRole;
+    const matchesStatus = filterStatus === "All" || a.status === filterStatus;
+
+    return matchesSearch && matchesRole && matchesStatus;
+  });
 
   return (
-    <div className="bg-slate-50 min-h-screen font-sans text-slate-900">
+    <div className="bg-slate-50 text-slate-900">
       <section className="md:px-16 lg:px-12 pt-7 pb-0">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-8">
           <div>
@@ -206,7 +239,7 @@ const AccountManagement = () => {
               onClick={fetchAccounts}
               className="!h-12 !px-6 !rounded-2xl !border-slate-200 !font-bold !text-slate-600 hover:!text-[#39C6C6] hover:!border-[#39C6C6]"
             >
-              Refresh
+              Sync Data
             </Button>
             <Button
               type="primary"
@@ -219,13 +252,48 @@ const AccountManagement = () => {
           </Space>
         </div>
 
-        <div>
-          <Input
-            placeholder="Search by name or email..."
-            prefix={<Search size={20} className="text-slate-300 mr-3" />}
-            className="!mb-5 !h-12 !bg-white !rounded-full !text-base !transition-all hover:!border-[#39C6C6] focus-within:!border-[#39C6C6] focus-within:!shadow-[0_0_0_2px_rgba(57,198,198,0.2)]"
-            onChange={(e) => setSearchText(e.target.value)}
-          />
+        {/* --- KHU VỰC BỘ LỌC (SEARCH + ROLE + STATUS) --- */}
+        <div className="flex flex-col md:flex-row gap-4 mb-6">
+          <div className="flex-1">
+            <Input
+              placeholder="Quick search by name or email..."
+              prefix={<Search size={20} className="text-slate-300 mr-3" />}
+              className="!h-12 !bg-white !rounded-full !text-base !transition-all !border-slate-300 hover:!border-[#39C6C6] focus-within:!border-[#39C6C6]"
+              onChange={(e) => setSearchText(e.target.value)}
+            />
+          </div>
+
+          <div className="flex gap-4">
+            <Select
+              defaultValue="All"
+              // Mặc định: !border-slate-200
+              // Khi hover: hover:!border-[#39c6c6]
+              // Khi focus/chọn: focus-within:!border-[#39c6c6]
+              className="!w-48 !h-12 !pl-5 !rounded-full !border !border-slate-300 hover:!border-[#39c6c6] focus-within:!border-[#39c6c6] overflow-hidden transition-all"
+              onChange={(value) => setFilterRole(value)}
+              suffixIcon={
+                <Filter
+                  size={16}
+                  className="text-slate-400 group-hover:text-[#39c6c6]"
+                />
+              }
+            >
+              <Option value="All">All Roles</Option>
+              <Option value="Company Administrator">Admin</Option>
+              <Option value="Manager">Manager</Option>
+              <Option value="Staff">Staff</Option>
+            </Select>
+
+            <Select
+              defaultValue="All"
+              className="!w-40 !h-12 !pl-5 !rounded-full !border !border-slate-300 hover:!border-[#39c6c6] focus-within:!border-[#39c6c6] overflow-hidden transition-all"
+              onChange={(value) => setFilterStatus(value)}
+            >
+              {/* <Option value="All">All Status</Option> */}
+              <Option value="Active">Active</Option>
+              <Option value="Inactive">Inactive</Option>
+            </Select>
+          </div>
         </div>
 
         <div className="bg-white rounded-[1rem] shadow-2xl shadow-slate-200/60 border border-white overflow-hidden p-6">
@@ -235,17 +303,15 @@ const AccountManagement = () => {
             loading={loading}
             rowKey="id"
             pagination={{ pageSize: 8, className: "px-6" }}
-            scroll={{ x: 1100 }}
+            scroll={{ x: 1000 }}
             className="account-custom-table"
             onRow={(record) => ({
               onClick: (event) => {
-                // Nếu click vào các nút action (Edit/Delete) thì không chuyển trang details
                 if (
                   event.target.closest("button") ||
                   event.target.closest(".ant-popover")
-                ) {
+                )
                   return;
-                }
                 navigate(`details/${record.id}`);
               },
             })}
@@ -253,7 +319,11 @@ const AccountManagement = () => {
         </div>
       </section>
 
-      <style jsx="true">{`
+      <style jsx global>{`
+        .account-custom-table .ant-table-tbody > tr {
+          cursor: pointer;
+          transition: all 0.2s;
+        }
         .account-custom-table .ant-table-thead > tr > th {
           background: #f4f7fa !important;
           color: #4d4d4d !important;
@@ -265,7 +335,6 @@ const AccountManagement = () => {
           padding: 20px !important;
         }
         .account-custom-table .ant-table-tbody > tr > td {
-          padding: 12px 20px !important;
           border-bottom: 1px solid #f1f5f9 !important;
         }
         .ant-pagination-item-active {
@@ -274,9 +343,17 @@ const AccountManagement = () => {
         .ant-pagination-item-active a {
           color: #39c6c6 !important;
         }
-        .account-custom-table .ant-table-tbody > tr {
-          cursor: pointer;
-          transition: all 0.2s;
+        /* Custom style cho Select antd cho đồng bộ với giao diện hiện tại */
+        .ant-select-selector {
+          border-radius: 9999px !important;
+          height: 48px !important;
+          display: flex !important;
+          align-items: center !important;
+          border-color: #e2e8f0 !important;
+        }
+        .ant-select-selection-item {
+          font-weight: 600 !important;
+          color: #475569 !important;
         }
       `}</style>
     </div>

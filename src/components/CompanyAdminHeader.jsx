@@ -24,13 +24,14 @@ const CompanyAdminHeader = ({ isCollapsed }) => {
       if (!userId) return;
       try {
         const res = await api.get(`/Users/get-user-profile/${userId}`);
+        console.log("profile: ", res);
         setUserProfile(res.data);
       } catch (error) {
         console.error("Error fetching header profile:", error);
       }
     };
     fetchUserProfile();
-  }, [userId]);
+  }, []);
 
   const fullName = userProfile?.fullName || "User";
 
@@ -51,8 +52,8 @@ const CompanyAdminHeader = ({ isCollapsed }) => {
   return (
     <>
       <header
-        className={`!fixed !top-0 !right-0 !h-15 !bg-white !border-b !border-slate-100 !flex !items-center !justify-end !px-8 !z-40 !transition-all !duration-300 ${
-          isCollapsed ? "!left-20" : "!left-64"
+        className={`shadow-sm fixed !top-0 !right-0 !h-13 !bg-white !border-b !border-slate-100 !flex !items-center !justify-end !px-8 !z-40 !transition-all !duration-300 ${
+          isCollapsed ? "!left-20" : "!left-60"
         }`}
       >
         <div className="!flex !items-center !gap-6">
@@ -69,7 +70,7 @@ const CompanyAdminHeader = ({ isCollapsed }) => {
               <span className="!text-sm !font-bold !text-slate-700 !hidden md:!block">
                 {fullName}
               </span>
-              <div className="!w-10 !h-10 !rounded-xl !overflow-hidden !border-2 !border-[#39c6c6]/50 group-hover:!border-[#39c6c6] !transition-all !shadow-sm">
+              <div className="!w-9 !h-9 !rounded-xl !overflow-hidden !border-2 !border-[#39c6c6]/50 group-hover:!border-[#39c6c6] !transition-all !shadow-sm">
                 <img
                   src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${fullName}`}
                   alt="Avatar"

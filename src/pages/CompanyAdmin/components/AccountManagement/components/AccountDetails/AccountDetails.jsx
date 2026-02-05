@@ -20,6 +20,8 @@ const AccountDetails = () => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  console.log("user: ", user);
+
   // --- FETCH USER DETAILS ---
   useEffect(() => {
     const fetchUserDetails = async () => {
