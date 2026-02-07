@@ -115,9 +115,9 @@ const CompanyAdminSidebar = ({ isCollapsed, setIsCollapsed }) => {
             </p>
           )}
           <SidebarItem
-            to="inbound-management"
+            to="inbound-request-management"
             icon={<ArrowDownCircle size={20} />}
-            label="Inbound"
+            label="Inbound Request"
             isCollapsed={isCollapsed}
           />
           <SidebarItem

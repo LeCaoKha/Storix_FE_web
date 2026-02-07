@@ -11,11 +11,13 @@ import {
   Modal,
   Tooltip,
   Popconfirm,
+  Upload, // Thêm Upload
 } from "antd";
 import {
   PlusCircleOutlined,
   ArrowLeftOutlined,
   DeleteOutlined,
+  UploadOutlined, // Thêm Icon Upload
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import api from "../../../../../../api/axios";
@@ -48,17 +50,13 @@ const CreateProduct = () => {
     fetchProductTypes();
   }, []);
 
-  // 2. Handle Delete Product Type (Đồng bộ từ trang Edit)
+  // 2. Handle Delete Product Type
   const handleDeleteType = async (e, typeId) => {
-    if (e) e.stopPropagation(); // Chặn sự kiện nổi bọt để dropdown không đóng/chọn nhầm
+    if (e) e.stopPropagation();
     try {
       await api.delete(`/Products/delete-product-type/${typeId}`);
       message.success("Product type deleted!");
-
-      // Refresh lại danh sách
       await fetchProductTypes();
-
-      // Nếu type đang chọn bị xóa, reset giá trị typeId về undefined
       if (form.getFieldValue("typeId") === typeId) {
         form.setFieldValue("typeId", undefined);
       }
@@ -92,24 +90,47 @@ const CreateProduct = () => {
     }
   };
 
-  // 4. Handle Create Product
+  // 4. Handle Create Product (CHUYỂN SANG FORM DATA)
   const onFinish = async (values) => {
     setLoading(true);
     try {
-      const companyId = parseInt(localStorage.getItem("companyId")) || 0;
-      const payload = {
-        ...values,
-        companyId: companyId,
-        weight: 0,
-      };
-      const res = await api.post("/Products/create", payload);
+      const companyId = localStorage.getItem("companyId") || "0";
+
+      // Khởi tạo FormData
+      const formData = new FormData();
+
+      // Append các trường text
+      formData.append("name", values.name);
+      formData.append("sku", values.sku);
+      formData.append("typeId", values.typeId);
+      formData.append("companyId", companyId);
+      formData.append("weight", "0");
+      if (values.unit) formData.append("unit", values.unit);
+      if (values.category) formData.append("category", values.category);
+      if (values.description)
+        formData.append("description", values.description);
+
+      // Append File ảnh (Lấy từ mảng fileList của Upload Antd)
+      if (values.image && values.image.fileList && values.image.fileList[0]) {
+        formData.append("image", values.image.fileList[0].originFileObj);
+      }
+
+      // Gửi FormData qua API
+      const res = await api.post("/Products/create", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
       if (res.status === 200 || res.status === 201) {
         message.success("Product created successfully!");
         form.resetFields();
         navigate("/company-admin/product-management");
       }
     } catch (error) {
-      message.error("Failed to create product");
+      message.error(
+        error.response?.data?.message || "Failed to create product",
+      );
     } finally {
       setLoading(false);
     }
@@ -190,7 +211,6 @@ const CreateProduct = () => {
                   size="large"
                   placeholder="Select or search type"
                   optionFilterProp="label"
-                  // Render custom option với icon xóa tương tự trang Edit
                   optionRender={(option) => (
                     <div className="flex justify-between items-center w-full">
                       <span>{option.label}</span>
@@ -231,6 +251,27 @@ const CreateProduct = () => {
             </Col>
           </Row>
 
+          {/* TRƯỜNG IMAGE MỚI THÊM */}
+          <Row gutter={16}>
+            <Col span={24}>
+              <Form.Item
+                label="Product Image"
+                name="image"
+                extra="Accepts JPG, PNG, GIF."
+              >
+                <Upload
+                  listType="picture"
+                  maxCount={1}
+                  beforeUpload={() => false} // Chặn upload tự động để gửi cùng FormData
+                >
+                  <Button icon={<UploadOutlined />} size="large" block>
+                    Click to upload image
+                  </Button>
+                </Upload>
+              </Form.Item>
+            </Col>
+          </Row>
+
           <Form.Item label="Description" name="description">
             <TextArea rows={4} placeholder="Enter product description" />
           </Form.Item>
@@ -255,7 +296,7 @@ const CreateProduct = () => {
         </Form>
       </Card>
 
-      {/* MODAL TẠO TYPE MỚI */}
+      {/* MODAL TẠO TYPE MỚI GIỮ NGUYÊN */}
       <Modal
         title="Add New Product Type"
         open={isModalOpen}
@@ -276,7 +317,7 @@ const CreateProduct = () => {
             <Input
               placeholder="e.g. Clothes, Electronic..."
               size="large"
-              onPressEnter={handleCreateType} // Kích hoạt khi nhấn Enter
+              onPressEnter={handleCreateType}
             />
           </Form.Item>
         </Form>

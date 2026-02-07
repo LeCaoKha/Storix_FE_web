@@ -258,6 +258,21 @@ const ProductManagement = () => {
             }}
             scroll={{ x: 1100 }}
             className="storix-custom-table"
+            // --- THÊM ĐOẠN NÀY ---
+            onRow={(record) => ({
+              onClick: (event) => {
+                // Kiểm tra nếu click vào button hoặc các phần tử trong Popconfirm
+                // thì không thực hiện chuyển hướng trang details
+                if (
+                  event.target.closest("button") ||
+                  event.target.closest(".ant-popover")
+                ) {
+                  return;
+                }
+                navigate(`details/${record.id}`);
+              },
+            })}
+            // ----------------------
           />
         </div>
       </section>
