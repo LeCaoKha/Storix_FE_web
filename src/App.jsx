@@ -8,7 +8,7 @@ import ScrollToTop from "./components/ScrollToTop";
 const App = () => {
   const navigate = useNavigate();
 
-  const token = localStorage.getItem("token");
+  const token = localStorage.getItem("accessToken");
   const roleId = localStorage.getItem("roleId");
 
   useEffect(() => {

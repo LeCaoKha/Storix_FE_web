@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import api from "../../../../../../api/axios";
 import { message } from "antd";
 import InboundHeader from "./components/InboundHeader/InboundHeader";
 import ProductSearchSection from "./components/ProductSearchSection/ProductSearchSection";
 import QuickCreateProductModal from "./components/QuickCreateProductModal/QuickCreateProductModal";
 import InboundSidebar from "./components/InboundSidebar/InboundSidebar";
+import { useNavigate } from "react-router-dom";
 
 const InboundRequestCreate = () => {
   const [products, setProducts] = useState([]);
@@ -15,75 +16,99 @@ const InboundRequestCreate = () => {
   const [submitting, setSubmitting] = useState(false);
   const [productTypes, setProductTypes] = useState([]);
   const searchRef = useRef(null);
+  const [creating, setCreating] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const navigate = useNavigate();
 
+  // Quản lý thông tin Sidebar và chiết khấu tổng
+  const [orderDiscount, setOrderDiscount] = useState(0); // Chiết khấu % tổng đơn
   const [inboundData, setInboundData] = useState({
     supplierId: null,
-    warehouseId: null,
+    warehouseId: 1, // Hardcode mặc định là "My warehouse"
     reference: "",
     notes: "",
   });
 
   const [selectedProducts, setSelectedProducts] = useState([]);
   const userId = localStorage.getItem("userId");
-  const companyId = localStorage.getItem("companyId");
 
   // ==========================================
-  // LOGIC QUẢN LÝ DANH SÁCH SẢN PHẨM CHỌN
+  // 1. LOGIC TÍNH TOÁN THANH TOÁN (DERIVED STATE)
+  // ==========================================
+  const paymentSummary = useMemo(() => {
+    // Tổng số lượng sản phẩm
+    const totalQuantity = selectedProducts.reduce(
+      (sum, item) => sum + (item.quantity || 0),
+      0,
+    );
+
+    // Tổng tiền trước khi giảm giá đơn hàng
+    const totalAmount = selectedProducts.reduce(
+      (sum, item) => sum + (item.price || 0) * (item.quantity || 1),
+      0,
+    );
+
+    // Giá trị giảm giá từ % đơn hàng
+    const discountValue = (totalAmount * orderDiscount) / 100;
+    const amountToPay = totalAmount - discountValue;
+
+    return {
+      totalQuantity,
+      totalAmount,
+      orderDiscount,
+      amountToPay,
+      supplierId: inboundData.supplierId,
+    };
+  }, [selectedProducts, orderDiscount, inboundData.supplierId]);
+
+  // ==========================================
+  // 2. LOGIC QUẢN LÝ DANH SÁCH SẢN PHẨM CHỌN
   // ==========================================
 
-  // 1. Thêm sản phẩm vào danh sách
   const handleSelectProduct = (product) => {
     const isExist = selectedProducts.find((p) => p.id === product.id);
     if (isExist) {
-      message.info("Sản phẩm này đã có trong danh sách");
+      message.info("This product is already in the list");
       return;
     }
 
-    // 1. Lấy danh sách giá từ product
+    // Tìm giá gần nhất với hiện tại
     const priceEntries = product.productPrices || [];
     let latestPrice = 0;
 
     if (priceEntries.length > 0) {
-      // 2. Sắp xếp mảng productPrices theo ngày giảm dần (mới nhất lên đầu)
-      const sortedPrices = [...priceEntries].sort((a, b) => {
-        return new Date(b.date) - new Date(a.date);
-      });
-
-      // 3. Lấy giá của phần tử đầu tiên (ngày gần hiện tại nhất)
-      latestPrice = sortedPrices[0].price;
+      const sortedPrices = [...priceEntries].sort(
+        (a, b) => new Date(b.date) - new Date(a.date),
+      );
+      latestPrice = sortedPrices[0].price || 0;
     }
 
-    // 4. Cập nhật vào danh sách selectedProducts
     setSelectedProducts([
       ...selectedProducts,
       {
         ...product,
         quantity: 1,
         lineDiscount: 0,
-        price: latestPrice, // Gán giá mới nhất làm đơn giá hiện tại
-        originalPrice: latestPrice, // Gán giá mới nhất làm giá gốc để so sánh
+        price: latestPrice, // Giá thực tế sau điều chỉnh
+        originalPrice: latestPrice, // Giá gốc để so sánh gạch ngang
       },
     ]);
   };
 
-  // 2. Xóa sản phẩm khỏi danh sách
   const handleRemoveProduct = (productId) => {
     setSelectedProducts(selectedProducts.filter((p) => p.id !== productId));
   };
 
-  // 3. Cập nhật số lượng
   const handleUpdateQuantity = (productId, quantity) => {
-    const newList = selectedProducts.map((p) =>
-      p.id === productId ? { ...p, quantity } : p,
+    setSelectedProducts((prev) =>
+      prev.map((p) => (p.id === productId ? { ...p, quantity } : p)),
     );
-    setSelectedProducts(newList);
   };
 
-  // 4. CẬP NHẬT ĐƠN GIÁ (Dùng cho Modal điều chỉnh giá)
   const handleUpdatePrice = (
     productId,
     newPrice,
-    originalPrice,
+    originalPriceInput,
     lineDiscount,
   ) => {
     setSelectedProducts((prevList) =>
@@ -92,8 +117,13 @@ const InboundRequestCreate = () => {
           ? {
               ...p,
               price: newPrice,
-              originalPrice: originalPrice,
-              lineDiscount: lineDiscount,
+              // Nếu truyền originalPriceInput thì update, không thì giữ nguyên
+              originalPrice:
+                originalPriceInput !== undefined
+                  ? originalPriceInput
+                  : p.originalPrice,
+              lineDiscount:
+                lineDiscount !== undefined ? lineDiscount : p.lineDiscount,
             }
           : p,
       ),
@@ -101,11 +131,15 @@ const InboundRequestCreate = () => {
   };
 
   // ==========================================
-  // LOGIC FETCH DỮ LIỆU & TÌM KIẾM
+  // 3. LOGIC FETCH DỮ LIỆU & TÌM KIẾM
   // ==========================================
 
   const handleSidebarChange = (key, value) => {
-    setInboundData((prev) => ({ ...prev, [key]: value }));
+    if (key === "orderDiscount") {
+      setOrderDiscount(value);
+    } else {
+      setInboundData((prev) => ({ ...prev, [key]: value }));
+    }
   };
 
   const fetchData = async () => {
@@ -120,7 +154,7 @@ const InboundRequestCreate = () => {
       setProducts(prodRes.data);
       setFilteredProducts(prodRes.data);
     } catch (error) {
-      message.error("Không thể tải dữ liệu");
+      message.error("Failed to load data");
     } finally {
       setLoadingProducts(false);
     }
@@ -153,23 +187,81 @@ const InboundRequestCreate = () => {
     try {
       const res = await api.post("/Products/create", formData);
       if (res.status === 200 || res.status === 201) {
-        message.success("Tạo sản phẩm thành công!");
+        message.success("Product created successfully!");
         setIsModalOpen(false);
         await fetchData();
       }
     } catch (error) {
-      message.error(error.response?.data?.message || "Lỗi tạo sản phẩm");
+      message.error(error.response?.data?.message || "Creation failed");
     } finally {
       setSubmitting(false);
     }
   };
 
+  const handleCreateInboundRequest = async () => {
+    // 1. KIỂM TRA CÁC TRƯỜNG BẮT BUỘC
+    const supplierId = inboundData.supplierId;
+    const warehouseId = inboundData.warehouseId || 1; // Mặc định là 1 (My warehouse)
+    const reqBy = Number(userId);
+    const items = selectedProducts.map((p) => ({
+      productId: p.id,
+      expectedQuantity: p.quantity || 0,
+      price: p.price || 0,
+      lineDiscount: p.lineDiscount || 0,
+    }));
+
+    if (!supplierId)
+      return message.warning("Please select a supplier (Required)");
+    if (!warehouseId)
+      return message.warning("Warehouse information is missing (Required)");
+    if (!reqBy)
+      return message.warning(
+        "User information is missing. Please re-login (Required)",
+      );
+    if (items.length === 0)
+      return message.warning("Please add at least one product (Required)");
+
+    setIsSubmitting(true);
+    try {
+      // 2. TỔNG HỢP PAYLOAD (Gồm cả trường bắt buộc và tùy chọn)
+      const payload = {
+        warehouseId: warehouseId,
+        supplierId: supplierId,
+        requestedBy: reqBy,
+        items: items,
+        // Các trường tùy chọn
+        note: inboundData.notes || "",
+        expectedArrivalDate: inboundData.expectedDate || null,
+        orderDiscount: orderDiscount || 0,
+      };
+
+      const res = await api.post(
+        "/InventoryInbound/create-inbound-request",
+        payload,
+      );
+
+      if (res.status === 200 || res.status === 201) {
+        message.success("Inbound request created successfully!");
+        navigate(-1); // Quay lại trang trước đó
+      }
+    } catch (error) {
+      console.error("Submission Error:", error.response);
+      message.error(
+        error.response?.data?.message || "Failed to create inbound request",
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="pt-7 px-12 bg-[#F8FAFC] min-h-screen font-sans">
-      <InboundHeader />
-
+      <InboundHeader
+        onCreate={handleCreateInboundRequest}
+        loading={isSubmitting}
+      />
       <div className="flex justify-center gap-x-6 pb-20">
-        {/* Cột trái: Tìm kiếm và Danh sách sản phẩm */}
+        {/* Cột trái: Tìm kiếm, Danh sách sản phẩm & Thanh toán */}
         <div className="w-[60%] space-y-6">
           <ProductSearchSection
             searchRef={searchRef}
@@ -179,22 +271,25 @@ const InboundRequestCreate = () => {
             loadingProducts={loadingProducts}
             filteredProducts={filteredProducts}
             onOpenCreateModal={() => setIsModalOpen(true)}
-            // Props quản lý sản phẩm được chọn
             selectedProducts={selectedProducts}
             onSelectProduct={handleSelectProduct}
             onRemoveProduct={handleRemoveProduct}
             onUpdateQuantity={handleUpdateQuantity}
-            onUpdatePrice={handleUpdatePrice} // Truyền hàm cập nhật giá vào đây
+            onUpdatePrice={handleUpdatePrice}
+            // Truyền summary để hiển thị card thanh toán bên dưới danh sách SP
+            paymentSummary={paymentSummary}
           />
         </div>
 
-        {/* Cột phải: Thông tin Sidebar */}
+        {/* Cột phải: Sidebar (Supplier, Warehouse, Notes) */}
         <div className="w-[30%]">
-          <InboundSidebar onDataChange={handleSidebarChange} />
+          <InboundSidebar
+            onDataChange={handleSidebarChange}
+            summary={paymentSummary}
+          />
         </div>
       </div>
 
-      {/* Modal tạo nhanh sản phẩm */}
       <QuickCreateProductModal
         isOpen={isModalOpen}
         onCancel={() => setIsModalOpen(false)}

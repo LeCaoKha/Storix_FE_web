@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Card,
   Input,
@@ -37,11 +37,14 @@ const ProductSearchSection = ({
   const [editingProduct, setEditingProduct] = useState(null);
   const [priceForm] = Form.useForm();
 
+  // --- NEW: ORDER DISCOUNT STATES ---
+  const [isOrderDiscountModalOpen, setIsOrderDiscountModalOpen] =
+    useState(false);
+  const [orderDiscountPercent, setOrderDiscountPercent] = useState(0);
+
   // Watchers to monitor Input values (string format) and calculate in real-time
   const originalPriceRaw = Form.useWatch("price", priceForm) || "0";
   const lineDiscountValueRaw = Form.useWatch("discountValue", priceForm) || "0";
-
-  console.log("selected product: ", selectedProducts);
 
   // Logic to calculate price after % discount
   const calculateFinalPrice = () => {
@@ -64,7 +67,6 @@ const ProductSearchSection = ({
 
   const handleApplyPrice = () => {
     const finalPrice = calculateFinalPrice();
-    // Update the parent state with the new price while maintaining the original reference
     onUpdatePrice(
       editingProduct.id,
       finalPrice,
@@ -75,13 +77,28 @@ const ProductSearchSection = ({
     message.success("Unit price updated successfully");
   };
 
+  // --- CALCULATIONS FOR SUMMARY CARD ---
   const totalAmount = selectedProducts.reduce(
     (acc, item) => acc + (item.price || 0) * (item.quantity || 1),
     0,
   );
   const totalLineItems = selectedProducts.length;
-  const orderDiscount = 0; // Placeholder for now
-  const finalPayable = totalAmount - orderDiscount;
+
+  // Calculate order discount amount based on percentage
+  const orderDiscountAmount = (totalAmount * orderDiscountPercent) / 100;
+  const finalPayable = totalAmount - orderDiscountAmount;
+
+  // --- KEYBOARD SHORTCUT (F6) ---
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "F6") {
+        e.preventDefault();
+        setIsOrderDiscountModalOpen(true);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   return (
     <div>
@@ -106,7 +123,6 @@ const ProductSearchSection = ({
           {/* 2. SEARCH RESULTS DROPDOWN */}
           {isSearching && (
             <div className="!absolute !top-14 !left-0 !w-full !bg-white !z-[100] !rounded-2xl !shadow-2xl !border !border-slate-100 !max-h-[305px] !overflow-y-auto !p-2 !transition-all">
-              {/* Create New Product Action */}
               <div
                 onClick={() => {
                   setIsSearching(false);
@@ -169,7 +185,6 @@ const ProductSearchSection = ({
         <div className="mt-8">
           {selectedProducts.length > 0 ? (
             <div className="space-y-3 max-h-80 overflow-y-auto">
-              {/* Column Headers for alignment */}
               <div className="flex items-center px-4 text-[10px] !uppercase !font-bold text-slate-400 !tracking-widest mb-1">
                 <span className="flex-1">Product</span>
                 <div className="flex items-center text-right">
@@ -185,7 +200,6 @@ const ProductSearchSection = ({
                   key={item.id}
                   className="flex items-center justify-between p-4 bg-white border border-slate-100 rounded-2xl hover:shadow-md hover:border-[#38c6c6]/20 transition-all"
                 >
-                  {/* Product Info */}
                   <div className="flex items-center gap-4 flex-1">
                     <Avatar
                       shape="square"
@@ -204,7 +218,6 @@ const ProductSearchSection = ({
                     </div>
                   </div>
 
-                  {/* Numerical Columns */}
                   <div className="flex items-center">
                     <div className="w-24 flex justify-center">
                       <Input
@@ -222,7 +235,6 @@ const ProductSearchSection = ({
                         className="flex flex-col items-end cursor-pointer group"
                         onClick={() => handleOpenPriceModal(item)}
                       >
-                        {/* Strike through logic if price differs from original price */}
                         {item.originalPrice &&
                         item.price !== item.originalPrice ? (
                           <>
@@ -264,7 +276,6 @@ const ProductSearchSection = ({
               ))}
             </div>
           ) : (
-            /* Empty State */
             <div className="h-48 border-2 border-dashed border-slate-100 rounded-2xl flex flex-col items-center justify-center text-slate-300">
               <Package size={40} className="mb-2 opacity-10" />
               <p className="font-medium text-sm">
@@ -354,7 +365,6 @@ const ProductSearchSection = ({
               </Col>
             </Row>
 
-            {/* Real-time Calculation Box */}
             <div className="!mt-2 !p-6 !bg-slate-50 !rounded-2xl !border !border-dashed !border-slate-200 !text-center">
               <p className="!text-[11px] !uppercase !font-black !text-slate-400 !tracking-widest !mb-2">
                 Final Price After Discount
@@ -374,9 +384,8 @@ const ProductSearchSection = ({
         `}</style>
       </Card>
 
-      {/* Card tong tien thanh toan  */}
+      {/* --- PAYMENT SUMMARY CARD --- */}
       <div className="mt-5 space-y-6">
-        {/* --- NEW: PAYMENT SUMMARY CARD --- */}
         <Card className="!rounded-2xl !shadow-sm !border-slate-100">
           <div className="px-2">
             <Text className="!text-lg !font-bold !text-slate-800 !block !mb-6">
@@ -384,7 +393,6 @@ const ProductSearchSection = ({
             </Text>
 
             <div className="space-y-5">
-              {/* Total Amount Row */}
               <div className="flex items-center justify-between">
                 <Text className="!text-slate-600 !w-40">Total Amount</Text>
                 <Text className="!text-slate-400 !text-sm flex-1 text-center">
@@ -395,20 +403,21 @@ const ProductSearchSection = ({
                 </Text>
               </div>
 
-              {/* Discount Row */}
               <div className="flex items-center justify-between">
-                <Text className="!text-[#38c6c6] !font-medium !w-40 !cursor-pointer hover:!underline">
+                <Text
+                  className="!text-[#38c6c6] !font-medium !w-40 !cursor-pointer hover:!underline"
+                  onClick={() => setIsOrderDiscountModalOpen(true)}
+                >
                   Order Discount (F6)
                 </Text>
                 <Text className="!text-slate-300 flex-1 text-center">
                   ------
                 </Text>
                 <Text className="!font-bold !text-slate-800 !w-40 text-right">
-                  {orderDiscount.toLocaleString()} ₫
+                  {orderDiscountAmount.toLocaleString()} ₫
                 </Text>
               </div>
 
-              {/* Final Payable Row */}
               <div className="flex items-center justify-between !pt-2">
                 <Text className="!font-bold !text-slate-800 !w-40">
                   Amount to Pay Supplier
@@ -422,6 +431,72 @@ const ProductSearchSection = ({
           </div>
         </Card>
       </div>
+
+      {/* --- NEW: ORDER DISCOUNT MODAL --- */}
+      <Modal
+        title={
+          <div className="!flex !items-center !gap-2 !pb-3 !border-b !border-slate-100">
+            <span className="!text-lg !font-bold !text-slate-800">
+              Apply Order Discount
+            </span>
+          </div>
+        }
+        open={isOrderDiscountModalOpen}
+        onCancel={() => setIsOrderDiscountModalOpen(false)}
+        centered
+        footer={[
+          <Button
+            key="cancel"
+            onClick={() => setIsOrderDiscountModalOpen(false)}
+            className="!rounded-xl !h-11 !px-8 !font-bold"
+          >
+            Cancel
+          </Button>,
+          <Button
+            key="submit"
+            type="primary"
+            onClick={() => {
+              setIsOrderDiscountModalOpen(false);
+              message.success(
+                `Order discount of ${orderDiscountPercent}% applied`,
+              );
+            }}
+            className="!rounded-xl !h-11 !px-10 !bg-[#38c6c6] !border-none !font-bold"
+          >
+            Apply Discount
+          </Button>,
+        ]}
+        width={400}
+      >
+        <div className="!mt-6 space-y-4">
+          <div>
+            <Text className="!font-bold !text-slate-600 !block !mb-2">
+              Discount Percentage (%)
+            </Text>
+            <Input
+              maxLength={3}
+              placeholder="Enter percentage"
+              value={orderDiscountPercent}
+              className="!h-12 !rounded-xl !bg-slate-50 !border-none !font-bold !text-lg"
+              suffix={<span className="!font-bold !text-slate-400">%</span>}
+              onChange={(e) => {
+                const value = e.target.value.replace(/\D/g, "");
+                const formatted = Number(value) > 100 ? 100 : Number(value);
+                setOrderDiscountPercent(formatted);
+              }}
+            />
+          </div>
+
+          <div className="!p-4 !bg-[#38c6c6]/5 !rounded-xl !border !border-dashed !border-[#38c6c6]/20 flex justify-between">
+            <Text className="!text-slate-500 !font-medium">
+              Reduced Amount:
+            </Text>
+            <Text className="!font-black !text-[#38c6c6]">
+              {orderDiscountAmount.toLocaleString()} ₫
+            </Text>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

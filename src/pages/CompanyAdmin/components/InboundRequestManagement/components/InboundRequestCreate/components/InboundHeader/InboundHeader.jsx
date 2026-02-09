@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 
 const { Title, Text } = Typography;
 
-const InboundHeader = () => {
+const InboundHeader = ({ onCreate, loading }) => {
   const navigate = useNavigate();
   return (
     <div className="flex justify-between items-center mb-10">
@@ -32,19 +32,29 @@ const InboundHeader = () => {
         <Button
           type="text"
           icon={<X size={18} />}
+          onClick={() => navigate(-1)}
+          disabled={loading}
           className="!flex !items-center !gap-2 !h-11 !px-5 !font-bold !text-slate-500 hover:!text-rose-500 hover:!bg-rose-50 !rounded-xl transition-all"
         >
           Cancel
         </Button>
+
+        {/* Nút Create PO: Kích hoạt gọi API */}
         <Button
           icon={<Save size={18} />}
+          onClick={onCreate}
+          loading={loading}
           className="!flex !items-center !gap-2 !h-11 !px-6 !font-bold !text-slate-600 !bg-white !border-slate-200 !rounded-xl shadow-sm hover:!border-[#39c6c6] hover:!text-[#39c6c6]"
         >
           Create PO
         </Button>
+
+        {/* Nút Create & Approve: Kích hoạt gọi API */}
         <Button
           type="primary"
           icon={<CheckCircle2 size={18} />}
+          onClick={onCreate}
+          loading={loading}
           className="!flex !items-center !gap-2 !h-11 !px-6 !font-bold !bg-[#39c6c6] hover:!bg-[#2eb1b1] !border-none !rounded-xl shadow-lg shadow-[#39c6c6]/20"
         >
           Create & Approve

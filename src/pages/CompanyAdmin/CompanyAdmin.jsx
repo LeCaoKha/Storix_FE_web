@@ -20,7 +20,7 @@ const CompanyAdminApp = () => {
 
   // 3. Kiểm tra quyền truy cập
   useEffect(() => {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("accessToken");
     const roleId = localStorage.getItem("roleId");
     if (!roleId || !token) {
       navigate("/auth");

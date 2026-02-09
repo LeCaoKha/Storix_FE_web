@@ -10,7 +10,7 @@ import {
   Tooltip,
   Typography,
   Popconfirm,
-  Select, // Thêm Select để dùng cho filter
+  Select,
 } from "antd";
 import {
   Plus,
@@ -19,7 +19,7 @@ import {
   Users,
   UserX,
   UserCheck,
-  Filter, // Thêm icon filter cho đẹp
+  Filter,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -30,7 +30,6 @@ const AccountManagement = () => {
   const [accounts, setAccounts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchText, setSearchText] = useState("");
-  // --- THÊM STATE CHO FILTER ---
   const [filterRole, setFilterRole] = useState("All");
   const [filterStatus, setFilterStatus] = useState("Active");
 
@@ -65,26 +64,28 @@ const AccountManagement = () => {
     }
   };
 
-  const renderRoleTag = (roleName) => {
-    if (!roleName)
+  // --- CHỈ THAY ĐỔI LOGIC RENDER ROLE TẠI ĐÂY ---
+  const renderRoleTag = (roleId) => {
+    const roles = {
+      1: { name: "System Admin", color: "red" },
+      2: { name: "Company Admin", color: "purple" },
+      3: { name: "Manager", color: "blue" },
+      4: { name: "Staff", color: "green" },
+    };
+
+    const role = roles[roleId];
+
+    if (!role)
       return (
         <Tag className="!rounded-full !px-4 !border-none !font-bold">N/A</Tag>
       );
-    let displayName = roleName === "Company Administrator" ? "Admin" : roleName;
-    displayName =
-      displayName.charAt(0).toUpperCase() + displayName.slice(1).toLowerCase();
-
-    let color = "default";
-    if (displayName === "Admin") color = "purple";
-    if (displayName === "Manager") color = "blue";
-    if (displayName === "Staff") color = "green";
 
     return (
       <Tag
-        color={color}
+        color={role.color}
         className="!rounded-full !px-4 !border-none !font-bold !text-[11px]"
       >
-        {displayName}
+        {role.name}
       </Tag>
     );
   };
@@ -118,9 +119,9 @@ const AccountManagement = () => {
     },
     {
       title: "Role",
-      dataIndex: ["role", "name"],
+      dataIndex: "roleId", // Thay đổi dataIndex để lấy roleId trực tiếp
       key: "role",
-      render: (roleName) => renderRoleTag(roleName),
+      render: (roleId) => renderRoleTag(roleId),
     },
     {
       title: "Status",
@@ -142,10 +143,10 @@ const AccountManagement = () => {
       width: 190,
       render: (_, record) => {
         const isActive = record.status === "Active";
-        const isAdmin = record.role?.name === "Company Administrator";
+        const isSystemAdmin = record.roleId === 1; // Kiểm tra roleId thay vì role name
         return (
           <Space size="middle">
-            {!isAdmin ? (
+            {!isSystemAdmin ? (
               <div>
                 {isActive ? (
                   <Tooltip title="Ban Account">
@@ -205,13 +206,13 @@ const AccountManagement = () => {
     },
   ];
 
-  // --- CẬP NHẬT LOGIC FILTER ---
   const filteredData = accounts.filter((a) => {
     const matchesSearch =
       a.fullName?.toLowerCase().includes(searchText.toLowerCase()) ||
       a.email?.toLowerCase().includes(searchText.toLowerCase());
 
-    const matchesRole = filterRole === "All" || a.role?.name === filterRole;
+    // Cập nhật logic lọc theo ID dạng string từ Select
+    const matchesRole = filterRole === "All" || String(a.roleId) === filterRole;
     const matchesStatus = filterStatus === "All" || a.status === filterStatus;
 
     return matchesSearch && matchesRole && matchesStatus;
@@ -252,7 +253,6 @@ const AccountManagement = () => {
           </Space>
         </div>
 
-        {/* --- KHU VỰC BỘ LỌC (SEARCH + ROLE + STATUS) --- */}
         <div className="flex flex-col md:flex-row gap-4 mb-6">
           <div className="flex-1">
             <Input
@@ -266,10 +266,7 @@ const AccountManagement = () => {
           <div className="flex gap-4">
             <Select
               defaultValue="All"
-              // Mặc định: !border-slate-200
-              // Khi hover: hover:!border-[#39c6c6]
-              // Khi focus/chọn: focus-within:!border-[#39c6c6]
-              className="!w-48 !h-12 !pl-5 !rounded-full !border !border-slate-300 hover:!border-[#39c6c6] focus-within:!border-[#39c6c6] overflow-hidden transition-all"
+              className="!w-48 !h-12 !pl-5 !rounded-full !border !border-slate-300 hover:!border-[#39C6C6] focus-within:!border-[#39C6C6] overflow-hidden transition-all"
               onChange={(value) => setFilterRole(value)}
               suffixIcon={
                 <Filter
@@ -279,17 +276,19 @@ const AccountManagement = () => {
               }
             >
               <Option value="All">All Roles</Option>
-              <Option value="Company Administrator">Admin</Option>
-              <Option value="Manager">Manager</Option>
-              <Option value="Staff">Staff</Option>
+              {/* Thay đổi Option value thành ID tương ứng */}
+              <Option value="1">System Admin</Option>
+              <Option value="2">Company Admin</Option>
+              <Option value="3">Manager</Option>
+              <Option value="4">Staff</Option>
             </Select>
 
             <Select
               defaultValue="All"
-              className="!w-40 !h-12 !pl-5 !rounded-full !border !border-slate-300 hover:!border-[#39c6c6] focus-within:!border-[#39c6c6] overflow-hidden transition-all"
+              className="!w-40 !h-12 !pl-5 !rounded-full !border !border-slate-300 hover:!border-[#39C6C6] focus-within:!border-[#39C6C6] overflow-hidden transition-all"
               onChange={(value) => setFilterStatus(value)}
             >
-              {/* <Option value="All">All Status</Option> */}
+              <Option value="All">All Status</Option>
               <Option value="Active">Active</Option>
               <Option value="Inactive">Inactive</Option>
             </Select>
@@ -309,7 +308,8 @@ const AccountManagement = () => {
               onClick: (event) => {
                 if (
                   event.target.closest("button") ||
-                  event.target.closest(".ant-popover")
+                  event.target.closest(".ant-popover") ||
+                  event.target.closest(".ant-popconfirm")
                 )
                   return;
                 navigate(`details/${record.id}`);
@@ -343,7 +343,6 @@ const AccountManagement = () => {
         .ant-pagination-item-active a {
           color: #39c6c6 !important;
         }
-        /* Custom style cho Select antd cho đồng bộ với giao diện hiện tại */
         .ant-select-selector {
           border-radius: 9999px !important;
           height: 48px !important;
