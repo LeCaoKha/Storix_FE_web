@@ -13,12 +13,12 @@ const AuthPage = () => {
   const roleId = localStorage.getItem("roleId");
 
   useEffect(() => {
+    // Chỉ điều hướng NẾU đã đăng nhập rồi (có token và role)
     if (token && roleId) {
       authorizeRole(roleId, navigate);
-    } else if (!token) {
-      navigate("/auth");
     }
-  }, []);
+    // KHÔNG viết thêm "else if (!token) navigate('/auth')" ở đây nữa.
+  }, [token, roleId, navigate]);
 
   // ===== SOURCE OF TRUTH =====
   const status = searchParams.get("mode") === "signUp" ? "signUp" : "signIn";

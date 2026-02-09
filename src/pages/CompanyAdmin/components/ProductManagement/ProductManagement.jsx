@@ -253,7 +253,7 @@ const ProductManagement = () => {
             loading={loading}
             rowKey="id"
             pagination={{
-              pageSize: 8,
+              pageSize: 4,
               className: "px-6",
             }}
             scroll={{ x: 1100 }}
