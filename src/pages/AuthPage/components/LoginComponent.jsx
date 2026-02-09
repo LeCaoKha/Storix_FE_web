@@ -23,16 +23,16 @@ const LoginComponent = ({ form, handleChange }) => {
       });
 
       message.success("Login successful!");
-      console.log("Login Success:", response.data);
 
-      const roleId = response.data.roleId;
-      const token = response.data.token;
-      const companyId = response.data.companyId;
-      const userId = response.data.userId;
+      // Destructure the JSON response you received
+      const { accessToken, refreshToken, companyId, roleId, userId } =
+        response.data;
 
-      localStorage.setItem("token", token);
-      localStorage.setItem("roleId", roleId);
+      // Save everything to localStorage for global use
+      localStorage.setItem("accessToken", accessToken);
+      localStorage.setItem("refreshToken", refreshToken);
       localStorage.setItem("companyId", companyId);
+      localStorage.setItem("roleId", roleId);
       localStorage.setItem("userId", userId);
 
       authorizeRole(roleId, navigate);

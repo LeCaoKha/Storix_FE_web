@@ -237,7 +237,7 @@ const ProductManagement = () => {
           <Input
             placeholder="Quick search by product name or SKU code..."
             prefix={<Search size={20} className="text-slate-300 mr-3" />}
-            className="!mb-5 !h-12 !bg-slate-50 !rounded-full !text-base !transition-all
+            className="!mb-5 !bg-white !h-12 !bg-slate-50 !rounded-full !text-base !transition-all
                hover:!border-[#39C6C6] 
                focus-within:!border-[#39C6C6] 
                focus-within:!shadow-[0_0_0_2px_rgba(57,198,198,0.2)]"
@@ -253,11 +253,26 @@ const ProductManagement = () => {
             loading={loading}
             rowKey="id"
             pagination={{
-              pageSize: 8,
+              pageSize: 4,
               className: "px-6",
             }}
             scroll={{ x: 1100 }}
             className="storix-custom-table"
+            // --- THÊM ĐOẠN NÀY ---
+            onRow={(record) => ({
+              onClick: (event) => {
+                // Kiểm tra nếu click vào button hoặc các phần tử trong Popconfirm
+                // thì không thực hiện chuyển hướng trang details
+                if (
+                  event.target.closest("button") ||
+                  event.target.closest(".ant-popover")
+                ) {
+                  return;
+                }
+                navigate(`details/${record.id}`);
+              },
+            })}
+            // ----------------------
           />
         </div>
       </section>
@@ -276,7 +291,6 @@ const ProductManagement = () => {
           padding-bottom: 15px !important;
         }
         .storix-custom-table .ant-table-tbody > tr > td {
-          padding: 10px 20px 10px 20px !important;
           border-bottom: 1px solid #dbe5f0 !important;
         }
         .storix-custom-table .ant-table-row:hover > td {

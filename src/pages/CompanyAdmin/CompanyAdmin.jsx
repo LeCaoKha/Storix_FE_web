@@ -20,7 +20,7 @@ const CompanyAdminApp = () => {
 
   // 3. Kiểm tra quyền truy cập
   useEffect(() => {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("accessToken");
     const roleId = localStorage.getItem("roleId");
     if (!roleId || !token) {
       navigate("/auth");
@@ -48,7 +48,7 @@ const CompanyAdminApp = () => {
         {/* Nội dung chính điều chỉnh ml-64 hoặc ml-20 */}
         <main
           className={`!flex-1 !transition-all !duration-300 ${
-            isCollapsed ? "!ml-20" : "!ml-64"
+            isCollapsed ? "!ml-20" : "!ml-60"
           } !pt-15`}
         >
           <div className="">

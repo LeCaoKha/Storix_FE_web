@@ -20,6 +20,13 @@ import Profile from "../pages/Profile/Profile";
 import CreateProduct from "../pages/CompanyAdmin/components/ProductManagement/components/CreateProduct/CreateProduct";
 import EditProduct from "../pages/CompanyAdmin/components/ProductManagement/components/EditProduct/EditProduct";
 import EditProfile from "../pages/Profile/components/EditProfile";
+import AccountDetails from "../pages/CompanyAdmin/components/AccountManagement/components/AccountDetails/AccountDetails";
+import CreateAccount from "../pages/CompanyAdmin/components/AccountManagement/components/CreateAccount/CreateAccount";
+import SupplierManagement from "../pages/CompanyAdmin/components/SupplierManagement/SupplierManagement";
+import InboundRequestManagement from "../pages/CompanyAdmin/components/InboundRequestManagement/InboundRequestManagement";
+import InboundRequestDetails from "../pages/CompanyAdmin/components/InboundRequestManagement/components/InboundRequestDetails/InboundRequestDetails";
+import InboundRequestCreate from "../pages/CompanyAdmin/components/InboundRequestManagement/components/InboundRequestCreate/InboundRequestCreate";
+import ProductDetails from "../pages/CompanyAdmin/components/ProductManagement/components/ProductDetails/ProductDetails";
 
 const router = createBrowserRouter([
   {
@@ -38,17 +45,41 @@ const router = createBrowserRouter([
     path: "/company-admin",
     element: <CompanyAdmin />,
     children: [
-      { path: "inbound-management", element: <InboundManagement /> },
       { path: "dashboard", element: <Dashboard /> },
       { path: "outbound-management", element: <OutboundManagement /> },
 
       // PRODUCT MANAGEMENT
       { path: "product-management", element: <ProductManagement /> },
+      { path: "product-management/details/:id", element: <ProductDetails /> },
       { path: "product-management/create", element: <CreateProduct /> },
       { path: "product-management/edit/:id", element: <EditProduct /> },
 
       { path: "report-management", element: <ReportManagement /> },
+
+      // ACCOUNT MANAGEMENT
       { path: "account-management", element: <AccountManagement /> },
+      { path: "account-management/create", element: <CreateAccount /> },
+      {
+        path: "account-management/details/:id",
+        element: <AccountDetails />,
+      },
+
+      // INBOUND REQUEST MANAGEMENT
+      {
+        path: "inbound-request-management",
+        element: <InboundRequestManagement />,
+      },
+      {
+        path: "inbound-request-management/details/:id",
+        element: <InboundRequestDetails />,
+      },
+      {
+        path: "inbound-request-management/create",
+        element: <InboundRequestCreate />,
+      },
+
+      { path: "supplier-management", element: <SupplierManagement /> },
+
       { path: "warehouse-management", element: <WarehouseManagement /> },
 
       // PROFILE MANAGEMENT
