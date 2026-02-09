@@ -127,7 +127,7 @@ const InboundSidebar = ({ onDataChange, summary }) => {
         await fetchSidebarData();
       }
     } catch (error) {
-      message.error("Failed to add supplier");
+      message.error("Failed to add supplier !");
     } finally {
       setSupplierSubmitting(false);
     }
