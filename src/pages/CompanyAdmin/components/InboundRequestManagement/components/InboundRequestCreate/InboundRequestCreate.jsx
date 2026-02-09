@@ -206,7 +206,7 @@ const InboundRequestCreate = () => {
     const items = selectedProducts.map((p) => ({
       productId: p.id,
       expectedQuantity: p.quantity || 0,
-      price: p.price || 0,
+      price: p.originalPrice || 0,
       lineDiscount: p.lineDiscount || 0,
     }));
 
@@ -234,6 +234,8 @@ const InboundRequestCreate = () => {
         expectedArrivalDate: inboundData.expectedDate || null,
         orderDiscount: orderDiscount || 0,
       };
+
+      console.log("payload: ", payload);
 
       const res = await api.post(
         "/InventoryInbound/create-inbound-request",
@@ -277,6 +279,9 @@ const InboundRequestCreate = () => {
             onUpdateQuantity={handleUpdateQuantity}
             onUpdatePrice={handleUpdatePrice}
             // Truyền summary để hiển thị card thanh toán bên dưới danh sách SP
+            onDiscountChange={(value) =>
+              handleSidebarChange("orderDiscount", value)
+            }
             paymentSummary={paymentSummary}
           />
         </div>

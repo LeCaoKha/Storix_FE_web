@@ -32,6 +32,7 @@ const ProductSearchSection = ({
   onRemoveProduct,
   onUpdateQuantity,
   onUpdatePrice,
+  onDiscountChange,
 }) => {
   const [isPriceModalOpen, setIsPriceModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
@@ -456,6 +457,10 @@ const ProductSearchSection = ({
             key="submit"
             type="primary"
             onClick={() => {
+              // Gửi giá trị về component cha (InboundRequestCreate)
+              if (onDiscountChange) {
+                onDiscountChange(orderDiscountPercent);
+              }
               setIsOrderDiscountModalOpen(false);
               message.success(
                 `Order discount of ${orderDiscountPercent}% applied`,
