@@ -1,54 +1,67 @@
-import { Button } from "antd";
-import {
-  ArrowLeftOutlined,
-  CheckCircleOutlined,
-  CloseOutlined,
-  FileTextOutlined,
-} from "@ant-design/icons";
+import React from "react";
+import { Button, Space, Typography, Tag } from "antd";
+import { ArrowLeft, CheckCircle2, FileText, X } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
-const DetailsHeader = ({ data }) => (
-  <div className="flex justify-between items-center">
-    <div className="flex items-center gap-4">
-      <Button
-        type="text"
-        icon={<ArrowLeftOutlined className="text-xl" />}
-        onClick={() => window.history.back()}
-      />
-      <div>
-        <h1 className="text-2xl font-bold text-[#1a3353] m-0">
-          Inbound Request: {data?.code}
-        </h1>
-        <p className="text-gray-400 font-semibold text-xs tracking-widest uppercase m-0">
-          Inbound Management
-        </p>
-      </div>
-    </div>
+const { Title, Text } = Typography;
 
-    <div className="flex items-center gap-3">
-      <Button
-        icon={<CloseOutlined />}
-        type="text"
-        className="text-gray-500 font-semibold"
-      >
-        Cancel
-      </Button>
-      <Button
-        icon={<FileTextOutlined />}
-        className="rounded-lg h-10 px-6 font-semibold"
-      >
-        Export PDF
-      </Button>
-      {data?.status === "Pending" && (
+const DetailsHeader = ({ data, onApprove, isApproving, onExportPDF }) => {
+  const navigate = useNavigate();
+
+  return (
+    <div className="flex justify-between items-center mb-10">
+      <div className="flex items-center gap-4">
+        {/* Nút quay lại dạng Icon Circle */}
         <Button
-          type="primary"
-          icon={<CheckCircleOutlined />}
-          className="bg-[#4fd1c5] border-none rounded-lg h-10 px-6 font-semibold hover:!bg-[#38b2ac]"
+          type="text"
+          icon={<ArrowLeft size={24} />}
+          onClick={() => navigate(-1)}
+          className="!flex !items-center !justify-center !h-12 !w-12 !rounded-full hover:!bg-white hover:!shadow-md transition-all text-slate-600"
+        />
+        <div>
+          <div className="flex items-center gap-3">
+            <Title
+              level={2}
+              className="!mb-0 !font-extrabold !tracking-tight !text-slate-800"
+            >
+              Inbound Request: {data?.code || "N/A"}
+            </Title>
+            {/* Hiển thị Tag trạng thái để phân biệt nhanh */}
+            <Tag
+              color={data?.status === "Approved" ? "green" : "orange"}
+              className="!rounded-full !text-lg !px-3 !border-none !font-bold !m-0"
+            >
+              {data?.status?.toUpperCase()}
+            </Tag>
+          </div>
+        </div>
+      </div>
+
+      <Space size="middle">
+        {/* Nút Export PDF - Style Action phụ */}
+        <Button
+          icon={<FileText size={18} />}
+          onClick={onExportPDF} // Gắn hàm xử lý in
+          className="!flex !items-center !gap-2 !h-11 !px-6 !font-bold !text-slate-600 !bg-white !border-slate-200 !rounded-xl shadow-sm hover:!border-[#39c6c6] hover:!text-[#39c6c6] transition-all"
         >
-          Approve Request
+          Export PDF
         </Button>
-      )}
+
+        {/* Nút Approve Request - Chỉ hiện khi đơn hàng chưa được duyệt */}
+        {data?.status === "Pending" && (
+          <Button
+            type="primary"
+            icon={<CheckCircle2 size={18} />}
+            onClick={onApprove}
+            loading={isApproving}
+            className="!flex !items-center !gap-2 !h-11 !px-6 !font-bold !bg-[#39c6c6] hover:!bg-[#2eb1b1] !border-none !rounded-xl shadow-lg shadow-[#39c6c6]/20 transition-all"
+          >
+            Approve Request
+          </Button>
+        )}
+      </Space>
     </div>
-  </div>
-);
+  );
+};
 
 export default DetailsHeader;

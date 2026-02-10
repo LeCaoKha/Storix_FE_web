@@ -1,15 +1,18 @@
-import { FileTextOutlined } from "@ant-design/icons";
 import React from "react";
+import { Card, Typography } from "antd";
+import { StickyNote } from "lucide-react";
+
+const { Text } = Typography;
 
 const DetailsNotes = ({ note }) => (
-  <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-    <div className="flex items-center gap-2 mb-4 text-[#1a3353] font-bold uppercase text-xs tracking-wider">
-      <FileTextOutlined className="text-[#4fd1c5]" /> Internal Notes
-    </div>
-    <div className="p-4 bg-gray-50 rounded-xl text-gray-500 min-h-[120px]">
+  <Card className="!rounded-2xl !shadow-sm !border-slate-100">
+    <Text className="block !font-bold !text-slate-700 mb-3 uppercase text-[10px] tracking-widest flex items-center gap-2">
+      <StickyNote size={14} className="text-[#38c6c6]" /> Internal Notes
+    </Text>
+    <div className="!rounded-xl !bg-slate-50 !border-none !p-4 transition-all min-h-[120px] text-slate-500">
       {note || "No instructions provided."}
     </div>
-  </div>
+  </Card>
 );
 
 export default DetailsNotes;

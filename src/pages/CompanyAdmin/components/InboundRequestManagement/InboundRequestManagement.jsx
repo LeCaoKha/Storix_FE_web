@@ -60,7 +60,7 @@ const InboundManagement = () => {
       title: "Code",
       dataIndex: "code",
       key: "code",
-      width: 100,
+      width: 130,
       fixed: "left",
       render: (record) => <span className="font-medium">{record}</span>,
     },
@@ -174,7 +174,7 @@ const InboundManagement = () => {
   });
 
   return (
-    <div className="bg-slate-50 text-slate-900 min-h-screen">
+    <div className="bg-slate-50 text-slate-900">
       <section className="md:px-16 lg:px-12 pt-7 pb-10">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-8">
           <div>
@@ -240,7 +240,7 @@ const InboundManagement = () => {
             dataSource={filteredData}
             loading={loading}
             rowKey="id"
-            pagination={{ pageSize: 8, className: "px-6" }}
+            pagination={{ pageSize: 4, className: "px-6" }}
             scroll={{ x: 1100 }}
             className="inbound-custom-table"
             onRow={(record) => ({
