@@ -106,7 +106,7 @@ const ProductSearchSection = ({
       <Card
         title={
           <Space className="!text-slate-700 !uppercase !text-xs !tracking-wider !font-bold !py-2">
-            <Search size={16} /> Product Information
+            <Search size={16} className="text-[#38c6c6]" /> Product Information
           </Space>
         }
         className="!rounded-2xl !shadow-sm !border-slate-100 !overflow-visible"

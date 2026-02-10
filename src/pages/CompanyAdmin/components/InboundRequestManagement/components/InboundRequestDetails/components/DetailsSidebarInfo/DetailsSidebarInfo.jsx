@@ -1,41 +1,62 @@
-import {
-  ShoppingOutlined,
-  HomeOutlined,
-  CalendarOutlined,
-} from "@ant-design/icons";
+import React from "react";
+import { Card, Typography, Avatar } from "antd";
+import { Truck, Warehouse, Calendar, User } from "lucide-react";
 
-const DetailsSidebarInfo = ({ data }) => (
-  <div className="flex flex-col gap-6">
-    {/* Supplier Card */}
-    <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-      <div className="flex items-center gap-2 mb-4 text-[#1a3353] font-bold uppercase text-xs tracking-wider">
-        <ShoppingOutlined className="text-[#4fd1c5]" /> Supplier
+const { Text } = Typography;
+
+const DetailsSidebarInfo = ({ data }) => {
+  return (
+    <div className="space-y-6">
+      {/* SECTION: SOURCE & DESTINATION */}
+      <div>
+        <Card className="!rounded-2xl !shadow-sm !border-slate-100 !overflow-visible">
+          <div className="space-y-6">
+            {/* Supplier Information */}
+            <div>
+              <Text className="block !font-bold !text-slate-700 mb-2 uppercase text-[10px] tracking-widest flex items-center gap-2">
+                <Truck size={14} className="text-[#38c6c6]" /> Supplier
+              </Text>
+              <div className="!h-12 !flex !items-center !px-4 !rounded-xl !bg-slate-50 !border-none !font-medium !text-slate-700">
+                <Avatar
+                  size="small"
+                  icon={<User size={14} />}
+                  className="!bg-slate-100 !text-slate-400 !mr-3"
+                />
+                <Text className="!font-medium !text-slate-700">
+                  {data?.supplier?.name || "N/A"}
+                </Text>
+              </div>
+            </div>
+
+            {/* Destination Warehouse */}
+            <div>
+              <Text className="block !font-bold !text-slate-700 mb-2 uppercase text-[10px] tracking-widest flex items-center gap-2">
+                <Warehouse size={14} className="text-[#38c6c6]" /> Destination
+              </Text>
+              <div className="!h-12 !flex !items-center !px-4 !rounded-xl !bg-slate-100 !border-none !font-medium !text-slate-400">
+                <Warehouse size={18} className="text-slate-400 mr-3" />
+                {data?.warehouse?.name || "My warehouse"}
+              </div>
+            </div>
+          </div>
+        </Card>
       </div>
-      <div className="p-3 bg-gray-50 rounded-lg text-gray-600 font-medium">
-        {data?.supplier?.name}
+
+      {/* SECTION: EXPECTED DELIVERY DATE */}
+      <div>
+        <Card className="!rounded-2xl !shadow-sm !border-slate-100">
+          <Text className="block !font-bold !text-slate-700 mb-3 uppercase text-[10px] tracking-widest flex items-center gap-2">
+            <Calendar size={14} className="text-[#38c6c6]" /> Expected Delivery
+            Date
+          </Text>
+          <div className="!h-12 !flex !items-center !px-4 !rounded-xl !bg-slate-50 !border-none !font-medium !text-slate-700">
+            <Calendar size={18} className="text-slate-300 mr-3" />
+            {data?.expectedArrivalDate || "YYYY-MM-DD"}
+          </div>
+        </Card>
       </div>
     </div>
-
-    {/* Destination Card */}
-    <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-      <div className="flex items-center gap-2 mb-4 text-[#1a3353] font-bold uppercase text-xs tracking-wider">
-        <HomeOutlined className="text-[#4fd1c5]" /> Destination
-      </div>
-      <div className="p-3 bg-gray-50 rounded-lg text-gray-600 font-medium">
-        {data?.warehouse?.name}
-      </div>
-    </div>
-
-    {/* Date Card */}
-    <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-      <div className="flex items-center gap-2 mb-4 text-[#1a3353] font-bold uppercase text-xs tracking-wider">
-        <CalendarOutlined className="text-[#4fd1c5]" /> Expected Delivery Date
-      </div>
-      <div className="p-3 bg-gray-50 rounded-lg text-gray-600 font-medium italic">
-        {data?.expectedArrivalDate}
-      </div>
-    </div>
-  </div>
-);
+  );
+};
 
 export default DetailsSidebarInfo;

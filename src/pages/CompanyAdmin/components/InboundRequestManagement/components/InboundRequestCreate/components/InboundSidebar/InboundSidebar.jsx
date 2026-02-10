@@ -205,14 +205,16 @@ const InboundSidebar = ({ onDataChange, summary }) => {
                 <Text className="block !font-bold !text-slate-700 mb-2 uppercase text-[10px] tracking-widest flex items-center gap-2">
                   <Warehouse size={14} className="text-[#38c6c6]" /> Destination
                 </Text>
-                <Input
-                  value="My warehouse"
-                  disabled
-                  className="!h-12 !rounded-xl !bg-slate-100 !border-none !font-medium"
-                  prefix={
-                    <Warehouse size={18} className="text-slate-400 mr-1" />
-                  }
-                />
+                <div>
+                  <Input
+                    value="My warehouse"
+                    disabled
+                    className="!h-12 !rounded-xl !text-slate-400 !bg-slate-100 !border-none !font-medium"
+                    prefix={
+                      <Warehouse size={18} className="text-slate-400 mr-1" />
+                    }
+                  />
+                </div>
               </div>
             </div>
           </Skeleton>

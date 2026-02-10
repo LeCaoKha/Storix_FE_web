@@ -23,9 +23,6 @@ const InboundHeader = ({ onCreate, loading }) => {
           >
             Create Inbound Request
           </Title>
-          <Text className="text-slate-400 text-[11px] font-bold uppercase tracking-[0.15em]">
-            Inbound Management
-          </Text>
         </div>
       </div>
       <Space size="middle">
@@ -34,7 +31,7 @@ const InboundHeader = ({ onCreate, loading }) => {
           icon={<X size={18} />}
           onClick={() => navigate(-1)}
           disabled={loading}
-          className="!flex !items-center !gap-2 !h-11 !px-5 !font-bold !text-slate-500 hover:!text-rose-500 hover:!bg-rose-50 !rounded-xl transition-all"
+          className="!flex !items-center !gap-2 !h-11 !px-5 !font-bold !bg-rose-500 !text-white !text-slate-500 hover:!text-white hover:!bg-rose-600 !rounded-xl transition-all"
         >
           Cancel
         </Button>
