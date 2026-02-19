@@ -10,7 +10,8 @@ import ContactPage from "../pages/Contact/Contact";
 import CompanyAdmin from "../pages/CompanyAdmin/CompanyAdmin";
 import AccountManagement from "../pages/CompanyAdmin/components/AccountManagement/AccountManagement";
 import Dashboard from "../pages/CompanyAdmin/components/Dashboard/Dashboard";
-import InboundManagement from "../pages/CompanyAdmin/components/InboundManagement/InboundManagement";
+import InboundTicketManagement from "../pages/CompanyAdmin/components/InboundTicketManagement/InboundTicketManagement";
+import InboundTicketCreate from "../pages/CompanyAdmin/components/InboundTicketManagement/components/InboundTicketCreate/InboundTicketCreate";
 import OutboundManagement from "../pages/CompanyAdmin/components/OutboundManagement/OutboundManagement";
 import ProductManagement from "../pages/CompanyAdmin/components/ProductManagement/ProductManagement";
 import ReportManagement from "../pages/CompanyAdmin/components/ReportManagement/ReportManagement";
@@ -46,16 +47,15 @@ const router = createBrowserRouter([
     element: <CompanyAdmin />,
     children: [
       { path: "dashboard", element: <Dashboard /> },
+      // OUTBOUND MANAGEMENT
       { path: "outbound-management", element: <OutboundManagement /> },
-
       // PRODUCT MANAGEMENT
       { path: "product-management", element: <ProductManagement /> },
       { path: "product-management/details/:id", element: <ProductDetails /> },
       { path: "product-management/create", element: <CreateProduct /> },
       { path: "product-management/edit/:id", element: <EditProduct /> },
-
+      // REPORT MANAGEMENT
       { path: "report-management", element: <ReportManagement /> },
-
       // ACCOUNT MANAGEMENT
       { path: "account-management", element: <AccountManagement /> },
       { path: "account-management/create", element: <CreateAccount /> },
@@ -63,7 +63,6 @@ const router = createBrowserRouter([
         path: "account-management/details/:id",
         element: <AccountDetails />,
       },
-
       // INBOUND REQUEST MANAGEMENT
       {
         path: "inbound-request-management",
@@ -77,11 +76,19 @@ const router = createBrowserRouter([
         path: "inbound-request-management/create",
         element: <InboundRequestCreate />,
       },
-
+      // INBOUND TICKET MANAGEMENT
+      {
+        path: "inbound-ticket-management",
+        element: <InboundTicketManagement />,
+      },
+      {
+        path: "inbound-ticket-management/create/:id",
+        element: <InboundTicketCreate />,
+      },
+      // SUPPLIER MANAGEMENT
       { path: "supplier-management", element: <SupplierManagement /> },
-
+      // WAREHOUSE MANAGEMENT
       { path: "warehouse-management", element: <WarehouseManagement /> },
-
       // PROFILE MANAGEMENT
       { path: "profile/:id", element: <Profile /> },
       { path: "profile/:id/edit", element: <EditProfile /> },

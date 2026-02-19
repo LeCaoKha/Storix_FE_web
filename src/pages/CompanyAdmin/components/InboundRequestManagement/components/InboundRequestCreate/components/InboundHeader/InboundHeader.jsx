@@ -39,7 +39,7 @@ const InboundHeader = ({ onCreate, loading }) => {
         {/* Nút Create PO: Kích hoạt gọi API */}
         <Button
           icon={<Save size={18} />}
-          onClick={onCreate}
+          onClick={() => onCreate(false)}
           loading={loading}
           className="!flex !items-center !gap-2 !h-11 !px-6 !font-bold !text-slate-600 !bg-white !border-slate-200 !rounded-xl shadow-sm hover:!border-[#39c6c6] hover:!text-[#39c6c6]"
         >
@@ -50,7 +50,7 @@ const InboundHeader = ({ onCreate, loading }) => {
         <Button
           type="primary"
           icon={<CheckCircle2 size={18} />}
-          onClick={onCreate}
+          onClick={() => onCreate(true)}
           loading={loading}
           className="!flex !items-center !gap-2 !h-11 !px-6 !font-bold !bg-[#39c6c6] hover:!bg-[#2eb1b1] !border-none !rounded-xl shadow-lg shadow-[#39c6c6]/20"
         >
