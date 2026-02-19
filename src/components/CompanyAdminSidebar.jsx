@@ -9,7 +9,7 @@ import {
   FileText,
   Warehouse,
   Menu,
-  Truck, // Thêm icon Supplier
+  Truck,
 } from "lucide-react";
 import { Tooltip } from "antd";
 import chooseImage from "../assets/images";
@@ -100,7 +100,6 @@ const CompanyAdminSidebar = ({ isCollapsed, setIsCollapsed }) => {
           label="Warehouse"
           isCollapsed={isCollapsed}
         />
-        {/* TAB SUPPLIER MỚI ĐƯỢC THÊM TẠI ĐÂY */}
         <SidebarItem
           to="supplier-management"
           icon={<Truck size={20} />}
@@ -120,6 +119,15 @@ const CompanyAdminSidebar = ({ isCollapsed, setIsCollapsed }) => {
             label="Inbound Request"
             isCollapsed={isCollapsed}
           />
+
+          {/* DÒNG INBOUND TICKET MỚI */}
+          <SidebarItem
+            to="inbound-ticket-management"
+            icon={<FileText size={20} />}
+            label="Inbound Ticket"
+            isCollapsed={isCollapsed}
+          />
+
           <SidebarItem
             to="outbound-management"
             icon={<ArrowUpCircle size={20} />}

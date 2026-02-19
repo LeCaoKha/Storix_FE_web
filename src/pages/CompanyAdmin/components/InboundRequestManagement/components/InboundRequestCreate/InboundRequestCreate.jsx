@@ -198,10 +198,10 @@ const InboundRequestCreate = () => {
     }
   };
 
-  const handleCreateInboundRequest = async () => {
-    // 1. KIỂM TRA CÁC TRƯỜNG BẮT BUỘC
+  const handleCreateInboundRequest = async (shouldApprove = false) => {
+    // 1. Kiểm tra các trường bắt buộc
     const supplierId = inboundData.supplierId;
-    const warehouseId = inboundData.warehouseId || 1; // Mặc định là 1 (My warehouse)
+    const warehouseId = inboundData.warehouseId || 1;
     const reqBy = Number(userId);
     const items = selectedProducts.map((p) => ({
       productId: p.id,
@@ -210,41 +210,61 @@ const InboundRequestCreate = () => {
       lineDiscount: p.lineDiscount || 0,
     }));
 
-    if (!supplierId)
-      return message.warning("Please select a supplier (Required)");
-    if (!warehouseId)
-      return message.warning("Warehouse information is missing (Required)");
-    if (!reqBy)
-      return message.warning(
-        "User information is missing. Please re-login (Required)",
-      );
+    if (!supplierId) return message.warning("Please select a supplier");
     if (items.length === 0)
-      return message.warning("Please add at least one product (Required)");
+      return message.warning("Please add at least one product");
 
     setIsSubmitting(true);
     try {
-      // 2. TỔNG HỢP PAYLOAD (Gồm cả trường bắt buộc và tùy chọn)
-      const payload = {
+      // 2. Payload để tạo mới PO
+      const createPayload = {
         warehouseId: warehouseId,
         supplierId: supplierId,
         requestedBy: reqBy,
         items: items,
-        // Các trường tùy chọn
         note: inboundData.notes || "",
         expectedArrivalDate: inboundData.expectedDate || null,
         orderDiscount: orderDiscount || 0,
       };
 
-      console.log("payload: ", payload);
-
+      // Bước 1: Gọi API tạo Request
       const res = await api.post(
         "/InventoryInbound/create-inbound-request",
-        payload,
+        createPayload,
       );
 
       if (res.status === 200 || res.status === 201) {
-        message.success("Inbound request created successfully!");
-        navigate(-1); // Quay lại trang trước đó
+        // Lấy ID từ response (thường là res.data.id hoặc res.data tùy backend)
+        const newId = res.data?.id || res.data;
+
+        // Bước 2: Nếu người dùng chọn "Create & Approve"
+        if (shouldApprove && newId) {
+          try {
+            const approvePayload = {
+              approverId: reqBy, // Lấy từ userId trong localStorage đã convert ở trên
+              status: "Approved",
+            };
+
+            await api.put(
+              `/InventoryInbound/update-inbound-request/${newId}/status`,
+              approvePayload,
+            );
+
+            message.success(
+              "Inbound request created and approved successfully!",
+            );
+          } catch (approveError) {
+            console.error("Approve Error:", approveError);
+            message.warning(
+              "PO created successfully, but failed to auto-approve.",
+            );
+          }
+        } else {
+          message.success("Inbound request created successfully!");
+        }
+
+        // Cuối cùng: Chuyển hướng về trang danh sách
+        navigate(-1);
       }
     } catch (error) {
       console.error("Submission Error:", error.response);
@@ -255,7 +275,6 @@ const InboundRequestCreate = () => {
       setIsSubmitting(false);
     }
   };
-
   return (
     <div className="pt-7 px-12 bg-[#F8FAFC] min-h-screen font-sans">
       <InboundHeader
