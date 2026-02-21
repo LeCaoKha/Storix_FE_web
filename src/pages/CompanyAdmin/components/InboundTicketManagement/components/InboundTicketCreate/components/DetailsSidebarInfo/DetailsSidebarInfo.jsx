@@ -1,10 +1,15 @@
 import React from "react";
-import { Card, Typography, Avatar } from "antd";
-import { Truck, Warehouse, Calendar, User } from "lucide-react";
+import { Card, Typography, Avatar, Select } from "antd";
+import { Truck, Warehouse, Calendar, User, Users } from "lucide-react";
 
 const { Text } = Typography;
 
-const DetailsSidebarInfo = ({ data }) => {
+const DetailsSidebarInfo = ({
+  data,
+  users,
+  selectedStaffId,
+  onStaffChange,
+}) => {
   return (
     <div className="space-y-6">
       {/* SECTION: SOURCE & DESTINATION */}
@@ -22,7 +27,7 @@ const DetailsSidebarInfo = ({ data }) => {
                   icon={<User size={14} />}
                   className="!bg-slate-100 !text-slate-400 !mr-3"
                 />
-                <Text className="!font-medium !text-slate-700">
+                <Text className="!font-medium !text-slate-700 truncate">
                   {data?.supplier?.name || "N/A"}
                 </Text>
               </div>
@@ -39,6 +44,43 @@ const DetailsSidebarInfo = ({ data }) => {
               </div>
             </div>
           </div>
+        </Card>
+      </div>
+      {/* SECTION: ASSIGNED STAFF */}
+      <div>
+        <Card className="!rounded-2xl !shadow-sm !border-slate-100">
+          <Text className="block !font-bold !text-slate-700 mb-3 uppercase text-[10px] tracking-widest flex items-center gap-2">
+            <Users size={14} className="text-[#38c6c6]" /> Responsible Staff
+          </Text>
+          <Select
+            placeholder="Select staff member..."
+            className="w-full !h-12"
+            value={selectedStaffId}
+            onChange={onStaffChange}
+            variant="borderless"
+            style={{ backgroundColor: "#f8fafc", borderRadius: "12px" }}
+          >
+            {users.map((user) => (
+              <Select.Option key={user.id} value={user.id}>
+                <div className="flex items-center gap-2">
+                  <Avatar
+                    size="small"
+                    className="!bg-[#38c6c6]/10 !text-[#38c6c6]"
+                  >
+                    {user.fullName.charAt(0).toUpperCase()}
+                  </Avatar>
+                  <div className="flex flex-col">
+                    <span className="font-medium text-slate-700">
+                      {user.fullName}
+                    </span>
+                    <span className="text-[10px] text-slate-400 uppercase tracking-tighter">
+                      {user.roleName}
+                    </span>
+                  </div>
+                </div>
+              </Select.Option>
+            ))}
+          </Select>
         </Card>
       </div>
 

@@ -24,6 +24,8 @@ const InboundManagement = () => {
 
   const navigate = useNavigate();
 
+  console.log("inbound request: ", inboundRequests);
+
   // Lấy companyId từ localStorage
   const companyId = localStorage.getItem("companyId");
 

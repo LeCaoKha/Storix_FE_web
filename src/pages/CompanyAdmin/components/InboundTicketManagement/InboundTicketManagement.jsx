@@ -32,7 +32,6 @@ const InboundTicketManagement = () => {
     }
     setLoading(true);
     try {
-      // API MỚI: Lấy danh sách Tickets
       const response = await api.get(`/InventoryInbound/tickets/${companyId}`);
       setInboundTickets(response.data);
     } catch (error) {
@@ -57,18 +56,18 @@ const InboundTicketManagement = () => {
   const columns = [
     {
       title: "Ticket Code",
-      dataIndex: "referenceCode", // JSON MỚI: referenceCode
+      dataIndex: "referenceCode",
       key: "referenceCode",
-      width: 220,
       fixed: "left",
-      render: (text) => (
-        <span className="font-bold text-[#39C6C6]">{text || "N/A"}</span>
-      ),
+      // whitespace-nowrap giúp cột này tự giãn theo mã code mà không bị xuống dòng
+      className: "whitespace-nowrap font-bold text-[#39C6C6]",
+      render: (text) => text || "N/A",
     },
     {
       title: "Created At",
       dataIndex: "createdAt",
       key: "createdAt",
+      className: "whitespace-nowrap",
       render: (date) => {
         const d = new Date(date);
         return (
@@ -86,6 +85,7 @@ const InboundTicketManagement = () => {
       title: "Warehouse",
       dataIndex: ["warehouse", "name"],
       key: "warehouseName",
+      className: "whitespace-nowrap",
       render: (text) => (
         <span className="font-bold text-slate-800">{text}</span>
       ),
@@ -94,6 +94,8 @@ const InboundTicketManagement = () => {
       title: "Status",
       dataIndex: "status",
       key: "status",
+      align: "center",
+      className: "whitespace-nowrap", // Đảm bảo cột Status không bị bóp méo
       render: (status) => {
         let color = "blue";
         if (status === "Created") color = "cyan";
@@ -101,7 +103,7 @@ const InboundTicketManagement = () => {
         return (
           <Tag
             color={color}
-            className="!rounded-md !px-3 !py-0.5 !font-bold uppercase text-[10px]"
+            className="!rounded-md !px-3 !py-0.5 !font-bold uppercase text-[10px] !m-0"
           >
             {status}
           </Tag>
@@ -112,11 +114,13 @@ const InboundTicketManagement = () => {
       title: "Supplier",
       dataIndex: ["supplier", "name"],
       key: "supplierName",
+      className: "whitespace-nowrap",
     },
     {
       title: "Created By",
-      dataIndex: ["createdByUser", "fullName"], // JSON MỚI: createdByUser
+      dataIndex: ["createdByUser", "fullName"],
       key: "createdBy",
+      className: "whitespace-nowrap",
       render: (text) => (
         <Text className="font-medium text-slate-600">{text}</Text>
       ),
@@ -124,6 +128,8 @@ const InboundTicketManagement = () => {
     {
       title: "Items",
       key: "itemsCount",
+      align: "center",
+      className: "whitespace-nowrap",
       render: (_, record) => (
         <span className="font-bold text-slate-700">
           {record.inboundOrderItems?.reduce(
@@ -137,6 +143,7 @@ const InboundTicketManagement = () => {
       title: "Final Price",
       dataIndex: "finalPrice",
       key: "finalPrice",
+      className: "whitespace-nowrap",
       render: (price) => (
         <span className="text-[#39C6C6] font-black">
           {formatCurrency(price)}
@@ -168,9 +175,6 @@ const InboundTicketManagement = () => {
               Inbound Ticket Management{" "}
               <FileText className="inline-block ml-2 text-[#39C6C6]" />
             </Title>
-            <Text className="text-slate-400">
-              Manage all incoming stock receipts
-            </Text>
           </div>
 
           <Space size="middle">
@@ -198,7 +202,7 @@ const InboundTicketManagement = () => {
           />
           <Select
             defaultValue="All"
-            className="!w-48 !h-12"
+            className="!w-48 !h-12 !pl-5 !rounded-full !border !border-slate-300 hover:!border-[#39C6C6] focus-within:!border-[#39C6C6] overflow-hidden transition-all"
             onChange={(value) => setFilterStatus(value)}
             suffixIcon={<Filter size={16} />}
           >
@@ -215,7 +219,8 @@ const InboundTicketManagement = () => {
             loading={loading}
             rowKey="id"
             pagination={{ pageSize: 5 }}
-            scroll={{ x: 1200 }}
+            // Giải pháp cốt lõi: dùng max-content để các cột tự giãn theo nội dung
+            scroll={{ x: "max-content" }}
             className="inbound-custom-table"
             onRow={(record) => ({
               onClick: () => navigate(`details/${record.id}`),
@@ -228,6 +233,7 @@ const InboundTicketManagement = () => {
         .inbound-custom-table .ant-table-tbody > tr {
           cursor: pointer;
         }
+        /* Giữ cho header không bị xuống dòng và căn giữa nội dung */
         .inbound-custom-table .ant-table-thead > tr > th {
           background: #f4f7fa !important;
           font-weight: 1000 !important;
@@ -235,6 +241,7 @@ const InboundTicketManagement = () => {
           font-size: 11px !important;
           letter-spacing: 0.05em !important;
           padding: 16px !important;
+          white-space: nowrap !important;
         }
         .ant-pagination-item-active {
           border-color: #39c6c6 !important;

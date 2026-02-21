@@ -30,7 +30,7 @@ const ProfilePage = () => {
 
       if (!effectiveUserId) {
         message.error("User ID not found!");
-        navigate("/login");
+        navigate("/auth");
         return;
       }
 
