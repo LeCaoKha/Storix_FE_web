@@ -8,11 +8,11 @@ import AboutPage from "../pages/About/About";
 import ExplorePage from "../pages/Explore/Explore";
 import ContactPage from "../pages/Contact/Contact";
 import CompanyAdmin from "../pages/CompanyAdmin/CompanyAdmin";
+import Manager from "../pages/Manager/Manager";
 import AccountManagement from "../pages/CompanyAdmin/components/AccountManagement/AccountManagement";
 import Dashboard from "../pages/CompanyAdmin/components/Dashboard/Dashboard";
 import InboundTicketManagement from "../pages/CompanyAdmin/components/InboundTicketManagement/InboundTicketManagement";
 import InboundTicketCreate from "../pages/CompanyAdmin/components/InboundTicketManagement/components/InboundTicketCreate/InboundTicketCreate";
-import OutboundManagement from "../pages/CompanyAdmin/components/OutboundManagement/OutboundManagement";
 import ProductManagement from "../pages/CompanyAdmin/components/ProductManagement/ProductManagement";
 import ReportManagement from "../pages/CompanyAdmin/components/ReportManagement/ReportManagement";
 import WarehouseManagement from "../pages/CompanyAdmin/components/WarehouseManagement/WarehouseManagement";
@@ -28,6 +28,9 @@ import InboundRequestManagement from "../pages/CompanyAdmin/components/InboundRe
 import InboundRequestDetails from "../pages/CompanyAdmin/components/InboundRequestManagement/components/InboundRequestDetails/InboundRequestDetails";
 import InboundRequestCreate from "../pages/CompanyAdmin/components/InboundRequestManagement/components/InboundRequestCreate/InboundRequestCreate";
 import ProductDetails from "../pages/CompanyAdmin/components/ProductManagement/components/ProductDetails/ProductDetails";
+import InboundTicketDetails from "../pages/CompanyAdmin/components/InboundTicketManagement/components/InboundTicketDetails/InboundTicketDetails";
+import OutboundRequestManagement from "../pages/Manager/components/OutboundRequestManagement/OutboundRequestManagement";
+import OutboundRequestCreate from "../pages/Manager/components/OutboundRequestManagement/components/OutboundRequestCreate/OutboundRequestCreate";
 
 const router = createBrowserRouter([
   {
@@ -48,7 +51,12 @@ const router = createBrowserRouter([
     children: [
       { path: "dashboard", element: <Dashboard /> },
       // OUTBOUND MANAGEMENT
-      { path: "outbound-management", element: <OutboundManagement /> },
+      { path: "outbound-management", element: <OutboundRequestManagement /> },
+      {
+        path: "outbound-management/create",
+        element: <OutboundRequestCreate />,
+      },
+
       // PRODUCT MANAGEMENT
       { path: "product-management", element: <ProductManagement /> },
       { path: "product-management/details/:id", element: <ProductDetails /> },
@@ -85,6 +93,10 @@ const router = createBrowserRouter([
         path: "inbound-ticket-management/create/:id",
         element: <InboundTicketCreate />,
       },
+      {
+        path: "inbound-ticket-management/details/:id",
+        element: <InboundTicketDetails />,
+      },
       // SUPPLIER MANAGEMENT
       { path: "supplier-management", element: <SupplierManagement /> },
       // WAREHOUSE MANAGEMENT
@@ -94,6 +106,69 @@ const router = createBrowserRouter([
       { path: "profile/:id/edit", element: <EditProfile /> },
     ],
   },
+
+  {
+    path: "/manager",
+    element: <Manager />,
+    children: [
+      { path: "dashboard", element: <Dashboard /> },
+      // OUTBOUND MANAGEMENT
+      { path: "outbound-management", element: <OutboundRequestManagement /> },
+      {
+        path: "outbound-management/create",
+        element: <OutboundRequestCreate />,
+      },
+
+      // PRODUCT MANAGEMENT
+      { path: "product-management", element: <ProductManagement /> },
+      { path: "product-management/details/:id", element: <ProductDetails /> },
+      { path: "product-management/create", element: <CreateProduct /> },
+      { path: "product-management/edit/:id", element: <EditProduct /> },
+      // REPORT MANAGEMENT
+      { path: "report-management", element: <ReportManagement /> },
+      // ACCOUNT MANAGEMENT
+      { path: "account-management", element: <AccountManagement /> },
+      { path: "account-management/create", element: <CreateAccount /> },
+      {
+        path: "account-management/details/:id",
+        element: <AccountDetails />,
+      },
+      // INBOUND REQUEST MANAGEMENT
+      {
+        path: "inbound-request-management",
+        element: <InboundRequestManagement />,
+      },
+      {
+        path: "inbound-request-management/details/:id",
+        element: <InboundRequestDetails />,
+      },
+      {
+        path: "inbound-request-management/create",
+        element: <InboundRequestCreate />,
+      },
+      // INBOUND TICKET MANAGEMENT
+      {
+        path: "inbound-ticket-management",
+        element: <InboundTicketManagement />,
+      },
+      {
+        path: "inbound-ticket-management/create/:id",
+        element: <InboundTicketCreate />,
+      },
+      {
+        path: "inbound-ticket-management/details/:id",
+        element: <InboundTicketDetails />,
+      },
+      // SUPPLIER MANAGEMENT
+      { path: "supplier-management", element: <SupplierManagement /> },
+      // WAREHOUSE MANAGEMENT
+      { path: "warehouse-management", element: <WarehouseManagement /> },
+      // PROFILE MANAGEMENT
+      { path: "profile/:id", element: <Profile /> },
+      { path: "profile/:id/edit", element: <EditProfile /> },
+    ],
+  },
+
   {
     path: "company-admin/warehouse-configuration",
     element: <WarehouseConfiguration />,

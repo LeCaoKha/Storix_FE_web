@@ -29,7 +29,7 @@ const DetailsHeader = ({ data, onApprove, isApproving }) => {
               className="!mb-0 !font-extrabold !tracking-tight !text-slate-800"
             >
               {isCreatePage
-                ? `Create Inbound Ticket From: ${data?.code || "N/A"}`
+                ? `Create Inbound Ticket From Request: ${data?.code || "N/A"}`
                 : `Inbound Request: ${data?.code || "N/A"}`}
             </Title>
           </div>
@@ -47,19 +47,6 @@ const DetailsHeader = ({ data, onApprove, isApproving }) => {
             className="!flex !items-center !gap-2 !h-11 !px-6 !font-bold !bg-[#39c6c6] hover:!bg-[#2eb1b1] !border-none !rounded-xl shadow-lg shadow-[#39c6c6]/20 transition-all"
           >
             Create Ticket
-          </Button>
-        )}
-
-        {/* Nút Approve Request: Chỉ hiển thị ở trang Details và status là Pending */}
-        {!isCreatePage && data?.status === "Pending" && (
-          <Button
-            type="primary"
-            icon={<CheckCircle2 size={18} />}
-            onClick={onApprove}
-            loading={isApproving}
-            className="!flex !items-center !gap-2 !h-11 !px-6 !font-bold !bg-[#39c6c6] hover:!bg-[#2eb1b1] !border-none !rounded-xl shadow-lg shadow-[#39c6c6]/20 transition-all"
-          >
-            Approve Request
           </Button>
         )}
       </Space>

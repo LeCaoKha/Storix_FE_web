@@ -39,6 +39,9 @@ const SidebarItem = ({ to, icon, label, isCollapsed }) => (
 const CompanyAdminSidebar = ({ isCollapsed, setIsCollapsed }) => {
   const navigate = useNavigate();
 
+  // Lấy roleId từ localStorage (ép kiểu số để so sánh chính xác)
+  const roleId = Number(localStorage.getItem("roleId"));
+
   return (
     <aside
       className={`!fixed !left-0 !top-0 !h-screen !bg-white !border-r !border-slate-100 !flex !flex-col !z-50 !transition-all !duration-300 ${
@@ -70,70 +73,81 @@ const CompanyAdminSidebar = ({ isCollapsed, setIsCollapsed }) => {
       </div>
 
       <div className="!flex-1 !px-4 !py-2 !space-y-1 !overflow-y-auto !overflow-x-hidden">
-        {!isCollapsed && (
-          <p className="!px-4 !text-[11px] !font-black !text-slate-400 !uppercase !tracking-widest !mb-3">
-            Main Menu
-          </p>
+        {/* CHỈ HIỆN MAIN MENU NẾU LÀ ADMIN (ROLE 2) */}
+        {roleId === 2 && (
+          <>
+            {!isCollapsed && (
+              <p className="!px-4 !text-[11px] !font-black !text-slate-400 !uppercase !tracking-widest !mb-3">
+                Main Menu
+              </p>
+            )}
+            <SidebarItem
+              to="dashboard"
+              icon={<LayoutDashboard size={20} />}
+              label="Dashboard"
+              isCollapsed={isCollapsed}
+            />
+            <SidebarItem
+              to="account-management"
+              icon={<UserCircle size={20} />}
+              label="Account"
+              isCollapsed={isCollapsed}
+            />
+            <SidebarItem
+              to="product-management"
+              icon={<Box size={20} />}
+              label="Product"
+              isCollapsed={isCollapsed}
+            />
+            <SidebarItem
+              to="warehouse-management"
+              icon={<Warehouse size={20} />}
+              label="Warehouse"
+              isCollapsed={isCollapsed}
+            />
+            <SidebarItem
+              to="supplier-management"
+              icon={<Truck size={20} />}
+              label="Supplier"
+              isCollapsed={isCollapsed}
+            />
+          </>
         )}
 
-        <SidebarItem
-          to="dashboard"
-          icon={<LayoutDashboard size={20} />}
-          label="Dashboard"
-          isCollapsed={isCollapsed}
-        />
-        <SidebarItem
-          to="account-management"
-          icon={<UserCircle size={20} />}
-          label="Account"
-          isCollapsed={isCollapsed}
-        />
-        <SidebarItem
-          to="product-management"
-          icon={<Box size={20} />}
-          label="Product"
-          isCollapsed={isCollapsed}
-        />
-        <SidebarItem
-          to="warehouse-management"
-          icon={<Warehouse size={20} />}
-          label="Warehouse"
-          isCollapsed={isCollapsed}
-        />
-        <SidebarItem
-          to="supplier-management"
-          icon={<Truck size={20} />}
-          label="Supplier"
-          isCollapsed={isCollapsed}
-        />
-
-        <div className="!pt-6">
+        <div className={roleId === 2 ? "!pt-6" : ""}>
           {!isCollapsed && (
             <p className="!px-4 !text-[11px] !font-black !text-slate-400 !uppercase !tracking-widest !mb-3">
               Operations
             </p>
           )}
-          <SidebarItem
-            to="inbound-request-management"
-            icon={<ArrowDownCircle size={20} />}
-            label="Inbound Request"
-            isCollapsed={isCollapsed}
-          />
 
-          {/* DÒNG INBOUND TICKET MỚI */}
-          <SidebarItem
-            to="inbound-ticket-management"
-            icon={<FileText size={20} />}
-            label="Inbound Ticket"
-            isCollapsed={isCollapsed}
-          />
+          {/* CÁC PHẦN INBOUND CHỈ HIỆN CHO ADMIN (ROLE 2) */}
+          {roleId === 2 && (
+            <>
+              <SidebarItem
+                to="inbound-request-management"
+                icon={<ArrowDownCircle size={20} />}
+                label="Inbound Request"
+                isCollapsed={isCollapsed}
+              />
+              <SidebarItem
+                to="inbound-ticket-management"
+                icon={<FileText size={20} />}
+                label="Inbound Ticket"
+                isCollapsed={isCollapsed}
+              />
+            </>
+          )}
 
-          <SidebarItem
-            to="outbound-management"
-            icon={<ArrowUpCircle size={20} />}
-            label="Outbound"
-            isCollapsed={isCollapsed}
-          />
+          {/* OUTBOUND HIỆN CHO CẢ ADMIN (2) VÀ MANAGER (3) */}
+          {(roleId === 2 || roleId === 3) && (
+            <SidebarItem
+              to="outbound-management"
+              icon={<ArrowUpCircle size={20} />}
+              label="Outbound"
+              isCollapsed={isCollapsed}
+            />
+          )}
         </div>
       </div>
 
