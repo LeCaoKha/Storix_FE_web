@@ -1,0 +1,61 @@
+/**
+ * Shared Storix Table Styles
+ * Used by: ProductManagement, AccountManagement, InboundRequestManagement,
+ *          InboundTicketManagement, SupplierManagement
+ *
+ * Usage: Add className="storix-table" to your <Table /> component
+ * This replaces the duplicate inline <style> blocks across multiple components.
+ */
+
+/* Clickable rows */
+.storix-table .ant-table-tbody > tr {
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+/* Table header styling */
+.storix-table .ant-table-thead > tr > th {
+  background: #f4f7fa !important;
+  color: #4d4d4d !important;
+  font-weight: 1000 !important;
+  text-transform: uppercase !important;
+  font-size: 12px !important;
+  letter-spacing: 0.1em !important;
+  border-bottom: 2px solid #f1f5f9 !important;
+  padding: 20px !important;
+  white-space: nowrap !important;
+}
+
+/* Table row border */
+.storix-table .ant-table-tbody > tr > td {
+  border-bottom: 1px solid #f1f5f9 !important;
+}
+
+/* Row hover */
+.storix-table .ant-table-row:hover > td {
+  background: #fdfdfd !important;
+}
+
+/* Pagination active state */
+.storix-table .ant-pagination-item-active {
+  border-color: #39c6c6 !important;
+}
+
+.storix-table .ant-pagination-item-active a {
+  color: #39c6c6 !important;
+}
+
+/* Select dropdown styling (used in filter selects) */
+.storix-table-filters .ant-select-selector {
+  border-radius: 9999px !important;
+  height: 48px !important;
+  display: flex !important;
+  align-items: center !important;
+  border: none !important;
+  background: transparent !important;
+}
+
+.storix-table-filters .ant-select-selection-item {
+  font-weight: 600 !important;
+  color: #475569 !important;
+}

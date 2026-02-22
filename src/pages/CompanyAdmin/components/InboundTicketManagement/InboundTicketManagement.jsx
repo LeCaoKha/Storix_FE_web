@@ -167,7 +167,7 @@ const InboundTicketManagement = () => {
   });
 
   return (
-    <div className="bg-slate-50 text-slate-900 min-h-screen">
+    <div className="bg-slate-50 text-slate-900">
       <section className="md:px-16 lg:px-12 pt-7 pb-10">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-8">
           <div>
@@ -218,38 +218,16 @@ const InboundTicketManagement = () => {
             dataSource={filteredData}
             loading={loading}
             rowKey="id"
-            pagination={{ pageSize: 5 }}
+            pagination={{ pageSize: 4 }}
             // Giải pháp cốt lõi: dùng max-content để các cột tự giãn theo nội dung
             scroll={{ x: "max-content" }}
-            className="inbound-custom-table"
+            className="storix-table"
             onRow={(record) => ({
               onClick: () => navigate(`details/${record.id}`),
             })}
           />
         </div>
       </section>
-
-      <style jsx global>{`
-        .inbound-custom-table .ant-table-tbody > tr {
-          cursor: pointer;
-        }
-        /* Giữ cho header không bị xuống dòng và căn giữa nội dung */
-        .inbound-custom-table .ant-table-thead > tr > th {
-          background: #f4f7fa !important;
-          font-weight: 1000 !important;
-          text-transform: uppercase !important;
-          font-size: 11px !important;
-          letter-spacing: 0.05em !important;
-          padding: 16px !important;
-          white-space: nowrap !important;
-        }
-        .ant-pagination-item-active {
-          border-color: #39c6c6 !important;
-        }
-        .ant-pagination-item-active a {
-          color: #39c6c6 !important;
-        }
-      `}</style>
     </div>
   );
 };

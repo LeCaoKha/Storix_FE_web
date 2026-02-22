@@ -3,7 +3,7 @@ import { Input, message } from "antd";
 import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios"; // Import axios
 
-const apiUrl = import.meta.env.API_URL;
+const apiUrl = import.meta.env.VITE_API_URL;
 
 const RegisterComponent = ({ form, handleChange }) => {
   const [step, setStep] = useState(0);

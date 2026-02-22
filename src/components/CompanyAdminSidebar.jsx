@@ -36,7 +36,11 @@ const SidebarItem = ({ to, icon, label, isCollapsed }) => (
   </Tooltip>
 );
 
-const CompanyAdminSidebar = ({ isCollapsed, setIsCollapsed }) => {
+const CompanyAdminSidebar = ({
+  isCollapsed,
+  setIsCollapsed,
+  basePath = "/company-admin",
+}) => {
   const navigate = useNavigate();
 
   // Lấy roleId từ localStorage (ép kiểu số để so sánh chính xác)
@@ -56,7 +60,7 @@ const CompanyAdminSidebar = ({ isCollapsed, setIsCollapsed }) => {
         {!isCollapsed && (
           <img
             className="!h-10 !cursor-pointer"
-            onClick={() => navigate("/company-admin/dashboard")}
+            onClick={() => navigate(`${basePath}/dashboard`)}
             src={chooseImage("logoStorixWithText")}
             alt="Logo"
           />

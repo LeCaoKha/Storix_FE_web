@@ -100,7 +100,7 @@ const InboundTicketCreate = () => {
         <div className="flex justify-center gap-x-6">
           <div className="w-[60%] space-y-6">
             <div>
-              <DetailsProductList items={data.inboundOrderItems} />
+              <DetailsProductList items={data?.inboundOrderItems} />
             </div>
             <div>
               <DetailsPayment data={data} />

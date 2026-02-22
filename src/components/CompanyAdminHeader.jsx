@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import api from "../api/axios";
 
-const CompanyAdminHeader = ({ isCollapsed }) => {
+const CompanyAdminHeader = ({ isCollapsed, basePath = "/company-admin" }) => {
   const navigate = useNavigate();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -87,7 +87,7 @@ const CompanyAdminHeader = ({ isCollapsed }) => {
               <div className="!absolute !right-0 !mt-3 !w-52 !bg-white !rounded-2xl !shadow-xl !border !border-slate-100 !py-2 !animate-in !fade-in !zoom-in !duration-150">
                 <button
                   onClick={() => {
-                    navigate(`/company-admin/profile/${userId}`);
+                    navigate(`${basePath}/profile/${userId}`);
                     setIsDropdownOpen(false);
                   }}
                   className="!w-full !flex !items-center !gap-3 !px-4 !py-2.5 !text-sm !text-slate-600 hover:!bg-slate-50 !transition-colors"
