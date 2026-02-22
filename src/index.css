@@ -1,1 +1,50 @@
 @import "tailwindcss";
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(60px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ─── Dark mode overrides ─────────────────────────────────────── */
+.dark body {
+  background-color: #0f172a;
+  color: #e2e8f0;
+}
+
+/* Main content area */
+.dark .bg-gray-50 { background-color: #0f172a !important; }
+.dark .bg-white   { background-color: #1e293b !important; }
+.dark .bg-gray-100 { background-color: #1e293b !important; }
+
+/* Borders */
+.dark .border-gray-200 { border-color: #334155 !important; }
+.dark .border-gray-100 { border-color: #2d3f55 !important; }
+
+/* Text */
+.dark .text-gray-800 { color: #f1f5f9 !important; }
+.dark .text-gray-700 { color: #e2e8f0 !important; }
+.dark .text-gray-600 { color: #cbd5e1 !important; }
+.dark .text-gray-500 { color: #94a3b8 !important; }
+.dark .text-gray-400 { color: #64748b !important; }
+
+/* Input fields */
+.dark input:not([type="checkbox"]):not([type="radio"]) {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+  color: #f1f5f9 !important;
+}
+.dark input::placeholder { color: #64748b !important; }
+
+/* Table rows */
+.dark .hover\:bg-gray-50\/70:hover { background-color: rgba(30,41,59,0.7) !important; }
+.dark .bg-gray-50 th { background-color: #1a2740 !important; color: #94a3b8 !important; }
+
+/* Dividers */
+.dark .divide-gray-50 > * { border-color: #1e3050 !important; }
+
+/* Scrollbar */
+.dark ::-webkit-scrollbar-track { background: #1e293b; }
+.dark ::-webkit-scrollbar-thumb { background: #334155; }
+.dark ::-webkit-scrollbar-thumb:hover { background: #475569; }
