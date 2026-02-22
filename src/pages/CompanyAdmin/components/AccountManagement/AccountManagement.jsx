@@ -303,7 +303,7 @@ const AccountManagement = () => {
             rowKey="id"
             pagination={{ pageSize: 8, className: "px-6" }}
             scroll={{ x: 1000 }}
-            className="account-custom-table"
+            className="storix-table"
             onRow={(record) => ({
               onClick: (event) => {
                 if (
@@ -318,43 +318,6 @@ const AccountManagement = () => {
           />
         </div>
       </section>
-
-      <style jsx global>{`
-        .account-custom-table .ant-table-tbody > tr {
-          cursor: pointer;
-          transition: all 0.2s;
-        }
-        .account-custom-table .ant-table-thead > tr > th {
-          background: #f4f7fa !important;
-          color: #4d4d4d !important;
-          font-weight: 1000 !important;
-          text-transform: uppercase !important;
-          font-size: 12px !important;
-          letter-spacing: 0.1em !important;
-          border-bottom: 2px solid #f1f5f9 !important;
-          padding: 20px !important;
-        }
-        .account-custom-table .ant-table-tbody > tr > td {
-          border-bottom: 1px solid #f1f5f9 !important;
-        }
-        .ant-pagination-item-active {
-          border-color: #39c6c6 !important;
-        }
-        .ant-pagination-item-active a {
-          color: #39c6c6 !important;
-        }
-        .ant-select-selector {
-          border-radius: 9999px !important;
-          height: 48px !important;
-          display: flex !important;
-          align-items: center !important;
-          border-color: #e2e8f0 !important;
-        }
-        .ant-select-selection-item {
-          font-weight: 600 !important;
-          color: #475569 !important;
-        }
-      `}</style>
     </div>
   );
 };

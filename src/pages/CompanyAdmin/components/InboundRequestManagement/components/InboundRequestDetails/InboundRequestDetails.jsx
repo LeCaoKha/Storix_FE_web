@@ -1,28 +1,33 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useParams } from "react-router-dom";
-import { Row, Col, Spin, message } from "antd";
+import { Spin, message } from "antd";
+import { useReactToPrint } from "react-to-print";
 import api from "../../../../../../api/axios";
+
+// Components
 import DetailsHeader from "./components/DetailsHeader/DetailsHeader";
 import DetailsProductList from "./components/DetailsProductList/DetailsProductList";
 import DetailsSidebarInfo from "./components/DetailsSidebarInfo/DetailsSidebarInfo";
 import DetailsPayment from "./components/DetailsPayment/DetailsPayment";
 import DetailsNotes from "./components/DetailsNotes/DetailsNotes";
-import { useReactToPrint } from "react-to-print"; // Import mới
+import InboundPrintTemplate from "./components/InboundPrintTemplate/InboundPrintTemplate";
+
 const InboundRequestDetails = () => {
   const { id } = useParams();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isApproving, setIsApproving] = useState(false);
 
-  const contentRef = useRef(null); // Tạo ref để trỏ vào vùng nội dung
+  // printRef trỏ tới Template In, không trỏ tới giao diện Web
+  const printRef = useRef(null);
 
   const companyId = localStorage.getItem("companyId");
   const userId = localStorage.getItem("userId");
 
-  // Hàm xử lý Export PDF
+  // Cấu hình in ấn chuyên nghiệp
   const handlePrint = useReactToPrint({
-    contentRef: contentRef, // Version 3 yêu cầu key này
-    documentTitle: `Inbound_Request_${data?.code || id}`,
+    contentRef: printRef,
+    documentTitle: `Inbound_Order_${data?.code || id}`,
   });
 
   const fetchData = async () => {
@@ -59,14 +64,12 @@ const InboundRequestDetails = () => {
         status: "Approved",
       };
 
-      // API PUT theo yêu cầu mới
       await api.put(
         `/InventoryInbound/update-inbound-request/${id}/status`,
         payload,
       );
-
       message.success("Request approved successfully!");
-      fetchData(); // Reload lại dữ liệu để cập nhật trạng thái mới
+      fetchData();
     } catch (error) {
       console.error("Approval error:", error);
       message.error(error.response?.data?.message || "Approval failed");
@@ -82,36 +85,40 @@ const InboundRequestDetails = () => {
       </div>
     );
 
-  if (!data) return <div className="p-10 text-center">No data found.</div>;
+  if (!data)
+    return (
+      <div className="p-10 text-center text-slate-400">No data found.</div>
+    );
 
   return (
     <div className="pt-7 px-12 bg-[#F8FAFC] min-h-screen font-sans">
-      {/* Truyền hàm handleExportPDF vào Header */}
+      {/* Header điều hướng và thao tác */}
       <DetailsHeader
         data={data}
         onApprove={handleApprove}
         isApproving={isApproving}
-        onExportPDF={handlePrint} // Gắn hàm in mới vào đây
+        onExportPDF={() => handlePrint()}
       />
 
-      {/* Bao bọc vùng cần in bằng contentRef */}
-      <div ref={contentRef} className="mt-8 pb-20">
+      {/* 1. GIAO DIỆN HIỂN THỊ TRÊN TRÌNH DUYỆT */}
+      <div className="mt-8 pb-20">
         <div className="flex justify-center gap-x-6">
+          {/* Cột trái: Sản phẩm và Thanh toán */}
           <div className="w-[60%] space-y-6">
-            <div>
-              <DetailsProductList items={data.inboundOrderItems} />
-            </div>
-            <div>
-              <DetailsPayment data={data} />
-            </div>
+            <DetailsProductList items={data.inboundOrderItems} />
+            <DetailsPayment data={data} />
           </div>
 
+          {/* Cột phải: Thông tin Warehouse, Supplier, Note */}
           <div className="w-[30%] space-y-6">
             <DetailsSidebarInfo data={data} />
             <DetailsNotes note={data.note} />
           </div>
         </div>
       </div>
+
+      {/* 2. PHẦN ẨN: CHỈ HIỂN THỊ KHI IN PDF */}
+      <InboundPrintTemplate ref={printRef} data={data} />
     </div>
   );
 };
