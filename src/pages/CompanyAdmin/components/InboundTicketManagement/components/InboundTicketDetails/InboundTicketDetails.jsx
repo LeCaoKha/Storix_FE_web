@@ -18,6 +18,8 @@ const InboundTicketDetails = () => {
   const [loading, setLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
 
+  console.log("in ticket: ", data);
+
   const companyId = localStorage.getItem("companyId");
   const userId = localStorage.getItem("userId");
 
