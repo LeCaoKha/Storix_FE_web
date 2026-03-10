@@ -89,11 +89,14 @@ const ProfilePage = () => {
             <div className="bg-white rounded-[2.5rem] shadow-xl shadow-slate-200/40 p-10 border border-white">
               <div className="flex flex-col items-center text-center">
                 <div className="relative group mb-8">
-                  <div className="w-36 h-36 rounded-[2.5rem] bg-slate-50 p-1 border-2 border-[#39C6C6] overflow-hidden shadow-inner transition-transform group-hover:scale-105">
+                  <div className="w-36 h-36 rounded-[2.5rem] bg-slate-50 border-2 border-[#39C6C6] overflow-hidden shadow-inner transition-transform group-hover:scale-105">
                     <img
-                      src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${profile?.fullName || "User"}`}
+                      src={
+                        profile?.avatar ||
+                        `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile?.fullName}`
+                      }
                       alt="Avatar"
-                      className="w-full h-full object-cover"
+                      className="w-full h-full rounded-[2.5rem] object-cover"
                     />
                   </div>
                 </div>

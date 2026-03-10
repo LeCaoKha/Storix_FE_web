@@ -18,6 +18,8 @@ const InboundTicketCreate = () => {
   const [loading, setLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
 
+  // console.log("data: ", data);
+
   const companyId = localStorage.getItem("companyId");
   const userId = localStorage.getItem("userId");
 
@@ -91,7 +93,8 @@ const InboundTicketCreate = () => {
   return (
     <div className="pt-7 px-12 bg-[#F8FAFC] min-h-screen font-sans">
       <DetailsHeader
-        data={{ ...data, status: "Approved" }}
+        // Không hardcode Approved nếu data đã có status từ API
+        data={data}
         onApprove={handleCreateTicket}
         isApproving={isCreating}
       />
@@ -109,12 +112,13 @@ const InboundTicketCreate = () => {
 
           <div className="w-[30%] space-y-6">
             <DetailsSidebarInfo
+              // Truyền toàn bộ data. Warehouse lúc này nằm trong data.warehouse
               data={data}
               users={users}
               selectedStaffId={selectedStaffId}
               onStaffChange={setSelectedStaffId}
             />
-            <DetailsNotes note={data.note} />
+            <DetailsNotes note={data?.note} />
           </div>
         </div>
       </div>

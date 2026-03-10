@@ -30,6 +30,8 @@ const ProductManagement = () => {
   const [searchText, setSearchText] = useState("");
   const navigate = useNavigate();
 
+  console.log("product: ", products);
+
   // --- FETCH PRODUCTS LOGIC ---
   const fetchProducts = async () => {
     setLoading(true);
@@ -88,6 +90,35 @@ const ProductManagement = () => {
         <span className="text-slate-400 font-mono">{index + 1}</span>
       ),
     },
+    // --- THÊM CỘT IMAGE MỚI VÀO ĐÂY ---
+    {
+      title: "Image",
+      dataIndex: "image",
+      key: "image",
+      fixed: "left",
+      width: 80,
+      render: (image, record) => (
+        <div className="w-12 h-12 rounded-xl overflow-hidden bg-slate-100 border border-slate-200 shadow-sm flex items-center justify-center">
+          {image ? (
+            <img
+              src={image}
+              alt={record.name}
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                // Hiển thị ảnh mặc định nếu URL ảnh bị lỗi
+                e.target.src =
+                  "https://placehold.co/100x100/f8fafc/94a3b8?text=No+Image";
+              }}
+            />
+          ) : (
+            <span className="text-[10px] text-slate-400 font-medium">
+              No Img
+            </span>
+          )}
+        </div>
+      ),
+    },
+    // -----------------------------------
     {
       title: "Product Name",
       dataIndex: "name",
