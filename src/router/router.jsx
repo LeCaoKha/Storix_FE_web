@@ -2,7 +2,6 @@ import { createBrowserRouter } from "react-router-dom";
 import App from "../App";
 import NotFound from "../pages/NotFound/NotFound";
 import AuthPage from "../pages/AuthPage/AuthPage";
-import WarehouseConfig from "../pages/WarehouseConfig/WarehouseConfig";
 import LandingPage from "../pages/LandingPage/LandingPage";
 import AboutPage from "../pages/About/About";
 import ExplorePage from "../pages/Explore/Explore";
@@ -15,7 +14,8 @@ import InboundTicketCreate from "../pages/CompanyAdmin/components/InboundTicketM
 import ProductManagement from "../pages/CompanyAdmin/components/ProductManagement/ProductManagement";
 import ReportManagement from "../pages/CompanyAdmin/components/ReportManagement/ReportManagement";
 import WarehouseManagement from "../pages/CompanyAdmin/components/WarehouseManagement/WarehouseManagement";
-import WarehouseConfiguration from "../pages/CompanyAdmin/components/WarehouseManagement/components/WarehouseConfiguration/WarehouseConfiguration";
+import WarehouseConfig from "../pages/WarehouseConfig/WarehouseConfig";
+import WarehouseConfiguration from "../pages/WarehouseConfiguration/WarehouseConfiguration";
 import Profile from "../pages/Profile/Profile";
 import CreateProduct from "../pages/CompanyAdmin/components/ProductManagement/components/CreateProduct/CreateProduct";
 import EditProduct from "../pages/CompanyAdmin/components/ProductManagement/components/EditProduct/EditProduct";
@@ -30,6 +30,8 @@ import ProductDetails from "../pages/CompanyAdmin/components/ProductManagement/c
 import InboundTicketDetails from "../pages/CompanyAdmin/components/InboundTicketManagement/components/InboundTicketDetails/InboundTicketDetails";
 import OutboundRequestManagement from "../pages/CompanyAdmin/components/OutboundRequestManagement/OutboundRequestManagement";
 import OutboundRequestCreate from "../pages/CompanyAdmin/components/OutboundRequestManagement/components/OutboundRequestCreate/OutboundRequestCreate";
+import WarehouseDetails from "../pages/CompanyAdmin/components/WarehouseManagement/components/WarehouseDetails/WarehouseDetails";
+import CreateWarehouse from "../pages/CompanyAdmin/components/WarehouseManagement/components/CreateWarehouse/CreateWarehouse";
 
 /**
  * Shared child routes used by both /company-admin and /manager layouts.
@@ -83,6 +85,11 @@ const sharedAdminRoutes = [
 
   // WAREHOUSE MANAGEMENT
   { path: "warehouse-management", element: <WarehouseManagement /> },
+  {
+    path: "warehouse-management/details/:id",
+    element: <WarehouseDetails />,
+  },
+  { path: "warehouse-management/create", element: <CreateWarehouse /> },
 
   // PROFILE MANAGEMENT
   { path: "profile/:id", element: <Profile /> },
@@ -111,11 +118,11 @@ const router = createBrowserRouter([
     children: sharedAdminRoutes,
   },
   {
-    path: "company-admin/warehouse-configuration",
+    path: "company-admin/warehouse-configuration/:id",
     element: <WarehouseConfiguration />,
   },
   { path: "profile", element: <Profile /> },
-  { path: "warehouse-config", element: <WarehouseConfig /> },
+  { path: "warehouse-config", element: <WarehouseConfiguration /> },
   { path: "auth", element: <AuthPage /> },
   { path: "*", element: <NotFound /> },
 ]);

@@ -15,6 +15,7 @@ import {
   Avatar,
   Empty,
   DatePicker,
+  Select, // Thêm Select từ antd
 } from "antd";
 import {
   Truck,
@@ -30,9 +31,11 @@ import dayjs from "dayjs";
 
 const { Text } = Typography;
 const { TextArea } = Input;
+const { Option } = Select; // Thêm Option để dùng trong Select
 
-const InboundSidebar = ({ onDataChange, summary }) => {
+const InboundSidebar = ({ onDataChange, summary, inboundData }) => {
   const [suppliers, setSuppliers] = useState([]);
+  const [warehouses, setWarehouses] = useState([]); // State mới để lưu danh sách kho
   const [filteredSuppliers, setFilteredSuppliers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [isSearchingSupplier, setIsSearchingSupplier] = useState(false);
@@ -46,16 +49,27 @@ const InboundSidebar = ({ onDataChange, summary }) => {
 
   const fetchSidebarData = async () => {
     const userId = localStorage.getItem("userId");
+    const companyId = localStorage.getItem("companyId"); // Lấy companyId để gọi API kho
     if (!userId) return;
 
     setLoading(true);
     try {
-      const supplierRes = await api.get(`/Suppliers/get-all/${userId}`);
+      // Gọi song song cả API Supplier và API Warehouse
+      const [supplierRes, warehouseRes] = await Promise.all([
+        api.get(`/Suppliers/get-all/${userId}`),
+        api.get(`/company-warehouses/${companyId}/warehouses`),
+      ]);
+
       setSuppliers(supplierRes.data);
       setFilteredSuppliers(supplierRes.data);
-      if (onDataChange) onDataChange("warehouseId", 1);
+      setWarehouses(warehouseRes.data); // Lưu danh sách kho vào state
+
+      // Nếu có danh sách kho và chưa chọn kho nào, mặc định chọn kho đầu tiên
+      if (warehouseRes.data.length > 0 && !inboundData?.warehouseId) {
+        if (onDataChange) onDataChange("warehouseId", warehouseRes.data[0].id);
+      }
     } catch (error) {
-      message.error("Failed to load supplier resources");
+      message.error("Failed to load resources");
     } finally {
       setLoading(false);
     }
@@ -99,7 +113,6 @@ const InboundSidebar = ({ onDataChange, summary }) => {
     }
   };
 
-  // Logic to disable past dates and today (only allow tomorrow onwards)
   const disabledDate = (current) => {
     return current && current < dayjs().endOf("day");
   };
@@ -138,7 +151,7 @@ const InboundSidebar = ({ onDataChange, summary }) => {
       {/* SECTION: SOURCE & DESTINATION */}
       <div>
         <Card className="!rounded-2xl !shadow-sm !border-slate-100 !overflow-visible">
-          <Skeleton loading={loading} active paragraph={{ rows: 3 }}>
+          <Skeleton loading={loading} active paragraph={{ rows: 4 }}>
             <div className="space-y-6">
               {/* Supplier Search Input */}
               <div className="relative" ref={searchContainerRef}>
@@ -155,7 +168,6 @@ const InboundSidebar = ({ onDataChange, summary }) => {
                   prefix={<Search size={18} className="text-slate-300 mr-1" />}
                 />
 
-                {/* Custom Dropdown List */}
                 {isSearchingSupplier && (
                   <div className="!absolute !top-full !mt-2 !left-0 !w-full !bg-white !z-[100] !rounded-2xl !shadow-2xl !border !border-slate-100 !max-h-[250px] !overflow-y-auto !p-2 !transition-all">
                     <div
@@ -200,28 +212,33 @@ const InboundSidebar = ({ onDataChange, summary }) => {
                 )}
               </div>
 
-              {/* Destination Warehouse (Hardcoded) */}
+              {/* Destination Warehouse (Chuyển từ Input sang Select) */}
               <div>
                 <Text className="block !font-bold !text-slate-700 mb-2 uppercase text-[10px] tracking-widest flex items-center gap-2">
                   <Warehouse size={14} className="text-[#38c6c6]" /> Destination
                 </Text>
-                <div>
-                  <Input
-                    value="My warehouse"
-                    disabled
-                    className="!h-12 !rounded-xl !text-slate-400 !bg-slate-100 !border-none !font-medium"
-                    prefix={
-                      <Warehouse size={18} className="text-slate-400 mr-1" />
-                    }
-                  />
-                </div>
+                <Select
+                  placeholder="Select warehouse"
+                  className="w-full !h-12 custom-warehouse-select"
+                  value={inboundData?.warehouseId} // Lấy từ state cha thông qua prop
+                  onChange={(val) => handleChange("warehouseId", val)}
+                  suffixIcon={
+                    <Warehouse size={18} className="text-slate-400" />
+                  }
+                >
+                  {warehouses.map((w) => (
+                    <Option key={w.id} value={w.id}>
+                      {w.name}
+                    </Option>
+                  ))}
+                </Select>
               </div>
             </div>
           </Skeleton>
         </Card>
       </div>
 
-      {/* SECTION: EXPECTED DELIVERY DATE */}
+      {/* SECTION: EXPECTED DELIVERY DATE - GIỮ NGUYÊN */}
       <div>
         <Card className="!rounded-2xl !shadow-sm !border-slate-100">
           <Text className="block !font-bold !text-slate-700 mb-3 uppercase text-[10px] tracking-widest flex items-center gap-2">
@@ -240,7 +257,7 @@ const InboundSidebar = ({ onDataChange, summary }) => {
         </Card>
       </div>
 
-      {/* SECTION: NOTES */}
+      {/* SECTION: NOTES - GIỮ NGUYÊN */}
       <div>
         <Card className="!rounded-2xl !shadow-sm !border-slate-100">
           <Text className="block !font-bold !text-slate-700 mb-3 uppercase text-[10px] tracking-widest flex items-center gap-2">
@@ -255,7 +272,7 @@ const InboundSidebar = ({ onDataChange, summary }) => {
         </Card>
       </div>
 
-      {/* MODAL: ADD NEW SUPPLIER */}
+      {/* MODAL: ADD NEW SUPPLIER - GIỮ NGUYÊN */}
       <div>
         <Modal
           title={
@@ -329,6 +346,19 @@ const InboundSidebar = ({ onDataChange, summary }) => {
         .ant-picker-focused {
           border-color: #38c6c6 !important;
           box-shadow: 0 0 0 2px rgba(56, 198, 198, 0.1) !important;
+        }
+        /* Style cho Select Warehouse để giống Input hiện tại */
+        .custom-warehouse-select .ant-select-selector {
+          height: 48px !important;
+          border-radius: 12px !important;
+          background-color: #f8fafc !important; /* slate-50 */
+          border: none !important;
+          display: flex;
+          align-items: center;
+        }
+        .custom-warehouse-select .ant-select-selection-item {
+          font-weight: 500;
+          color: #334155; /* slate-700 */
         }
       `}</style>
     </div>

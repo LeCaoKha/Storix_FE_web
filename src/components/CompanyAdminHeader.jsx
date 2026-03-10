@@ -24,7 +24,6 @@ const CompanyAdminHeader = ({ isCollapsed, basePath = "/company-admin" }) => {
       if (!userId) return;
       try {
         const res = await api.get(`/Users/get-user-profile/${userId}`);
-        console.log("profile: ", res);
         setUserProfile(res.data);
       } catch (error) {
         console.error("Error fetching header profile:", error);
@@ -72,9 +71,12 @@ const CompanyAdminHeader = ({ isCollapsed, basePath = "/company-admin" }) => {
               </span>
               <div className="!w-9 !h-9 !rounded-xl !overflow-hidden !border-2 !border-[#39c6c6]/50 group-hover:!border-[#39c6c6] !transition-all !shadow-sm">
                 <img
-                  src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${fullName}`}
+                  src={
+                    userProfile?.avatar ||
+                    `https://api.dicebear.com/7.x/avataaars/svg?seed=${userProfile?.fullName}`
+                  }
                   alt="Avatar"
-                  className="!w-full !h-full !object-cover !bg-slate-100"
+                  className="w-full h-full object-cover"
                 />
               </div>
               <ChevronDown
