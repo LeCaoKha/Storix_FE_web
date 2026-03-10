@@ -10,6 +10,7 @@ import {
   Warehouse,
   Menu,
   Truck,
+  BarChart3,
 } from "lucide-react";
 import { Tooltip } from "antd";
 import chooseImage from "../assets/images";
@@ -23,10 +24,9 @@ const SidebarItem = ({ to, icon, label, isCollapsed }) => (
     <NavLink
       to={to}
       className={({ isActive }) =>
-        `!flex !items-center !gap-3 !px-4 !py-3 !rounded-xl !transition-all !duration-300 ${
-          isActive
-            ? "!bg-[#39c6c6]/10 !text-[#39c6c6] !font-semibold"
-            : "!text-slate-500 hover:!bg-slate-50 hover:!text-slate-700"
+        `!flex !items-center !gap-3 !px-4 !py-3 !rounded-xl !transition-all !duration-300 ${isActive
+          ? "!bg-[#39c6c6]/10 !text-[#39c6c6] !font-semibold"
+          : "!text-slate-500 hover:!bg-slate-50 hover:!text-slate-700"
         } ${isCollapsed ? "!justify-center !px-0 !mx-0" : ""}`
       }
     >
@@ -48,14 +48,12 @@ const CompanyAdminSidebar = ({
 
   return (
     <aside
-      className={`!fixed !left-0 !top-0 !h-screen !bg-white !border-r !border-slate-100 !flex !flex-col !z-50 !transition-all !duration-300 ${
-        isCollapsed ? "!w-20" : "!w-60"
-      }`}
+      className={`!fixed !left-0 !top-0 !h-screen !bg-white !border-r !border-slate-100 !flex !flex-col !z-50 !transition-all !duration-300 ${isCollapsed ? "!w-20" : "!w-60"
+        }`}
     >
       <div
-        className={`!flex !items-center !mb-10 !mt-3 !px-4 ${
-          isCollapsed ? "!justify-center" : "!justify-between"
-        }`}
+        className={`!flex !items-center !mb-10 !mt-3 !px-4 ${isCollapsed ? "!justify-center" : "!justify-between"
+          }`}
       >
         {!isCollapsed && (
           <img
@@ -113,6 +111,12 @@ const CompanyAdminSidebar = ({
               to="supplier-management"
               icon={<Truck size={20} />}
               label="Supplier"
+              isCollapsed={isCollapsed}
+            />
+            <SidebarItem
+              to="report-management"
+              icon={<BarChart3 size={20} />}
+              label="Reports"
               isCollapsed={isCollapsed}
             />
           </>
