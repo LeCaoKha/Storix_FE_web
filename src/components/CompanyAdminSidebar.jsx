@@ -11,6 +11,7 @@ import {
   Menu,
   Truck,
   BarChart3,
+  Archive, // <-- Import icon mới cho Inventory
 } from "lucide-react";
 import { Tooltip } from "antd";
 import chooseImage from "../assets/images";
@@ -24,9 +25,10 @@ const SidebarItem = ({ to, icon, label, isCollapsed }) => (
     <NavLink
       to={to}
       className={({ isActive }) =>
-        `!flex !items-center !gap-3 !px-4 !py-3 !rounded-xl !transition-all !duration-300 ${isActive
-          ? "!bg-[#39c6c6]/10 !text-[#39c6c6] !font-semibold"
-          : "!text-slate-500 hover:!bg-slate-50 hover:!text-slate-700"
+        `!flex !items-center !gap-3 !px-4 !py-3 !rounded-xl !transition-all !duration-300 ${
+          isActive
+            ? "!bg-[#39c6c6]/10 !text-[#39c6c6] !font-semibold"
+            : "!text-slate-500 hover:!bg-slate-50 hover:!text-slate-700"
         } ${isCollapsed ? "!justify-center !px-0 !mx-0" : ""}`
       }
     >
@@ -48,12 +50,14 @@ const CompanyAdminSidebar = ({
 
   return (
     <aside
-      className={`!fixed !left-0 !top-0 !h-screen !bg-white !border-r !border-slate-100 !flex !flex-col !z-50 !transition-all !duration-300 ${isCollapsed ? "!w-20" : "!w-60"
-        }`}
+      className={`!fixed !left-0 !top-0 !h-screen !bg-white !border-r !border-slate-100 !flex !flex-col !z-50 !transition-all !duration-300 ${
+        isCollapsed ? "!w-20" : "!w-60"
+      }`}
     >
       <div
-        className={`!flex !items-center !mb-10 !mt-3 !px-4 ${isCollapsed ? "!justify-center" : "!justify-between"
-          }`}
+        className={`!flex !items-center !mb-10 !mt-3 !px-4 ${
+          isCollapsed ? "!justify-center" : "!justify-between"
+        }`}
       >
         {!isCollapsed && (
           <img
@@ -129,6 +133,18 @@ const CompanyAdminSidebar = ({
             </p>
           )}
 
+          {(roleId === 2 || roleId === 3) && (
+            <>
+              {/* NÚT INVENTORY MỚI THÊM */}
+              <SidebarItem
+                to="inventory-management"
+                icon={<Archive size={20} />}
+                label="Inventory"
+                isCollapsed={isCollapsed}
+              />
+            </>
+          )}
+
           {/* CÁC PHẦN INBOUND CHỈ HIỆN CHO ADMIN (ROLE 2) */}
           {roleId === 2 && (
             <>
@@ -147,14 +163,16 @@ const CompanyAdminSidebar = ({
             </>
           )}
 
-          {/* OUTBOUND HIỆN CHO CẢ ADMIN (2) VÀ MANAGER (3) */}
+          {/* OUTBOUND & INVENTORY HIỆN CHO CẢ ADMIN (2) VÀ MANAGER (3) */}
           {(roleId === 2 || roleId === 3) && (
-            <SidebarItem
-              to="outbound-management"
-              icon={<ArrowUpCircle size={20} />}
-              label="Outbound"
-              isCollapsed={isCollapsed}
-            />
+            <>
+              <SidebarItem
+                to="outbound-management"
+                icon={<ArrowUpCircle size={20} />}
+                label="Outbound"
+                isCollapsed={isCollapsed}
+              />
+            </>
           )}
         </div>
       </div>

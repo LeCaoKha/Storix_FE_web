@@ -32,6 +32,8 @@ import OutboundRequestManagement from "../pages/CompanyAdmin/components/Outbound
 import OutboundRequestCreate from "../pages/CompanyAdmin/components/OutboundRequestManagement/components/OutboundRequestCreate/OutboundRequestCreate";
 import WarehouseDetails from "../pages/CompanyAdmin/components/WarehouseManagement/components/WarehouseDetails/WarehouseDetails";
 import CreateWarehouse from "../pages/CompanyAdmin/components/WarehouseManagement/components/CreateWarehouse/CreateWarehouse";
+import InventoryManagement from "../pages/CompanyAdmin/components/InventoryManagement/InventoryManagement";
+import InventoryDetails from "../pages/CompanyAdmin/components/InventoryManagement/components/InventoryDetails/InventoryDetails";
 
 /**
  * Shared child routes used by both /company-admin and /manager layouts.
@@ -94,6 +96,13 @@ const sharedAdminRoutes = [
   // PROFILE MANAGEMENT
   { path: "profile/:id", element: <Profile /> },
   { path: "profile/:id/edit", element: <EditProfile /> },
+
+  // INVENTORY MANAGEMENT
+  { path: "inventory-management", element: <InventoryManagement /> },
+  {
+    path: "inventory-management/details/:id",
+    element: <InventoryDetails />,
+  },
 ];
 
 const router = createBrowserRouter([
