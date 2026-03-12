@@ -203,6 +203,11 @@ const WarehouseDetails = () => {
                     {assignments.map((item) => (
                       <div
                         key={item.id}
+                        onClick={() =>
+                          navigate(
+                            `/company-admin/account-management/details/${item.user.id}`,
+                          )
+                        }
                         className="!p-4 !bg-slate-50 !rounded-2xl !border !border-slate-100 !flex !items-start !gap-4 !transition-all hover:!bg-white hover:!shadow-md"
                       >
                         <div className="!w-12 !h-12 !rounded-xl !bg-white !border !border-slate-200 !flex !items-center !justify-center !text-[#39c6c6] !shadow-sm">
