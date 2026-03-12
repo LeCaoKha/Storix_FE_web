@@ -6,6 +6,7 @@ import {
   MailOutlined,
   PhoneOutlined,
   LockOutlined,
+  UploadOutlined,
 } from "@ant-design/icons";
 import {
   Form,
@@ -17,6 +18,7 @@ import {
   Row,
   Col,
   ConfigProvider,
+  Upload,
 } from "antd";
 import api from "../../../api/axios";
 
@@ -29,6 +31,9 @@ const EditProfilePage = () => {
 
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
+
+  // State lưu trữ file ảnh avatar
+  const [avatarFile, setAvatarFile] = useState(null);
 
   // Logic: Ưu tiên ID từ URL (id), nếu không có mới dùng trong localStorage
   const storedUserId = localStorage.getItem("userId");
@@ -65,26 +70,46 @@ const EditProfilePage = () => {
   const onFinish = async (values) => {
     setLoading(true);
     try {
-      // Lấy companyId từ localStorage để truyền vào body API
+      // Lấy companyId từ localStorage
       const storedCompanyId = parseInt(localStorage.getItem("companyId")) || 0;
 
-      const payload = {
-        ...values,
-        companyId: storedCompanyId,
-        passwordHash: values.passwordHash || "",
-      };
+      // Tạo FormData để hỗ trợ gửi file (multipart/form-data)
+      const formData = new FormData();
+      formData.append("CompanyId", storedCompanyId);
+      formData.append("FullName", values.fullName);
+      formData.append("Email", values.email);
+
+      if (values.phone) {
+        formData.append("Phone", values.phone);
+      }
+
+      // API yêu cầu trường tên là Password
+      if (values.passwordHash) {
+        formData.append("Password", values.passwordHash);
+      }
+
+      // Đính kèm file Avatar nếu người dùng có chọn ảnh mới
+      if (avatarFile) {
+        formData.append("Avatar", avatarFile);
+      }
 
       const res = await api.put(
         `/Users/update-profile/${effectiveUserId}`,
-        payload,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        },
       );
 
-      if (res.status === 200 || res.status === 204) {
+      if (res.status === 200 || res.status === 204 || res.status === 201) {
         message.success("Profile updated successfully!");
         // Quay lại trang profile tương ứng
         navigate(`/company-admin/profile/${effectiveUserId}`);
       }
     } catch (error) {
+      console.error(error);
       message.error(error.response?.data?.message || "Update failed");
     } finally {
       setLoading(false);
@@ -134,6 +159,47 @@ const EditProfilePage = () => {
               requiredMark={false}
             >
               <Row gutter={24}>
+                {/* UPLOAD AVATAR */}
+                <Col span={24} className="!flex !justify-center !mb-6">
+                  <Form.Item name="avatar">
+                    <Upload
+                      name="avatar"
+                      listType="picture-circle"
+                      className="avatar-uploader"
+                      showUploadList={true}
+                      maxCount={1}
+                      beforeUpload={(file) => {
+                        const isImage = file.type.startsWith("image/");
+                        if (!isImage) {
+                          message.error("You can only upload image files!");
+                          return Upload.LIST_IGNORE;
+                        }
+                        const isLt2M = file.size / 1024 / 1024 < 2;
+                        if (!isLt2M) {
+                          message.error("Image must be smaller than 2MB!");
+                          return Upload.LIST_IGNORE;
+                        }
+
+                        setAvatarFile(file);
+                        return false;
+                      }}
+                      onRemove={() => {
+                        setAvatarFile(null);
+                      }}
+                    >
+                      {/* --- CHỈ SỬA ĐOẠN NÀY --- */}
+                      {/* Nếu đã có avatarFile thì ẩn nút Upload đi, nếu chưa có thì hiện */}
+                      {avatarFile ? null : (
+                        <div className="!flex !flex-col !items-center !text-slate-400 hover:!text-[#39c6c6] transition-colors">
+                          <UploadOutlined className="!text-2xl !mb-2" />
+                          <div style={{ marginTop: 8 }}>Upload Avatar</div>
+                        </div>
+                      )}
+                      {/* ------------------------- */}
+                    </Upload>
+                  </Form.Item>
+                </Col>
+
                 <Col span={24}>
                   <Form.Item
                     label={

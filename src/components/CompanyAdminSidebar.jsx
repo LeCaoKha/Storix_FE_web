@@ -11,10 +11,7 @@ import {
   Menu,
   Truck,
   BarChart3,
-  Building2,
-  ShieldCheck,
-  Sparkles,
-  Activity
+  Archive, // <-- Import icon mới cho Inventory
 } from "lucide-react";
 import { Tooltip } from "antd";
 import chooseImage from "../assets/images";
@@ -127,11 +124,22 @@ const CompanyAdminSidebar = ({
         )}
 
         <div className={roleId === 2 ? "!pt-6" : ""}>
-          {/* OPERATIONS SECTION - HIDE FOR ROLE 1 BY DEFAULT IF NO ITEMS */}
-          {(roleId === 2 || roleId === 3) && !isCollapsed && (
+          {!isCollapsed && (
             <p className="!px-4 !text-[11px] !font-black !text-slate-400 !uppercase !tracking-widest !mb-3">
               Operations
             </p>
+          )}
+
+          {(roleId === 2 || roleId === 3) && (
+            <>
+              {/* NÚT INVENTORY MỚI THÊM */}
+              <SidebarItem
+                to="inventory-management"
+                icon={<Archive size={20} />}
+                label="Inventory"
+                isCollapsed={isCollapsed}
+              />
+            </>
           )}
 
           {/* CÁC PHẦN INBOUND CHỈ HIỆN CHO ADMIN (ROLE 2) */}
@@ -152,31 +160,16 @@ const CompanyAdminSidebar = ({
             </>
           )}
 
-          {/* SUPER ADMIN MENU (ROLE 1) */}
-          {roleId === 1 && (
+          {/* OUTBOUND & INVENTORY HIỆN CHO CẢ ADMIN (2) VÀ MANAGER (3) */}
+          {(roleId === 2 || roleId === 3) && (
             <>
-              {!isCollapsed && (
-                <p className="!px-4 !text-[11px] !font-black !text-slate-400 !uppercase !tracking-widest !mb-3 !mt-4">
-                  System Admin
-                </p>
-              )}
               <SidebarItem
-                to="system-users"
-                icon={<ShieldCheck size={20} />}
-                label="System Users"
+                to="outbound-management"
+                icon={<ArrowUpCircle size={20} />}
+                label="Outbound"
                 isCollapsed={isCollapsed}
               />
             </>
-          )}
-
-          {/* OUTBOUND HIỆN CHO CẢ ADMIN (2) VÀ MANAGER (3) */}
-          {(roleId === 2 || roleId === 3) && (
-            <SidebarItem
-              to="outbound-management"
-              icon={<ArrowUpCircle size={20} />}
-              label="Outbound"
-              isCollapsed={isCollapsed}
-            />
           )}
         </div>
       </div>

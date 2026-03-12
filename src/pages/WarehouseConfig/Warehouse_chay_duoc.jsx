@@ -1,8 +1,8 @@
-import React, { useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import { Stage, Layer, Circle, Line, Rect, Text, Group } from "react-konva";
 
 /* =========================
-    HARD-CODE DATA (GIỮ NGUYÊN)
+    DATA GIAO THÔNG CHÍNH (Xương sống)
 ========================= */
 const NAV_NODES = [
   { id: "START", x: 50, y: 100 },
@@ -11,30 +11,12 @@ const NAV_NODES = [
   { id: "N3", x: 450, y: 100 },
   { id: "N4", x: 600, y: 100 },
   { id: "N5", x: 750, y: 100 },
-  { id: "N6", x: 150, y: 175 },
-  { id: "N7", x: 450, y: 175 },
-  { id: "N8", x: 750, y: 175 },
-  { id: "N9", x: 150, y: 250 },
-  { id: "N10", x: 450, y: 250 },
-  { id: "N11", x: 750, y: 250 },
-  { id: "N12", x: 150, y: 325 },
-  { id: "N13", x: 450, y: 325 },
-  { id: "N14", x: 750, y: 325 },
-  { id: "N15", x: 150, y: 400 },
-  { id: "N16", x: 450, y: 400 },
-  { id: "N17", x: 750, y: 400 },
-  { id: "ACN1", x: 300, y: 50 },
-  { id: "ACN2", x: 450, y: 50 },
-  { id: "ACN3", x: 250, y: 200 },
-  { id: "ACN4", x: 300, y: 200 },
-  { id: "ACN5", x: 600, y: 200 },
-  { id: "ACN6", x: 650, y: 200 },
-  { id: "ACN7", x: 250, y: 350 },
-  { id: "ACN8", x: 300, y: 350 },
-  { id: "ACN9", x: 600, y: 350 },
-  { id: "ACN10", x: 650, y: 350 },
-  { id: "ACN11", x: 275, y: 180 },
-
+  { id: "N6", x: 150, y: 250 },
+  { id: "N7", x: 450, y: 250 },
+  { id: "N8", x: 750, y: 250 },
+  { id: "N9", x: 150, y: 400 },
+  { id: "N10", x: 450, y: 400 },
+  { id: "N11", x: 750, y: 400 },
   { id: "END", x: 900, y: 400 },
 ];
 
@@ -46,48 +28,77 @@ const NAV_EDGES = [
   ["N4", "N5"],
   ["N1", "N6"],
   ["N6", "N9"],
-  ["N9", "N12"],
-  ["N12", "N15"],
   ["N3", "N7"],
   ["N7", "N10"],
-  ["N10", "N13"],
-  ["N13", "N16"],
   ["N5", "N8"],
   ["N8", "N11"],
-  ["N11", "N14"],
-  ["N14", "N17"],
+  ["N6", "N7"],
+  ["N7", "N8"],
   ["N9", "N10"],
   ["N10", "N11"],
-  ["N15", "N16"],
-  ["N16", "N17"],
-  ["N17", "END"],
-  ["N2", "ACN1"],
-  ["N3", "ACN2"],
-  ["N6", "ACN3"],
-  ["N7", "ACN4"],
-  ["N7", "ACN5"],
-  ["N8", "ACN6"],
-  ["N12", "ACN7"],
-  ["N13", "ACN8"],
-  ["N13", "ACN9"],
-  ["N14", "ACN10"],
-  ["N2", "ACN11"],
-];
-
-const SHELVES = [
-  { id: "SHELF-A", accessNodeIds: ["ACN1"] },
-  { id: "SHELF-B", accessNodeIds: ["ACN2"] },
-  { id: "SHELF-C", accessNodeIds: ["ACN3", "ACN4", "ACN11"] },
-  { id: "SHELF-D", accessNodeIds: ["ACN5", "ACN6"] },
-  { id: "SHELF-E", accessNodeIds: ["ACN7", "ACN8"] },
-  { id: "SHELF-F", accessNodeIds: ["ACN9", "ACN10"] },
+  ["N11", "END"],
 ];
 
 /* =========================
-    LOGIC TỐI ƯU HÓA MỚI
+    DATA KỆ HÀNG (Hỗ trợ Multi-Access ảo)
+========================= */
+const SHELVES = [
+  {
+    id: "SHELF-A",
+    x: 260,
+    y: 30,
+    w: 80,
+    h: 40,
+    accessOffsets: [{ dx: 40, dy: 65 }],
+  },
+  {
+    id: "SHELF-B",
+    x: 560,
+    y: 30,
+    w: 80,
+    h: 40,
+    accessOffsets: [{ dx: 40, dy: 65 }],
+  },
+  {
+    id: "SHELF-C",
+    x: 200,
+    y: 180,
+    w: 120,
+    h: 40,
+    accessOffsets: [
+      { dx: 20, dy: 65 },
+      { dx: 100, dy: 65 },
+    ],
+  },
+  {
+    id: "SHELF-D",
+    x: 600,
+    y: 330,
+    w: 80,
+    h: 40,
+    accessOffsets: [{ dx: 40, dy: -25 }],
+  },
+];
+
+/* =========================
+    LOGIC THUẬT TOÁN (Tối ưu TSP)
 ========================= */
 
-// 1. Xây dựng đồ thị kề
+// Hàm tìm node gần nhất
+const findNearestNavNode = (point, nodes) => {
+  let nearest = nodes[0];
+  let minDist = Infinity;
+  nodes.forEach((n) => {
+    const d = Math.hypot(n.x - point.x, n.y - point.y);
+    if (d < minDist) {
+      minDist = d;
+      nearest = n;
+    }
+  });
+  return nearest;
+};
+
+// Xây dựng đồ thị bao gồm các điểm ảo
 const buildGraph = () => {
   const adj = {};
   NAV_NODES.forEach((n) => (adj[n.id] = []));
@@ -98,17 +109,28 @@ const buildGraph = () => {
     adj[a].push({ to: b, dist });
     adj[b].push({ to: a, dist });
   });
+
+  SHELVES.forEach((shelf) => {
+    shelf.accessOffsets.forEach((offset, idx) => {
+      const vId = `V-ACN-${shelf.id}-${idx}`;
+      const vPos = { x: shelf.x + offset.dx, y: shelf.y + offset.dy };
+      adj[vId] = [];
+      const nearest = findNearestNavNode(vPos, NAV_NODES);
+      const dist = Math.hypot(vPos.x - nearest.x, vPos.y - nearest.y);
+      adj[vId].push({ to: nearest.id, dist });
+      adj[nearest.id].push({ to: vId, dist });
+    });
+  });
   return adj;
 };
 
-// 2. Thuật toán Dijkstra trả về dist và prev cho một node
+// Dijkstra chuẩn
 const getDijkstra = (graph, startNode) => {
   const dists = {};
   const prevs = {};
   const visited = new Set();
   Object.keys(graph).forEach((k) => (dists[k] = Infinity));
   dists[startNode] = 0;
-
   while (visited.size < Object.keys(graph).length) {
     let u = null;
     for (const node in dists) {
@@ -128,173 +150,228 @@ const getDijkstra = (graph, startNode) => {
   return { dists, prevs };
 };
 
-// 3. Hàm tìm lộ trình tối ưu (Optimal TSP)
-const findOptimalPath = (graph, pickedShelves) => {
-  const allShelvesData = pickedShelves.map((id) =>
-    SHELVES.find((s) => s.id === id),
-  );
+// Tìm đường đi tối ưu TSP qua các kệ đã chọn
+const findOptimalPathTSP = (graph, pickedShelfIds) => {
+  if (pickedShelfIds.length === 0) {
+    const { prevs } = getDijkstra(graph, "START");
+    let path = [];
+    let curr = "END";
+    while (curr) {
+      path.unshift(curr);
+      curr = prevs[curr];
+    }
+    return path;
+  }
 
   let minTotalDist = Infinity;
   let bestFullPath = [];
 
-  // Tạo các hoán vị của kệ (Permutations)
   const permute = (arr, m = []) => {
-    if (arr.length === 0) {
-      checkPath(m);
-    } else {
+    if (arr.length === 0) checkPath(m);
+    else {
       for (let i = 0; i < arr.length; i++) {
         let curr = arr.slice();
         let next = curr.splice(i, 1);
-        permute(curr.slice(), m.concat(next));
+        permute(curr, m.concat(next));
       }
     }
   };
 
   const checkPath = (shelfOrder) => {
-    // Với mỗi thứ tự kệ, ta lại phải thử các tổ hợp Access Nodes
-    const solveAccessNodes = (index, currentPath, currentDist, lastNodeId) => {
+    // Với mỗi kệ trong order, chọn Access Node gần "vị trí hiện tại" nhất
+    const solve = (index, currentPath, currentDist, lastNode) => {
       if (index === shelfOrder.length) {
-        // Chặng cuối về END
-        const { dists, prevs } = getDijkstra(graph, lastNodeId);
-        const toEnd = [];
-        let curr = "END";
-        while (curr) {
-          toEnd.unshift(curr);
-          curr = prevs[curr];
-        }
-
+        const { dists, prevs } = getDijkstra(graph, lastNode);
         const finalDist = currentDist + dists["END"];
         if (finalDist < minTotalDist) {
           minTotalDist = finalDist;
-          bestFullPath = [...currentPath, ...toEnd.slice(1)];
+          let toEnd = [];
+          let curr = "END";
+          while (curr !== lastNode) {
+            toEnd.unshift(curr);
+            curr = prevs[curr];
+          }
+          bestFullPath = [...currentPath, ...toEnd];
         }
         return;
       }
 
-      const shelf = shelfOrder[index];
-      const { dists, prevs } = getDijkstra(graph, lastNodeId);
+      const shelf = SHELVES.find((s) => s.id === shelfOrder[index]);
+      const { dists, prevs } = getDijkstra(graph, lastNode);
 
-      shelf.accessNodeIds.forEach((acnId) => {
-        const toAcn = [];
-        let currNode = acnId;
-        while (currNode) {
-          toAcn.unshift(currNode);
-          currNode = prevs[currNode];
+      // Tìm access node tốt nhất của kệ này
+      let bestAcn = `V-ACN-${shelf.id}-0`;
+      let minDistToAcn = Infinity;
+      shelf.accessOffsets.forEach((_, idx) => {
+        const acnId = `V-ACN-${shelf.id}-${idx}`;
+        if (dists[acnId] < minDistToAcn) {
+          minDistToAcn = dists[acnId];
+          bestAcn = acnId;
         }
-
-        solveAccessNodes(
-          index + 1,
-          [...currentPath, ...toAcn.slice(1)],
-          currentDist + dists[acnId],
-          acnId,
-        );
       });
+
+      let toAcn = [];
+      let curr = bestAcn;
+      while (curr !== lastNode) {
+        toAcn.unshift(curr);
+        curr = prevs[curr];
+      }
+      solve(
+        index + 1,
+        [...currentPath, ...toAcn],
+        currentDist + minDistToAcn,
+        bestAcn,
+      );
     };
 
-    solveAccessNodes(0, ["START"], 0, "START");
+    solve(0, ["START"], 0, "START");
   };
 
-  permute(allShelvesData);
+  permute(pickedShelfIds);
   return bestFullPath;
 };
 
 /* =========================
-    COMPONENT HIỂN THỊ
+    UI COMPONENT
 ========================= */
 
-export default function WarehouseOptimalRender() {
+export default function WarehouseTSPManager() {
+  const [picked, setPicked] = useState(["SHELF-A", "SHELF-C"]);
   const graph = useMemo(buildGraph, []);
-  const pickedShelves = ["SHELF-C", "SHELF-A", "SHELF-D", "SHELF-E"];
+  const path = useMemo(
+    () => findOptimalPathTSP(graph, picked),
+    [graph, picked],
+  );
 
-  const path = useMemo(() => findOptimalPath(graph, pickedShelves), [graph]);
-
-  const getNode = (id) => NAV_NODES.find((n) => n.id === id);
+  const getNodePos = (id) => {
+    const nav = NAV_NODES.find((n) => n.id === id);
+    if (nav) return nav;
+    if (id.startsWith("V-ACN-")) {
+      const parts = id.split("-");
+      const sId = `${parts[1]}-${parts[2]}`;
+      const idx = parseInt(parts[3]);
+      const shelf = SHELVES.find((s) => s.id === sId);
+      return {
+        x: shelf.x + shelf.accessOffsets[idx].dx,
+        y: shelf.y + shelf.accessOffsets[idx].dy,
+      };
+    }
+    return { x: 0, y: 0 };
+  };
 
   return (
-    <div style={{ background: "#f3f4f6", padding: "10px" }}>
-      <h3 style={{ textAlign: "center", color: "#1f2937" }}>
-        AI Path Optimization: Absolute Optimal Mode
-      </h3>
+    <div
+      style={{
+        background: "#0f172a",
+        padding: "20px",
+        color: "white",
+        minHeight: "100vh",
+      }}
+    >
+      <div
+        style={{
+          marginBottom: "20px",
+          display: "flex",
+          gap: "10px",
+          flexWrap: "wrap",
+        }}
+      >
+        {SHELVES.map((s) => (
+          <label
+            key={s.id}
+            style={{
+              background: picked.includes(s.id) ? "#3b82f6" : "#334155",
+              padding: "10px",
+              borderRadius: "8px",
+              cursor: "pointer",
+            }}
+          >
+            <input
+              type="checkbox"
+              checked={picked.includes(s.id)}
+              onChange={() =>
+                setPicked((prev) =>
+                  prev.includes(s.id)
+                    ? prev.filter((i) => i !== s.id)
+                    : [...prev, s.id],
+                )
+              }
+            />{" "}
+            {s.id}
+          </label>
+        ))}
+      </div>
+
       <Stage
         width={1000}
         height={500}
-        style={{
-          background: "white",
-          borderRadius: "8px",
-          boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
-        }}
+        style={{ background: "#1e293b", borderRadius: "12px" }}
       >
         <Layer>
-          {/* Lưới đường đi cơ sở */}
+          {/* Vẽ Grid Giao Thông */}
           {NAV_EDGES.map(([a, b], i) => {
-            const na = getNode(a);
-            const nb = getNode(b);
+            const n1 = getNodePos(a);
+            const n2 = getNodePos(b);
             return (
               <Line
                 key={i}
-                points={[na.x, na.y, nb.x, nb.y]}
-                stroke="#e5e7eb"
-                strokeWidth={2}
+                points={[n1.x, n1.y, n2.x, n2.y]}
+                stroke="#334155"
+                strokeWidth={1}
               />
             );
           })}
 
-          {/* Vẽ kệ hàng */}
-          {SHELVES.map((s) => {
-            const nodes = s.accessNodeIds.map(getNode);
-            const cx = nodes.reduce((sum, n) => sum + n.x, 0) / nodes.length;
-            const cy = nodes.reduce((sum, n) => sum + n.y, 0) / nodes.length;
-            const isPicked = pickedShelves.includes(s.id);
-
-            return (
-              <Group key={s.id}>
-                <Rect
-                  x={cx - 25}
-                  y={cy - 15}
-                  width={50}
-                  height={30}
-                  fill={isPicked ? "#f87171" : "#818cf8"}
-                  cornerRadius={4}
+          {/* Vẽ Kệ */}
+          {SHELVES.map((s) => (
+            <Group key={s.id}>
+              <Rect
+                x={s.x}
+                y={s.y}
+                width={s.w}
+                height={s.h}
+                fill={picked.includes(s.id) ? "#ef4444" : "#3b82f6"}
+                cornerRadius={4}
+              />
+              <Text
+                x={s.x + 5}
+                y={s.y + 12}
+                text={s.id.split("-")[1]}
+                fill="white"
+                fontStyle="bold"
+              />
+              {s.accessOffsets.map((off, idx) => (
+                <Circle
+                  key={idx}
+                  x={s.x + off.dx}
+                  y={s.y + off.dy}
+                  radius={3}
+                  fill="#10b981"
+                  opacity={0.4}
                 />
-                <Text
-                  x={cx - 20}
-                  y={cy - 5}
-                  text={s.id.split("-")[1]}
-                  fill="white"
-                  fontSize={12}
-                  fontStyle="bold"
-                />
-              </Group>
-            );
-          })}
-
-          {/* Vẽ các Node giao thông */}
-          {NAV_NODES.map((n) => (
-            <Circle
-              key={n.id}
-              x={n.x}
-              y={n.y}
-              radius={3}
-              fill={n.id === "START" || n.id === "END" ? "#10b981" : "#9ca3af"}
-            />
+              ))}
+            </Group>
           ))}
 
-          {/* VẼ ĐƯỜNG ĐI TỐI ƯU (ĐÃ SỬA) */}
+          {/* Vẽ ĐƯỜNG ĐI TỐI ƯU (TSP) */}
           {path.map((id, i) => {
             if (i === path.length - 1) return null;
-            const a = getNode(path[i]);
-            const b = getNode(path[i + 1]);
+            const p1 = getNodePos(path[i]);
+            const p2 = getNodePos(path[i + 1]);
             return (
               <Line
                 key={i}
-                points={[a.x, a.y, b.x, b.y]}
-                stroke="#ef4444"
-                strokeWidth={3}
+                points={[p1.x, p1.y, p2.x, p2.y]}
+                stroke="#fbbf24"
+                strokeWidth={4}
                 lineCap="round"
                 lineJoin="round"
               />
             );
           })}
+
+          <Circle x={50} y={100} radius={6} fill="#10b981" />
+          <Circle x={900} y={400} radius={6} fill="#f43f5e" />
         </Layer>
       </Stage>
     </div>

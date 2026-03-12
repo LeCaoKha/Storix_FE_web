@@ -24,13 +24,14 @@ const InboundRequestCreate = () => {
   const [orderDiscount, setOrderDiscount] = useState(0); // Chiết khấu % tổng đơn
   const [inboundData, setInboundData] = useState({
     supplierId: null,
-    warehouseId: 1, // Hardcode mặc định là "My warehouse"
+    warehouseId: null,
     reference: "",
     notes: "",
   });
 
   const [selectedProducts, setSelectedProducts] = useState([]);
   const userId = localStorage.getItem("userId");
+  const companyId = localStorage.getItem("companyId"); // Lấy companyId từ localStorage
 
   // ==========================================
   // 1. LOGIC TÍNH TOÁN THANH TOÁN (DERIVED STATE)
@@ -146,14 +147,27 @@ const InboundRequestCreate = () => {
     if (!userId) return;
     setLoadingProducts(true);
     try {
-      const [typeRes, prodRes] = await Promise.all([
+      const [typeRes, prodRes, warehouseRes] = await Promise.all([
         api.get(`/Products/get-all-product-types/${userId}`),
         api.get(`/Products/get-all/${userId}`),
+        // Gọi API lấy danh sách kho của công ty
+        api.get(`/company-warehouses/${companyId}/warehouses`),
       ]);
+
       setProductTypes(typeRes.data);
       setProducts(prodRes.data);
       setFilteredProducts(prodRes.data);
+
+      // 3. Tự động chọn kho đầu tiên nếu có dữ liệu trả về
+      if (warehouseRes.data && warehouseRes.data.length > 0) {
+        const firstWarehouseId = warehouseRes.data[0].id;
+        setInboundData((prev) => ({
+          ...prev,
+          warehouseId: firstWarehouseId,
+        }));
+      }
     } catch (error) {
+      console.error("Fetch Error:", error);
       message.error("Failed to load data");
     } finally {
       setLoadingProducts(false);
@@ -201,7 +215,7 @@ const InboundRequestCreate = () => {
   const handleCreateInboundRequest = async (shouldApprove = false) => {
     // 1. Kiểm tra các trường bắt buộc
     const supplierId = inboundData.supplierId;
-    const warehouseId = inboundData.warehouseId || 1;
+    const warehouseId = inboundData.warehouseId;
     const reqBy = Number(userId);
     const items = selectedProducts.map((p) => ({
       productId: p.id,
@@ -275,6 +289,7 @@ const InboundRequestCreate = () => {
       setIsSubmitting(false);
     }
   };
+
   return (
     <div className="pt-7 px-12 bg-[#F8FAFC] min-h-screen font-sans">
       <InboundHeader
@@ -308,6 +323,7 @@ const InboundRequestCreate = () => {
         {/* Cột phải: Sidebar (Supplier, Warehouse, Notes) */}
         <div className="w-[30%]">
           <InboundSidebar
+            inboundData={inboundData}
             onDataChange={handleSidebarChange}
             summary={paymentSummary}
           />
