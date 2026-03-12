@@ -30,6 +30,7 @@ import ProductDetails from "../pages/CompanyAdmin/components/ProductManagement/c
 import InboundTicketDetails from "../pages/CompanyAdmin/components/InboundTicketManagement/components/InboundTicketDetails/InboundTicketDetails";
 import OutboundRequestManagement from "../pages/CompanyAdmin/components/OutboundRequestManagement/OutboundRequestManagement";
 import OutboundRequestCreate from "../pages/CompanyAdmin/components/OutboundRequestManagement/components/OutboundRequestCreate/OutboundRequestCreate";
+import UserManagement from "../pages/SuperAdmin/UserManagement/UserManagement";
 
 /**
  * Shared child routes used by both /company-admin and /manager layouts.
@@ -109,6 +110,14 @@ const router = createBrowserRouter([
     path: "/manager",
     element: <AdminLayout allowedRoles={[3]} />,
     children: sharedAdminRoutes,
+  },
+  {
+    path: "/super-admin",
+    element: <AdminLayout allowedRoles={[1]} />,
+    children: [
+      { index: true, element: <UserManagement /> },
+      { path: "system-users", element: <UserManagement /> },
+    ],
   },
   {
     path: "company-admin/warehouse-configuration",

@@ -11,6 +11,10 @@ import {
   Menu,
   Truck,
   BarChart3,
+  Building2,
+  ShieldCheck,
+  Sparkles,
+  Activity
 } from "lucide-react";
 import { Tooltip } from "antd";
 import chooseImage from "../assets/images";
@@ -123,7 +127,8 @@ const CompanyAdminSidebar = ({
         )}
 
         <div className={roleId === 2 ? "!pt-6" : ""}>
-          {!isCollapsed && (
+          {/* OPERATIONS SECTION - HIDE FOR ROLE 1 BY DEFAULT IF NO ITEMS */}
+          {(roleId === 2 || roleId === 3) && !isCollapsed && (
             <p className="!px-4 !text-[11px] !font-black !text-slate-400 !uppercase !tracking-widest !mb-3">
               Operations
             </p>
@@ -142,6 +147,23 @@ const CompanyAdminSidebar = ({
                 to="inbound-ticket-management"
                 icon={<FileText size={20} />}
                 label="Inbound Ticket"
+                isCollapsed={isCollapsed}
+              />
+            </>
+          )}
+
+          {/* SUPER ADMIN MENU (ROLE 1) */}
+          {roleId === 1 && (
+            <>
+              {!isCollapsed && (
+                <p className="!px-4 !text-[11px] !font-black !text-slate-400 !uppercase !tracking-widest !mb-3 !mt-4">
+                  System Admin
+                </p>
+              )}
+              <SidebarItem
+                to="system-users"
+                icon={<ShieldCheck size={20} />}
+                label="System Users"
                 isCollapsed={isCollapsed}
               />
             </>
