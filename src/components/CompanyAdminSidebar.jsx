@@ -25,10 +25,9 @@ const SidebarItem = ({ to, icon, label, isCollapsed }) => (
     <NavLink
       to={to}
       className={({ isActive }) =>
-        `!flex !items-center !gap-3 !px-4 !py-3 !rounded-xl !transition-all !duration-300 ${
-          isActive
-            ? "!bg-[#39c6c6]/10 !text-[#39c6c6] !font-semibold"
-            : "!text-slate-500 hover:!bg-slate-50 hover:!text-slate-700"
+        `!flex !items-center !gap-3 !px-4 !py-3 !rounded-xl !transition-all !duration-300 ${isActive
+          ? "!bg-[#39c6c6]/10 !text-[#39c6c6] !font-semibold"
+          : "!text-slate-500 hover:!bg-slate-50 hover:!text-slate-700"
         } ${isCollapsed ? "!justify-center !px-0 !mx-0" : ""}`
       }
     >
@@ -50,19 +49,23 @@ const CompanyAdminSidebar = ({
 
   return (
     <aside
-      className={`!fixed !left-0 !top-0 !h-screen !bg-white !border-r !border-slate-100 !flex !flex-col !z-50 !transition-all !duration-300 ${
-        isCollapsed ? "!w-20" : "!w-60"
-      }`}
+      className={`!fixed !left-0 !top-0 !h-screen !bg-white !border-r !border-slate-100 !flex !flex-col !z-50 !transition-all !duration-300 ${isCollapsed ? "!w-20" : "!w-60"
+        }`}
     >
       <div
-        className={`!flex !items-center !mb-10 !mt-3 !px-4 ${
-          isCollapsed ? "!justify-center" : "!justify-between"
-        }`}
+        className={`!flex !items-center !mb-10 !mt-3 !px-4 ${isCollapsed ? "!justify-center" : "!justify-between"
+          }`}
       >
         {!isCollapsed && (
           <img
             className="!h-10 !cursor-pointer"
-            onClick={() => navigate(`${basePath}/dashboard`)}
+            onClick={() => {
+              if (roleId === 1) {
+                navigate(`/super-admin/dashboard`);
+              } else {
+                navigate(`${basePath}/dashboard`);
+              }
+            }}
             src={chooseImage("logoStorixWithText")}
             alt="Logo"
           />
@@ -79,6 +82,23 @@ const CompanyAdminSidebar = ({
       </div>
 
       <div className="!flex-1 !px-4 !py-2 !space-y-1 !overflow-y-auto !overflow-x-hidden">
+        {/* SUPER ADMIN MENU (ROLE 1) */}
+        {roleId === 1 && (
+          <>
+            {!isCollapsed && (
+              <p className="!px-4 !text-[11px] !font-black !text-slate-400 !uppercase !tracking-widest !mb-3">
+                System Admin
+              </p>
+            )}
+            <SidebarItem
+              to="dashboard"
+              icon={<UserCircle size={20} />}
+              label="User Management"
+              isCollapsed={isCollapsed}
+            />
+          </>
+        )}
+
         {/* CHỈ HIỆN MAIN MENU NẾU LÀ ADMIN (ROLE 2) */}
         {roleId === 2 && (
           <>

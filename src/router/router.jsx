@@ -34,6 +34,7 @@ import WarehouseDetails from "../pages/CompanyAdmin/components/WarehouseManageme
 import CreateWarehouse from "../pages/CompanyAdmin/components/WarehouseManagement/components/CreateWarehouse/CreateWarehouse";
 import InventoryManagement from "../pages/CompanyAdmin/components/InventoryManagement/InventoryManagement";
 import InventoryDetails from "../pages/CompanyAdmin/components/InventoryManagement/components/InventoryDetails/InventoryDetails";
+import UserManagement from "../pages/SuperAdmin/UserManagement/UserManagement";
 
 /**
  * Shared child routes used by both /company-admin and /manager layouts.
@@ -125,6 +126,15 @@ const router = createBrowserRouter([
     path: "/manager",
     element: <AdminLayout allowedRoles={[3]} />,
     children: sharedAdminRoutes,
+  },
+  {
+    path: "/super-admin",
+    element: <AdminLayout allowedRoles={[1]} />,
+    children: [
+      { index: true, element: <UserManagement /> },
+      { path: "dashboard", element: <UserManagement /> },
+      { path: "user-management", element: <UserManagement /> },
+    ],
   },
   {
     path: "company-admin/warehouse-configuration/:id",
