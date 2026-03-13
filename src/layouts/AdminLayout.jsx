@@ -44,7 +44,7 @@ const AdminLayout = ({ allowedRoles }) => {
     // If the current role is not in the allowed roles, redirect to the correct dashboard
     if (!allowedRoles.includes(roleIdNum)) {
       if (roleIdNum === 1) {
-        navigate("/super-admin/system-users");
+        navigate("/super-admin/dashboard");
       } else if (roleIdNum === 2) {
         navigate("/company-admin/dashboard");
       } else if (roleIdNum === 3) {

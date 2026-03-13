@@ -59,7 +59,13 @@ const CompanyAdminSidebar = ({
         {!isCollapsed && (
           <img
             className="!h-10 !cursor-pointer"
-            onClick={() => navigate(`${basePath}/dashboard`)}
+            onClick={() => {
+              if (roleId === 1) {
+                navigate(`/super-admin/dashboard`);
+              } else {
+                navigate(`${basePath}/dashboard`);
+              }
+            }}
             src={chooseImage("logoStorixWithText")}
             alt="Logo"
           />
@@ -76,6 +82,23 @@ const CompanyAdminSidebar = ({
       </div>
 
       <div className="!flex-1 !px-4 !py-2 !space-y-1 !overflow-y-auto !overflow-x-hidden">
+        {/* SUPER ADMIN MENU (ROLE 1) */}
+        {roleId === 1 && (
+          <>
+            {!isCollapsed && (
+              <p className="!px-4 !text-[11px] !font-black !text-slate-400 !uppercase !tracking-widest !mb-3">
+                System Admin
+              </p>
+            )}
+            <SidebarItem
+              to="dashboard"
+              icon={<UserCircle size={20} />}
+              label="User Management"
+              isCollapsed={isCollapsed}
+            />
+          </>
+        )}
+
         {/* CHỈ HIỆN MAIN MENU NẾU LÀ ADMIN (ROLE 2) */}
         {roleId === 2 && (
           <>
