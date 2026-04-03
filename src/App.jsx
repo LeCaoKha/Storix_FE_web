@@ -6,16 +6,16 @@ import { authorizeRole } from "./utils/utils";
 import ScrollToTop from "./components/ScrollToTop";
 
 const App = () => {
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
 
-  const token = localStorage.getItem("accessToken");
-  const roleId = localStorage.getItem("roleId");
+  // const token = localStorage.getItem("accessToken");
+  // const roleId = localStorage.getItem("roleId");
 
-  useEffect(() => {
-    if (token && roleId) {
-      authorizeRole(roleId, navigate);
-    }
-  }, []);
+  // useEffect(() => {
+  //   if (token && roleId) {
+  //     authorizeRole(roleId, navigate);
+  //   }
+  // }, []);
   return (
     <div className="flex flex-col min-h-screen">
       <ScrollToTop />

@@ -7,18 +7,18 @@ import { authorizeRole } from "../../utils/utils";
 const AuthPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
 
-  const token = localStorage.getItem("accessToken");
-  const roleId = localStorage.getItem("roleId");
+  // const token = localStorage.getItem("accessToken");
+  // const roleId = localStorage.getItem("roleId");
 
-  useEffect(() => {
-    // Chỉ điều hướng NẾU đã đăng nhập rồi (có token và role)
-    if (token && roleId) {
-      authorizeRole(roleId, navigate);
-    }
-    // KHÔNG viết thêm "else if (!token) navigate('/auth')" ở đây nữa.
-  }, [token, roleId, navigate]);
+  // useEffect(() => {
+  //   // Chỉ điều hướng NẾU đã đăng nhập rồi (có token và role)
+  //   if (token && roleId) {
+  //     authorizeRole(roleId, navigate);
+  //   }
+  //   // KHÔNG viết thêm "else if (!token) navigate('/auth')" ở đây nữa.
+  // }, [token, roleId, navigate]);
 
   // ===== SOURCE OF TRUTH =====
   const status = searchParams.get("mode") === "signUp" ? "signUp" : "signIn";
