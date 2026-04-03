@@ -25,8 +25,14 @@ const LoginComponent = ({ form, handleChange }) => {
       message.success("Login successful!");
 
       // Destructure the JSON response you received
-      const { accessToken, refreshToken, companyId, roleId, userId } =
-        response.data;
+      const {
+        accessToken,
+        refreshToken,
+        companyId,
+        roleId,
+        userId,
+        warehouseId,
+      } = response.data;
 
       // Save everything to localStorage for global use
       localStorage.setItem("accessToken", accessToken);
@@ -34,6 +40,7 @@ const LoginComponent = ({ form, handleChange }) => {
       localStorage.setItem("companyId", companyId);
       localStorage.setItem("roleId", roleId);
       localStorage.setItem("userId", userId);
+      localStorage.setItem("warehouseId", warehouseId);
 
       authorizeRole(roleId, navigate);
     } catch (error) {

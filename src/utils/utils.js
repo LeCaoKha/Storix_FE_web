@@ -10,6 +10,8 @@ export const authorizeRole = (roleId, navigate) => {
     navigate("/company-admin/dashboard", navOptions);
   } else if (roleIdNumber === 3) {
     navigate("/manager/dashboard", navOptions);
+  } else if (roleIdNumber === 4) {
+    navigate("/staff/inbound-request-management", navOptions);
   } else {
     // Trường hợp role không xác định, có thể về trang chủ hoặc báo lỗi
     navigate("/", navOptions);

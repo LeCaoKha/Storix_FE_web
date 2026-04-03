@@ -42,17 +42,17 @@ const AdminLayout = ({ allowedRoles }) => {
     const roleIdNum = Number(roleId);
 
     // If the current role is not in the allowed roles, redirect to the correct dashboard
-    if (!allowedRoles.includes(roleIdNum)) {
-      if (roleIdNum === 1) {
-        navigate("/super-admin/dashboard");
-      } else if (roleIdNum === 2) {
-        navigate("/company-admin/dashboard");
-      } else if (roleIdNum === 3) {
-        navigate("/manager/dashboard");
-      } else {
-        navigate("/auth");
-      }
-    }
+    // if (!allowedRoles.includes(roleIdNum)) {
+    //   if (roleIdNum === 1) {
+    //     navigate("/super-admin/dashboard");
+    //   } else if (roleIdNum === 2) {
+    //     navigate("/company-admin/dashboard");
+    //   } else if (roleIdNum === 3) {
+    //     navigate("/manager/dashboard");
+    //   } else {
+    //     navigate("/auth");
+    //   }
+    // }
   }, [navigate, allowedRoles]);
 
   return (

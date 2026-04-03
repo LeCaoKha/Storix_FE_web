@@ -14,7 +14,6 @@ import InboundTicketCreate from "../pages/CompanyAdmin/components/InboundTicketM
 import ProductManagement from "../pages/CompanyAdmin/components/ProductManagement/ProductManagement";
 import ReportManagement from "../pages/CompanyAdmin/components/ReportManagement/ReportManagement";
 import WarehouseManagement from "../pages/CompanyAdmin/components/WarehouseManagement/WarehouseManagement";
-import WarehouseConfig from "../pages/WarehouseConfig/WarehouseConfig";
 import WarehouseConfiguration from "../pages/WarehouseConfiguration/WarehouseConfiguration";
 import Profile from "../pages/Profile/Profile";
 import CreateProduct from "../pages/CompanyAdmin/components/ProductManagement/components/CreateProduct/CreateProduct";
@@ -34,17 +33,33 @@ import WarehouseDetails from "../pages/CompanyAdmin/components/WarehouseManageme
 import CreateWarehouse from "../pages/CompanyAdmin/components/WarehouseManagement/components/CreateWarehouse/CreateWarehouse";
 import InventoryManagement from "../pages/CompanyAdmin/components/InventoryManagement/InventoryManagement";
 import InventoryDetails from "../pages/CompanyAdmin/components/InventoryManagement/components/InventoryDetails/InventoryDetails";
+import OutboundRequestDetails from "../pages/CompanyAdmin/components/OutboundRequestManagement/components/OutboundRequestDetails/OutboundRequestDetails";
+import OutboundTicketManagement from "../pages/CompanyAdmin/components/OutboundTicketManagement/OutboundTicketManagement";
+import OutboundTicketCreate from "../pages/CompanyAdmin/components/OutboundTicketManagement/components/OutboundTicketCreate/OutboundTicketCreate";
 
 /**
- * Shared child routes used by both /company-admin and /manager layouts.
- * This eliminates the previous duplication of ~60 identical route definitions.
+ * 1. SHARED ADMIN ROUTES (Quyền hạn đầy đủ cho Admin & Manager)
  */
 const sharedAdminRoutes = [
   { path: "dashboard", element: <Dashboard /> },
 
-  // OUTBOUND MANAGEMENT
+  // OUTBOUND REQUEST MANAGEMENT
   { path: "outbound-management", element: <OutboundRequestManagement /> },
   { path: "outbound-management/create", element: <OutboundRequestCreate /> },
+  {
+    path: "outbound-management/details/:id",
+    element: <OutboundRequestDetails />,
+  },
+
+  // OUTBOUND TICKET MANAGEMENT
+  {
+    path: "outbound-ticket-management",
+    element: <OutboundTicketManagement />,
+  },
+  {
+    path: "outbound-ticket-management/create/:id",
+    element: <OutboundTicketCreate />,
+  },
 
   // PRODUCT MANAGEMENT
   { path: "product-management", element: <ProductManagement /> },
@@ -87,10 +102,7 @@ const sharedAdminRoutes = [
 
   // WAREHOUSE MANAGEMENT
   { path: "warehouse-management", element: <WarehouseManagement /> },
-  {
-    path: "warehouse-management/details/:id",
-    element: <WarehouseDetails />,
-  },
+  { path: "warehouse-management/details/:id", element: <WarehouseDetails /> },
   { path: "warehouse-management/create", element: <CreateWarehouse /> },
 
   // PROFILE MANAGEMENT
@@ -99,12 +111,65 @@ const sharedAdminRoutes = [
 
   // INVENTORY MANAGEMENT
   { path: "inventory-management", element: <InventoryManagement /> },
-  {
-    path: "inventory-management/details/:id",
-    element: <InventoryDetails />,
-  },
+  { path: "inventory-management/details/:id", element: <InventoryDetails /> },
 ];
 
+/**
+ * 2. STAFF ROUTES (Quyền hạn hạn chế cho Staff)
+ */
+const staffRoutes = [
+  // OUTBOUND REQUEST MANAGEMENT
+  { path: "outbound-management", element: <OutboundRequestManagement /> },
+  { path: "outbound-management/create", element: <OutboundRequestCreate /> },
+  {
+    path: "outbound-management/details/:id",
+    element: <OutboundRequestDetails />,
+  },
+
+  // --- BỔ SUNG: Cho phép Staff truy cập Outbound Ticket ---
+  {
+    path: "outbound-ticket-management",
+    element: <OutboundTicketManagement />,
+  },
+  {
+    path: "outbound-ticket-management/create/:id",
+    element: <OutboundTicketCreate />,
+  },
+
+  // INBOUND REQUEST MANAGEMENT
+  { path: "inbound-request-management", element: <InboundRequestManagement /> },
+  {
+    path: "inbound-request-management/details/:id",
+    element: <InboundRequestDetails />,
+  },
+  {
+    path: "inbound-request-management/create",
+    element: <InboundRequestCreate />,
+  },
+
+  // INBOUND TICKET MANAGEMENT
+  { path: "inbound-ticket-management", element: <InboundTicketManagement /> },
+  {
+    path: "inbound-ticket-management/create/:id",
+    element: <InboundTicketCreate />,
+  },
+  {
+    path: "inbound-ticket-management/details/:id",
+    element: <InboundTicketDetails />,
+  },
+
+  // INVENTORY MANAGEMENT
+  { path: "inventory-management", element: <InventoryManagement /> },
+  { path: "inventory-management/details/:id", element: <InventoryDetails /> },
+
+  // Profile cho Staff
+  { path: "profile/:id", element: <Profile /> },
+  { path: "profile/:id/edit", element: <EditProfile /> },
+];
+
+/**
+ * 3. ROUTER CONFIGURATION
+ */
 const router = createBrowserRouter([
   {
     path: "/",
@@ -125,6 +190,11 @@ const router = createBrowserRouter([
     path: "/manager",
     element: <AdminLayout allowedRoles={[3]} />,
     children: sharedAdminRoutes,
+  },
+  {
+    path: "/staff",
+    element: <AdminLayout allowedRoles={[4]} />, // Giả định Role ID của Staff là 4
+    children: staffRoutes,
   },
   {
     path: "company-admin/warehouse-configuration/:id",

@@ -14,7 +14,13 @@ const OutboundRequestCreate = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
 
-  const [destination, setDestination] = useState("");
+  // State quản lý dữ liệu Sidebar (Kho, Lý do)
+  const [outboundData, setOutboundData] = useState({
+    warehouseId: null,
+    notes: "",
+    destination: "", // <-- TRẢ VỀ RỖNG ĐỂ NGƯỜI DÙNG NHẬP
+  });
+
   const navigate = useNavigate();
   const searchRef = useRef(null);
   const userId = localStorage.getItem("userId");
@@ -26,6 +32,7 @@ const OutboundRequestCreate = () => {
       setProducts(res.data);
       setFilteredProducts(res.data);
     } catch (error) {
+      console.error("Lỗi khi tải danh sách sản phẩm:", error);
       message.error("Failed to load products");
     } finally {
       setLoading(false);
@@ -35,6 +42,14 @@ const OutboundRequestCreate = () => {
   useEffect(() => {
     fetchData();
   }, []);
+
+  // Hàm xử lý thay đổi dữ liệu từ Sidebar
+  const handleSidebarChange = (key, value) => {
+    setOutboundData((prev) => ({
+      ...prev,
+      [key]: value,
+    }));
+  };
 
   const handleSearch = (e) => {
     const value = e.target.value.toLowerCase();
@@ -66,28 +81,37 @@ const OutboundRequestCreate = () => {
     setSelectedProducts(selectedProducts.filter((p) => p.id !== productId));
   };
 
+  // --- GỬI API TẠO REQUEST ---
   const handleCreateRequest = async () => {
-    if (!destination) return message.warning("Please enter destination");
     if (selectedProducts.length === 0)
       return message.warning("Please select at least one product");
+    if (!outboundData.warehouseId)
+      return message.warning("Please select an origin warehouse");
 
     setIsSubmitting(true);
     try {
+      // Mapping đúng cấu trúc JSON bạn yêu cầu
       const payload = {
-        warehouseId: 2, // Default as requested
-        destination: destination,
+        warehouseId: Number(outboundData.warehouseId),
+        destination: outboundData.destination,
         requestedBy: Number(userId),
         items: selectedProducts.map((p) => ({
           productId: p.id,
           quantity: p.quantity,
         })),
+        reason: outboundData.notes, // Map notes -> reason
       };
 
+      console.log("payload: ", payload);
+
       await api.post("InventoryOutbound/create-outbound-request", payload);
-      message.success("Outbound request created!");
+      message.success("Outbound request created successfully!");
       navigate(-1);
     } catch (error) {
-      message.error("Failed to create request");
+      console.error("Submit Error:", error);
+      message.error(
+        error.response?.data?.message || "Failed to create request",
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -98,6 +122,7 @@ const OutboundRequestCreate = () => {
       <OutboundHeader onCreate={handleCreateRequest} loading={isSubmitting} />
 
       <div className="flex justify-center gap-x-6 pb-20 mt-6">
+        {/* Bên trái: Chọn sản phẩm */}
         <div className="w-[65%]">
           <ProductSelectionOutbound
             searchRef={searchRef}
@@ -110,12 +135,15 @@ const OutboundRequestCreate = () => {
             onUpdateQuantity={handleUpdateQuantity}
             onRemoveProduct={handleRemoveProduct}
             loading={loading}
+            // Nếu bạn muốn chỉnh giá ở Outbound, hãy truyền thêm onUpdatePrice ở đây
           />
         </div>
+
+        {/* Bên phải: Thông tin kho & Ghi chú */}
         <div className="w-[30%]">
           <OutboundSidebar
-            destination={destination}
-            setDestination={setDestination}
+            outboundData={outboundData}
+            onDataChange={handleSidebarChange}
           />
         </div>
       </div>

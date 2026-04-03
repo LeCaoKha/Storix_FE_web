@@ -42,6 +42,7 @@ const ProductManagement = () => {
         return;
       }
       const response = await api.get(`/Products/get-all/${userId}`);
+
       setProducts(response.data);
     } catch (error) {
       const errorMsg =
@@ -90,7 +91,6 @@ const ProductManagement = () => {
         <span className="text-slate-400 font-mono">{index + 1}</span>
       ),
     },
-    // --- THÊM CỘT IMAGE MỚI VÀO ĐÂY ---
     {
       title: "Image",
       dataIndex: "image",
@@ -118,7 +118,6 @@ const ProductManagement = () => {
         </div>
       ),
     },
-    // -----------------------------------
     {
       title: "Product Name",
       dataIndex: "name",
@@ -142,23 +141,26 @@ const ProductManagement = () => {
     },
     {
       title: "Type",
-      dataIndex: ["type", "name"],
+      dataIndex: "type", // Đã sửa: lấy nguyên object
       key: "type",
-      render: (typeName) => (
+      render: (typeObj) => (
         <Tag
           color="cyan"
           className="rounded-full px-4 border-none font-bold uppercase text-[10px]"
         >
-          {typeName || "Unclassified"}
+          {typeObj?.name || "Unclassified"}
         </Tag>
       ),
     },
     {
       title: "Category",
-      dataIndex: "category",
+      dataIndex: "category", // Lấy nguyên object category
       key: "category",
       render: (cat) => (
-        <span className="text-slate-500 font-medium">{cat}</span>
+        <span className="text-slate-500 font-medium">
+          {/* Đã sửa: Truy xuất tên danh mục hoặc trả về mặc định */}
+          {cat?.name || "Uncategorized"}
+        </span>
       ),
     },
     {
@@ -269,9 +271,9 @@ const ProductManagement = () => {
             placeholder="Quick search by product name or SKU code..."
             prefix={<Search size={20} className="text-slate-300 mr-3" />}
             className="!mb-5 !bg-white !h-12 !bg-slate-50 !rounded-full !text-base !transition-all
-               hover:!border-[#39C6C6] 
-               focus-within:!border-[#39C6C6] 
-               focus-within:!shadow-[0_0_0_2px_rgba(57,198,198,0.2)]"
+                hover:!border-[#39C6C6] 
+                focus-within:!border-[#39C6C6] 
+                focus-within:!shadow-[0_0_0_2px_rgba(57,198,198,0.2)]"
             onChange={(e) => setSearchText(e.target.value)}
           />
         </div>
@@ -289,7 +291,6 @@ const ProductManagement = () => {
             }}
             scroll={{ x: 1100 }}
             className="storix-table"
-            // --- THÊM ĐOẠN NÀY ---
             onRow={(record) => ({
               onClick: (event) => {
                 // Kiểm tra nếu click vào button hoặc các phần tử trong Popconfirm
@@ -303,7 +304,6 @@ const ProductManagement = () => {
                 navigate(`details/${record.id}`);
               },
             })}
-            // ----------------------
           />
         </div>
       </section>

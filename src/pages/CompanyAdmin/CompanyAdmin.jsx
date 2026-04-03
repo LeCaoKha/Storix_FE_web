@@ -19,17 +19,17 @@ const CompanyAdminApp = () => {
   }, [isCollapsed]);
 
   // 3. Kiểm tra quyền truy cập
-  useEffect(() => {
-    const token = localStorage.getItem("accessToken");
-    const roleId = localStorage.getItem("roleId");
-    if (!roleId || !token) {
-      navigate("/auth");
-    } else if (roleId === "1") {
-      navigate("/super-admin/dashboard");
-    } else if (roleId === "3") {
-      navigate("/manager/dashboard");
-    }
-  }, [navigate]);
+  // useEffect(() => {
+  //   const token = localStorage.getItem("accessToken");
+  //   const roleId = localStorage.getItem("roleId");
+  //   if (!roleId || !token) {
+  //     navigate("/auth");
+  //   } else if (roleId === "1") {
+  //     navigate("/super-admin/dashboard");
+  //   } else if (roleId === "3") {
+  //     navigate("/manager/dashboard");
+  //   }
+  // }, [navigate]);
 
   return (
     <div className="!flex !min-h-screen !bg-slate-50">
