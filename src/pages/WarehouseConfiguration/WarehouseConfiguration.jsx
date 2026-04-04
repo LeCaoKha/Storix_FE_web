@@ -88,13 +88,31 @@ const WarehouseConfiguration = () => {
             width: z.width || 300,
             height: z.height || 300,
             color: "rgba(57, 198, 198, 0.15)",
+            // --- ADDED: FEATURE ZONE PROPERTIES (Load từ DB) ---
+            isESD: z.isESD || false,
+            isMSD: z.isMSD || false,
+            zoneType: z.zoneType || "NORMAL",
+            isEsd: z.isEsd ?? z.isESD ?? false,
+            isMsd: z.isMsd ?? z.isMSD ?? false,
+            // ===== ADDED CODE START =====
+            // Load the new boolean fields
+            isCold: z.isCold ?? false,
+            isVulnerable: z.isVulnerable ?? false,
+            isHighValue: z.isHighValue ?? false,
+            // ===== ADDED CODE END =====
             shelves: (z.shelves || []).map((s, sIndex) => ({
               id: s.id || `s-${Date.now()}-${sIndex}`,
               code: s.code || `S-${sIndex + 1}`,
               x: s.x ?? 20,
               y: s.y ?? 20,
               width: s.width || 40,
-              height: s.height || 100,
+              // ===== FIX START =====
+              // FIX CONCEPTUAL MISMATCH: Map API length -> state height (2D canvas rendering depth)
+              // Map API height -> state verticalHeight (Real world vertical height, unrendered)
+              // Removed duplicate length/height properties to resolve Vite warnings
+              height: s.length || 100,
+              verticalHeight: s.height || 0,
+              // ===== FIX END =====
               accessNodes: (s.accessNodes || []).map((a) => ({
                 id: a.id,
                 side: a.side || "none",
@@ -108,6 +126,14 @@ const WarehouseConfiguration = () => {
                 bins: (l.bins || []).map((b) => ({
                   id: b.id,
                   name: b.code || "",
+                  // Ép kiểu an toàn: Dù DB trả về boolean (false) hay chuỗi ("inactive"), đều đưa về chuẩn "inactive".
+                  status:
+                    b.status === false ||
+                    b.status === "false" ||
+                    b.status === "inactive" ||
+                    b.status === "INACTIVE"
+                      ? "inactive"
+                      : "active",
                 })),
               })),
             })),
@@ -121,7 +147,12 @@ const WarehouseConfiguration = () => {
               x: n.x ?? 100,
               y: n.y ?? 100,
               radius: n.radius || 8,
-              color: "#39c6c6",
+              color:
+                n.type === "start"
+                  ? "#10b981"
+                  : n.type === "finish"
+                    ? "#ef4444"
+                    : "#39c6c6",
               side: n.side || "none",
               type: n.type || "nav",
             }));
@@ -179,13 +210,32 @@ const WarehouseConfiguration = () => {
           y: z.y,
           width: z.width,
           height: z.height,
+          // --- ADDED: FEATURE ZONE PROPERTIES (Lưu xuống DB) ---
+          isESD: z.isESD || false,
+          isMSD: z.isMSD || false,
+          zoneType: z.zoneType || "NORMAL",
+          isEsd: z.isEsd ?? z.isESD ?? false,
+          isMsd: z.isMsd ?? z.isMSD ?? false,
+          // ===== ADDED CODE START =====
+          // Include the new fields in the payload
+          isCold: z.isCold ?? false,
+          isVulnerable: z.isVulnerable ?? false,
+          isHighValue: z.isHighValue ?? false,
+          // ===== ADDED CODE END =====
           shelves: z.shelves.map((s) => ({
             id: s.id,
             code: s.code || "",
             x: s.x,
             y: s.y,
             width: s.width,
-            height: s.height,
+            // ===== FIX START =====
+            // RE-MAP TO API STRUCTURE:
+            // Send internal 2D state 'height' as API 'length'
+            // Send internal vertical 'verticalHeight' as API 'height'
+            // Cleaned duplicate properties.
+            length: s.height,
+            height: s.verticalHeight ?? 0,
+            // ===== FIX END =====
             accessNodes: (s.accessNodes || []).map((a) => ({
               id: a.id,
               side: a.side || "none",
@@ -199,6 +249,16 @@ const WarehouseConfiguration = () => {
               bins: (l.bins || []).map((b) => ({
                 id: b.id,
                 code: b.name || "",
+                // Cố định luôn gửi lên chuỗi "active" hoặc "inactive"
+                status:
+                  b.status === false || b.status === "inactive"
+                    ? "inactive"
+                    : "active",
+                // ===== ADDED CODE START =====
+                width: s.width || 0,
+                length: (s.height || 0) / (l.bins?.length || 1),
+                height: (s.verticalHeight || 0) / (s.levels?.length || 1),
+                // ===== ADDED CODE END =====
               })),
             })),
           })),
@@ -219,6 +279,8 @@ const WarehouseConfiguration = () => {
         })),
       };
 
+      console.log("payload: ", payload);
+
       await api.post(
         `/update-company-warehouse/${companyId}/structure/${warehouseId}`,
         payload,
@@ -236,6 +298,26 @@ const WarehouseConfiguration = () => {
   };
 
   // --- LOGIC FUNCTIONS ---
+  // ===== ADDED CODE START =====
+  const handleUpdateShelfDimension = (zoneId, shelfId, field, value) => {
+    // Avoid NaN crashing Konva, fallback to 0 safely
+    const numValue = Math.max(0, Number(value) || 0);
+    setData((prev) => ({
+      ...prev,
+      zones: prev.zones.map((z) => {
+        if (z.id !== zoneId) return z;
+        return {
+          ...z,
+          shelves: z.shelves.map((s) => {
+            if (s.id !== shelfId) return s;
+            return { ...s, [field]: numValue };
+          }),
+        };
+      }),
+    }));
+  };
+  // ===== ADDED CODE END =====
+
   const getNextShelfCode = (currentData) => {
     let maxNum = 0;
     currentData.zones.forEach((z) => {
@@ -278,6 +360,59 @@ const WarehouseConfiguration = () => {
   };
 
   const activeShelf = getSelectedShelf();
+
+  // --- ADDED: FEATURE - LẤY ZONE ĐANG ĐƯỢC CHỌN ---
+  const getSelectedZone = () => {
+    if (selectedIds.length !== 1) return null;
+    const zid = selectedIds[0];
+    if (!zid.startsWith("z-")) return null;
+    return data.zones.find((z) => z.id === zid) || null;
+  };
+
+  const activeZone = getSelectedZone();
+
+  // FEATURE - LẤY NODE ĐANG ĐƯỢC CHỌN
+  const getSelectedNode = () => {
+    if (selectedIds.length !== 1) return null;
+    const nid = selectedIds[0];
+    if (!nid.startsWith("n-")) return null;
+    return data.nodes.find((n) => n.id === nid) || null;
+  };
+
+  const activeNode = getSelectedNode();
+
+  // Hàm cập nhật thuộc tính cho Node
+  const handleUpdateNode = (nodeId, field, value) => {
+    setData((prev) => ({
+      ...prev,
+      nodes: prev.nodes.map((n) => {
+        if (n.id === nodeId) {
+          let newColor = n.color;
+          // Cập nhật màu sắc UI dựa trên loại Type
+          if (field === "type") {
+            if (value === "start")
+              newColor = "#10b981"; // Green
+            else if (value === "finish")
+              newColor = "#ef4444"; // Red
+            else newColor = "#39c6c6"; // Cyan
+          }
+          return { ...n, [field]: value, color: newColor };
+        }
+        return n;
+      }),
+    }));
+  };
+
+  // Hàm cập nhật trạng thái của Zone
+  const handleUpdateZone = (zoneId, field, value) => {
+    setData((prev) => ({
+      ...prev,
+      zones: prev.zones.map((z) =>
+        z.id === zoneId ? { ...z, [field]: value } : z,
+      ),
+    }));
+  };
+  // -------------------------------------------------
 
   const handleToggleAccessNode = (zoneId, shelfId, side) => {
     setData((prev) => ({
@@ -389,6 +524,18 @@ const WarehouseConfiguration = () => {
       height: 250,
       color: "rgba(57, 198, 198, 0.15)",
       shelves: [],
+      // --- ADDED: Giá trị mặc định khi tạo mới ---
+      isESD: false,
+      isMSD: false,
+      zoneType: "NORMAL",
+      isEsd: false,
+      isMsd: false,
+      // ===== ADDED CODE START =====
+      // Initialize new fields as false for new zones
+      isCold: false,
+      isVulnerable: false,
+      isHighValue: false,
+      // ===== ADDED CODE END =====
     };
     setData((prev) => ({ ...prev, zones: [...prev.zones, newZone] }));
     setSelectedIds([nid]);
@@ -414,7 +561,12 @@ const WarehouseConfiguration = () => {
         x: 20,
         y: 20,
         width: 40,
+        // ===== FIX START =====
+        // FIX OVERRIDE: Keep 2D depth mapped to state height, vertical height mapped to state verticalHeight
+        // Cleaned up duplicate keys
         height: 100,
+        verticalHeight: 0,
+        // ===== FIX END =====
         accessNodes: [],
         levels: [],
       };
@@ -440,6 +592,7 @@ const WarehouseConfiguration = () => {
       y: posY || 100,
       radius: 8,
       color: "#39c6c6",
+      type: "nav", // Default type required by API
     };
     setData((prev) => ({ ...prev, nodes: [...prev.nodes, newNode] }));
     setSelectedIds([nid]);
@@ -851,6 +1004,7 @@ const WarehouseConfiguration = () => {
                 const newBin = {
                   id: `bin-${Date.now()}-${Math.random()}`,
                   name: `B-${l.bins.length + 1}`,
+                  status: "active", // Trạng thái mặc định khi tạo mới
                 };
                 return { ...l, bins: [...l.bins, newBin] };
               }),
@@ -875,6 +1029,41 @@ const WarehouseConfiguration = () => {
               levels: (s.levels || []).map((l) => {
                 if (l.id !== levelId) return l;
                 return { ...l, bins: l.bins.filter((b) => b.id !== binId) };
+              }),
+            };
+          }),
+        };
+      }),
+    }));
+  };
+
+  // Hàm cập nhật trạng thái của Bin
+  const handleUpdateBinStatus = (
+    zoneId,
+    shelfId,
+    levelId,
+    binId,
+    newStatus,
+  ) => {
+    setData((prev) => ({
+      ...prev,
+      zones: prev.zones.map((z) => {
+        if (z.id !== zoneId) return z;
+        return {
+          ...z,
+          shelves: z.shelves.map((s) => {
+            if (s.id !== shelfId) return s;
+            return {
+              ...s,
+              levels: (s.levels || []).map((l) => {
+                if (l.id !== levelId) return l;
+                return {
+                  ...l,
+                  bins: l.bins.map((b) => {
+                    if (b.id !== binId) return b;
+                    return { ...b, status: newStatus };
+                  }),
+                };
               }),
             };
           }),
@@ -1002,7 +1191,10 @@ const WarehouseConfiguration = () => {
         {/* CENTER - KONVA STAGE */}
         <main className="!flex-1 !relative !overflow-hidden">
           <Stage
-            width={window.innerWidth - (activeShelf ? 600 : 300)}
+            width={
+              window.innerWidth -
+              (activeShelf || activeZone || activeNode ? 600 : 300)
+            }
             height={window.innerHeight}
             ref={stageRef}
             scaleX={scale}
@@ -1191,157 +1383,452 @@ const WarehouseConfiguration = () => {
         </main>
 
         {/* SIDEBAR PHẢI - DETAILS */}
-        {activeShelf && (
+        {(activeShelf || activeZone || activeNode) && (
           <aside className="!w-[300px] !bg-slate-800 !border-l !border-[#10b981] !border-l-2 !flex !flex-col !overflow-y-auto !z-10 !shadow-[-5px_0_15px_rgba(0,0,0,0.3)]">
-            <div className="!p-5">
-              <div className="!flex !justify-between !items-start !mb-5">
-                <h3 className="!text-[#10b981] !font-bold !text-lg !m-0">
-                  Shelf Details
-                </h3>
-                <button
-                  onClick={() => setSelectedIds([])}
-                  className="!bg-transparent !border-none !text-slate-400 hover:!text-white !cursor-pointer"
-                >
-                  <X size={20} />
-                </button>
-              </div>
-
-              <div className="!bg-slate-700/50 !p-3 !rounded-xl !mb-4">
-                <p className="!text-xs !text-slate-400 !m-0 !mb-1">
-                  Shelf Code:{" "}
-                  <span className="!text-white !font-bold">
-                    {activeShelf.code}
-                  </span>
-                </p>
-                <p className="!text-[10px] !text-slate-500 !m-0 !truncate">
-                  ID: {activeShelf.id}
-                </p>
-              </div>
-
-              <div className="!mt-4">
-                <p className="!text-xs !text-[#10b981] !font-bold !mb-4 !flex !items-center !gap-2">
-                  ACCESS POINTS (SIDES)
-                </p>
-                <div className="!flex !flex-col !gap-3">
-                  {["top", "bottom", "left", "right"].map((side) => {
-                    const isChecked = activeShelf.accessNodes?.some(
-                      (n) => n.side === side,
-                    );
-                    return (
-                      <label
-                        key={side}
-                        className="!flex !items-center !text-sm !text-slate-200 !cursor-pointer !p-2 !bg-slate-700/50 !rounded-md !border !border-slate-600"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={isChecked}
-                          onChange={() =>
-                            handleToggleAccessNode(
-                              activeShelf.zoneId,
-                              activeShelf.id,
-                              side,
-                            )
-                          }
-                          className="!cursor-pointer"
-                        />
-                        <span className="!ml-3 !capitalize">{side} Side</span>
-                      </label>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div className="!mt-6">
-                <div className="!flex !justify-between !items-center !mb-3">
-                  <p className="!text-xs !text-[#10b981] !font-bold !m-0">
-                    LEVELS & BINS
-                  </p>
+            {/* PHẦN HIỂN THỊ CHI TIẾT SHELF (GIỮ NGUYÊN) */}
+            {activeShelf && (
+              <div className="!p-5">
+                <div className="!flex !justify-between !items-start !mb-5">
+                  <h3 className="!text-[#10b981] !font-bold !text-lg !m-0">
+                    Shelf Details
+                  </h3>
                   <button
-                    onClick={() =>
-                      handleAddLevel(activeShelf.zoneId, activeShelf.id)
-                    }
-                    className="!bg-[#3b82f6] !text-white !border-none !px-2 !py-1 !rounded !text-[10px] !font-bold !cursor-pointer"
+                    onClick={() => setSelectedIds([])}
+                    className="!bg-transparent !border-none !text-slate-400 hover:!text-white !cursor-pointer"
                   >
-                    + Add Level
+                    <X size={20} />
                   </button>
                 </div>
 
-                <div className="!flex !flex-col !gap-3 !max-h-[300px] !overflow-y-auto !pr-1">
-                  {(activeShelf.levels || []).map((level) => (
-                    <div
-                      key={level.id}
-                      className="!bg-slate-700/50 !p-3 !rounded-md !border !border-slate-600"
-                    >
-                      <div className="!flex !justify-between !items-center !mb-2">
-                        <span className="!text-xs !font-bold !text-slate-200">
-                          {level.name}
-                        </span>
-                        <div>
-                          <button
-                            onClick={() =>
-                              handleAddBin(
-                                activeShelf.zoneId,
-                                activeShelf.id,
-                                level.id,
-                              )
-                            }
-                            className="!bg-transparent !border-none !text-[#3b82f6] !cursor-pointer !text-[11px] !mr-2"
-                          >
-                            + Bin
-                          </button>
-                          <button
-                            onClick={() =>
-                              handleDeleteLevel(
-                                activeShelf.zoneId,
-                                activeShelf.id,
-                                level.id,
-                              )
-                            }
-                            className="!bg-transparent !border-none !text-rose-400 !cursor-pointer !text-[11px]"
-                          >
-                            Del
-                          </button>
-                        </div>
-                      </div>
+                <div className="!bg-slate-700/50 !p-3 !rounded-xl !mb-4">
+                  <p className="!text-xs !text-slate-400 !m-0 !mb-1">
+                    Shelf Code:{" "}
+                    <span className="!text-white !font-bold">
+                      {activeShelf.code}
+                    </span>
+                  </p>
+                  <p className="!text-[10px] !text-slate-500 !m-0 !truncate">
+                    ID: {activeShelf.id}
+                  </p>
+                </div>
 
-                      <div className="!flex !flex-wrap !gap-1.5">
-                        {level.bins?.map((bin) => (
-                          <div
-                            key={bin.id}
-                            className="!flex !items-center !bg-slate-800 !px-2 !py-1 !rounded !text-[10px] !text-slate-300"
-                          >
-                            {bin.name}
+                <div className="!mt-4">
+                  <p className="!text-xs !text-[#10b981] !font-bold !mb-4 !flex !items-center !gap-2">
+                    ACCESS POINTS (SIDES)
+                  </p>
+                  <div className="!flex !flex-col !gap-3">
+                    {["top", "bottom", "left", "right"].map((side) => {
+                      const isChecked = activeShelf.accessNodes?.some(
+                        (n) => n.side === side,
+                      );
+                      return (
+                        <label
+                          key={side}
+                          className="!flex !items-center !text-sm !text-slate-200 !cursor-pointer !p-2 !bg-slate-700/50 !rounded-md !border !border-slate-600"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={isChecked}
+                            onChange={() =>
+                              handleToggleAccessNode(
+                                activeShelf.zoneId,
+                                activeShelf.id,
+                                side,
+                              )
+                            }
+                            className="!cursor-pointer"
+                          />
+                          <span className="!ml-3 !capitalize">{side} Side</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="!mt-6">
+                  <p className="!text-xs !text-[#10b981] !font-bold !mb-4 !flex !items-center !gap-2">
+                    DIMENSIONS
+                  </p>
+                  <div className="!flex !flex-col !gap-3">
+                    <div className="!flex !justify-between !items-center !bg-slate-700/50 !p-2 !rounded-md !border !border-slate-600">
+                      <span className="!text-sm !text-slate-200">Width</span>
+                      <input
+                        type="number"
+                        value={activeShelf.width ?? 0}
+                        onChange={(e) =>
+                          handleUpdateShelfDimension(
+                            activeShelf.zoneId,
+                            activeShelf.id,
+                            "width",
+                            e.target.value,
+                          )
+                        }
+                        className="!w-24 !p-1 !bg-slate-800 !text-white !rounded !border !border-slate-600 !outline-none focus:!border-[#10b981] !text-right"
+                      />
+                    </div>
+                    <div className="!flex !justify-between !items-center !bg-slate-700/50 !p-2 !rounded-md !border !border-slate-600">
+                      {/* Note: Length in UI corresponds to Canvas/Internal Height (2D Depth) */}
+                      <span className="!text-sm !text-slate-200">Length</span>
+                      <input
+                        type="number"
+                        value={activeShelf.height ?? 0}
+                        onChange={(e) =>
+                          handleUpdateShelfDimension(
+                            activeShelf.zoneId,
+                            activeShelf.id,
+                            "height",
+                            e.target.value,
+                          )
+                        }
+                        className="!w-24 !p-1 !bg-slate-800 !text-white !rounded !border !border-slate-600 !outline-none focus:!border-[#10b981] !text-right"
+                      />
+                    </div>
+                    <div className="!flex !justify-between !items-center !bg-slate-700/50 !p-2 !rounded-md !border !border-slate-600">
+                      {/* Note: Height in UI corresponds to Real-world verticalHeight (Not visual) */}
+                      <span className="!text-sm !text-slate-200">Height</span>
+                      <input
+                        type="number"
+                        value={activeShelf.verticalHeight ?? 0}
+                        onChange={(e) =>
+                          handleUpdateShelfDimension(
+                            activeShelf.zoneId,
+                            activeShelf.id,
+                            "verticalHeight",
+                            e.target.value,
+                          )
+                        }
+                        className="!w-24 !p-1 !bg-slate-800 !text-white !rounded !border !border-slate-600 !outline-none focus:!border-[#10b981] !text-right"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="!mt-6">
+                  <div className="!flex !justify-between !items-center !mb-3">
+                    <p className="!text-xs !text-[#10b981] !font-bold !m-0">
+                      LEVELS & BINS
+                    </p>
+                    <button
+                      onClick={() =>
+                        handleAddLevel(activeShelf.zoneId, activeShelf.id)
+                      }
+                      className="!bg-[#3b82f6] !text-white !border-none !px-2 !py-1 !rounded !text-[10px] !font-bold !cursor-pointer"
+                    >
+                      + Add Level
+                    </button>
+                  </div>
+
+                  <div className="!flex !flex-col !gap-3 !max-h-[300px] !overflow-y-auto !pr-1">
+                    {(activeShelf.levels || []).map((level) => (
+                      <div
+                        key={level.id}
+                        className="!bg-slate-700/50 !p-3 !rounded-md !border !border-slate-600"
+                      >
+                        <div className="!flex !justify-between !items-center !mb-2">
+                          <span className="!text-xs !font-bold !text-slate-200">
+                            {level.name}
+                          </span>
+                          <div>
                             <button
                               onClick={() =>
-                                handleDeleteBin(
+                                handleAddBin(
                                   activeShelf.zoneId,
                                   activeShelf.id,
                                   level.id,
-                                  bin.id,
                                 )
                               }
-                              className="!bg-transparent !border-none !text-rose-400 !cursor-pointer !text-[10px] !ml-1 !p-0"
+                              className="!bg-transparent !border-none !text-[#3b82f6] !cursor-pointer !text-[11px] !mr-2"
                             >
-                              ✕
+                              + Bin
+                            </button>
+                            <button
+                              onClick={() =>
+                                handleDeleteLevel(
+                                  activeShelf.zoneId,
+                                  activeShelf.id,
+                                  level.id,
+                                )
+                              }
+                              className="!bg-transparent !border-none !text-rose-400 !cursor-pointer !text-[11px]"
+                            >
+                              Del
                             </button>
                           </div>
-                        ))}
-                        {(!level.bins || level.bins.length === 0) && (
-                          <span className="!text-[10px] !text-slate-500 !italic">
-                            No bins
-                          </span>
-                        )}
+                        </div>
+
+                        <div className="!flex !flex-col !gap-2">
+                          {level.bins?.map((bin) => (
+                            <div
+                              key={bin.id}
+                              className={`!flex !justify-between !items-center !px-2 !py-1.5 !rounded !text-[10px] !text-slate-300 !border ${
+                                bin.status === "inactive"
+                                  ? "!bg-slate-800/80 !border-slate-700 !text-slate-500"
+                                  : "!bg-slate-800 !border-slate-600"
+                              }`}
+                            >
+                              <span className="!font-medium">{bin.name}</span>
+
+                              <div className="!flex !items-center !gap-2">
+                                <select
+                                  value={bin.status || "active"}
+                                  onChange={(e) =>
+                                    handleUpdateBinStatus(
+                                      activeShelf.zoneId,
+                                      activeShelf.id,
+                                      level.id,
+                                      bin.id,
+                                      e.target.value,
+                                    )
+                                  }
+                                  className={`!text-[9px] !rounded !px-1 !py-0.5 !border-none !outline-none !cursor-pointer ${
+                                    bin.status === "inactive"
+                                      ? "!bg-rose-500/20 !text-rose-400"
+                                      : "!bg-emerald-500/20 !text-emerald-400"
+                                  }`}
+                                >
+                                  <option
+                                    value="active"
+                                    className="!bg-slate-800 !text-emerald-400"
+                                  >
+                                    Active
+                                  </option>
+                                  <option
+                                    value="inactive"
+                                    className="!bg-slate-800 !text-rose-400"
+                                  >
+                                    Inactive
+                                  </option>
+                                </select>
+
+                                <button
+                                  onClick={() =>
+                                    handleDeleteBin(
+                                      activeShelf.zoneId,
+                                      activeShelf.id,
+                                      level.id,
+                                      bin.id,
+                                    )
+                                  }
+                                  className="!bg-transparent !border-none !text-slate-500 hover:!text-rose-400 !cursor-pointer !text-[12px] !p-0 !leading-none"
+                                  title="Delete Bin"
+                                >
+                                  ✕
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                          {(!level.bins || level.bins.length === 0) && (
+                            <span className="!text-[10px] !text-slate-500 !italic">
+                              No bins
+                            </span>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                  {(!activeShelf.levels || activeShelf.levels.length === 0) && (
-                    <p className="!text-[11px] !text-slate-500 !italic !text-center !my-3">
-                      No levels added yet.
-                    </p>
-                  )}
+                    ))}
+                    {(!activeShelf.levels ||
+                      activeShelf.levels.length === 0) && (
+                      <p className="!text-[11px] !text-slate-500 !italic !text-center !my-3">
+                        No levels added yet.
+                      </p>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
+
+            {/* --- ADDED: FEATURE PHẦN HIỂN THỊ CHI TIẾT ZONE --- */}
+            {activeZone && (
+              <div className="!p-5">
+                <div className="!flex !justify-between !items-start !mb-5">
+                  <h3 className="!text-[#39c6c6] !font-bold !text-lg !m-0">
+                    Zone Details
+                  </h3>
+                  <button
+                    onClick={() => setSelectedIds([])}
+                    className="!bg-transparent !border-none !text-slate-400 hover:!text-white !cursor-pointer"
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
+
+                <div className="!bg-slate-700/50 !p-3 !rounded-xl !mb-4">
+                  <p className="!text-xs !text-slate-400 !m-0 !mb-1">
+                    Zone Name:{" "}
+                    <span className="!text-white !font-bold">
+                      {activeZone.name}
+                    </span>
+                  </p>
+                  <p className="!text-[10px] !text-slate-500 !m-0 !truncate">
+                    ID: {activeZone.id}
+                  </p>
+                </div>
+
+                <div className="!mt-4">
+                  <p className="!text-xs !text-[#39c6c6] !font-bold !mb-4 !flex !items-center !gap-2">
+                    ENVIRONMENTAL REQUIREMENTS
+                  </p>
+                  <div className="!flex !flex-col !gap-3">
+                    <label className="!flex !items-center !text-sm !text-slate-200 !cursor-pointer !p-2 !bg-slate-700/50 !rounded-md !border !border-slate-600">
+                      <input
+                        type="checkbox"
+                        checked={
+                          activeZone.isEsd === true || activeZone.isESD === true
+                        }
+                        onChange={(e) => {
+                          handleUpdateZone(
+                            activeZone.id,
+                            "isEsd",
+                            e.target.checked,
+                          );
+                          handleUpdateZone(
+                            activeZone.id,
+                            "isESD",
+                            e.target.checked,
+                          );
+                        }}
+                        className="!cursor-pointer"
+                      />
+                      <span className="!ml-3">Requires ESD (Anti-static)</span>
+                    </label>
+
+                    <label className="!flex !items-center !text-sm !text-slate-200 !cursor-pointer !p-2 !bg-slate-700/50 !rounded-md !border !border-slate-600">
+                      <input
+                        type="checkbox"
+                        checked={
+                          activeZone.isMsd === true || activeZone.isMSD === true
+                        }
+                        onChange={(e) => {
+                          handleUpdateZone(
+                            activeZone.id,
+                            "isMsd",
+                            e.target.checked,
+                          );
+                          handleUpdateZone(
+                            activeZone.id,
+                            "isMSD",
+                            e.target.checked,
+                          );
+                        }}
+                        className="!cursor-pointer"
+                      />
+                      <span className="!ml-3">
+                        Requires MSD (Moisture control)
+                      </span>
+                    </label>
+                    <label className="!flex !items-center !text-sm !text-slate-200 !cursor-pointer !p-2 !bg-slate-700/50 !rounded-md !border !border-slate-600">
+                      <input
+                        type="checkbox"
+                        checked={activeZone.isCold === true}
+                        onChange={(e) =>
+                          handleUpdateZone(
+                            activeZone.id,
+                            "isCold",
+                            e.target.checked,
+                          )
+                        }
+                        className="!cursor-pointer"
+                      />
+                      <span className="!ml-3">Cold Storage</span>
+                    </label>
+                    <label className="!flex !items-center !text-sm !text-slate-200 !cursor-pointer !p-2 !bg-slate-700/50 !rounded-md !border !border-slate-600">
+                      <input
+                        type="checkbox"
+                        checked={activeZone.isVulnerable === true}
+                        onChange={(e) =>
+                          handleUpdateZone(
+                            activeZone.id,
+                            "isVulnerable",
+                            e.target.checked,
+                          )
+                        }
+                        className="!cursor-pointer"
+                      />
+                      <span className="!ml-3">Vulnerable / Fragile</span>
+                    </label>
+                    <label className="!flex !items-center !text-sm !text-slate-200 !cursor-pointer !p-2 !bg-slate-700/50 !rounded-md !border !border-slate-600">
+                      <input
+                        type="checkbox"
+                        checked={activeZone.isHighValue === true}
+                        onChange={(e) =>
+                          handleUpdateZone(
+                            activeZone.id,
+                            "isHighValue",
+                            e.target.checked,
+                          )
+                        }
+                        className="!cursor-pointer"
+                      />
+                      <span className="!ml-3">High Value / Secure</span>
+                    </label>
+                  </div>
+                </div>
+
+                <div className="!mt-6">
+                  <p className="!text-xs !text-[#39c6c6] !font-bold !mb-4 !flex !items-center !gap-2">
+                    ZONE TYPE
+                  </p>
+                  <select
+                    value={activeZone.zoneType || "NORMAL"}
+                    onChange={(e) =>
+                      handleUpdateZone(
+                        activeZone.id,
+                        "zoneType",
+                        e.target.value,
+                      )
+                    }
+                    className="!w-full !p-2 !bg-slate-700/50 !text-slate-200 !rounded-md !border !border-slate-600 !outline-none focus:!border-[#39c6c6]"
+                  >
+                    <option value="NORMAL">Normal</option>
+                    <option value="COLD">Cold Storage</option>
+                    <option value="HAZARDOUS">Hazardous Material</option>
+                    <option value="BATTERY">Battery Storage</option>
+                    <option value="VALUABLE">Valuable/Secure</option>
+                  </select>
+                </div>
+              </div>
+            )}
+
+            {activeNode && (
+              <div className="!p-5">
+                <div className="!flex !justify-between !items-start !mb-5">
+                  <h3 className="!text-[#39c6c6] !font-bold !text-lg !m-0">
+                    Node Details
+                  </h3>
+                  <button
+                    onClick={() => setSelectedIds([])}
+                    className="!bg-transparent !border-none !text-slate-400 hover:!text-white !cursor-pointer"
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
+
+                <div className="!bg-slate-700/50 !p-3 !rounded-xl !mb-4">
+                  <p className="!text-xs !text-slate-400 !m-0 !mb-1">
+                    Node ID:{" "}
+                    <span className="!text-white !font-bold">
+                      {activeNode.id}
+                    </span>
+                  </p>
+                </div>
+
+                <div className="!mt-4">
+                  <p className="!text-xs !text-[#39c6c6] !font-bold !mb-4 !flex !items-center !gap-2">
+                    NODE TYPE
+                  </p>
+                  <select
+                    value={activeNode.type || "nav"}
+                    onChange={(e) =>
+                      handleUpdateNode(activeNode.id, "type", e.target.value)
+                    }
+                    className="!w-full !p-2 !bg-slate-700/50 !text-slate-200 !rounded-md !border !border-slate-600 !outline-none focus:!border-[#39c6c6]"
+                  >
+                    <option value="nav">Navigation (nav)</option>
+                    <option value="start">Start Point (start)</option>
+                    <option value="finish">Finish Point (finish)</option>
+                  </select>
+                </div>
+              </div>
+            )}
           </aside>
         )}
       </div>

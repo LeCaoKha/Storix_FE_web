@@ -18,22 +18,30 @@ const InboundTicketCreate = () => {
   const [loading, setLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
 
-  // console.log("data: ", data);
-
   const companyId = localStorage.getItem("companyId");
   const userId = localStorage.getItem("userId");
 
   const fetchData = async () => {
     try {
       setLoading(true);
-      // Gọi song song cả API lấy Request và API lấy danh sách User
-      const [requestRes, usersRes] = await Promise.all([
-        api.get(`/InventoryInbound/requests/${companyId}/${id}`),
-        api.get(`/Users`), // API lấy danh sách user
-      ]);
 
+      // 1. Lấy dữ liệu Inbound Request trước
+      const requestRes = await api.get(
+        `/InventoryInbound/requests/${companyId}/${id}`,
+      );
       setData(requestRes.data);
-      setUsers(usersRes.data);
+
+      // 2. Lấy danh sách User (Bọc try...catch riêng để chống sập nếu Staff bị lỗi 403)
+      try {
+        const usersRes = await api.get(`/Users`);
+        setUsers(usersRes.data);
+      } catch (userError) {
+        console.warn(
+          "Lỗi lấy danh sách Users (Có thể do Staff không có quyền):",
+          userError,
+        );
+        setUsers([]); // Gán mảng rỗng để giao diện không bị crash
+      }
     } catch (error) {
       console.error("Fetch error:", error);
       message.error("Failed to load resources");
@@ -66,14 +74,46 @@ const InboundTicketCreate = () => {
         staffId: selectedStaffId, // Sử dụng giá trị từ Select
       };
 
+      // 1. Gọi API tạo Inbound Ticket
       const res = await api.post(
         `/InventoryInbound/create-inbound-ticket/${id}/tickets`,
         payload,
       );
 
       if (res.status === 200 || res.status === 201) {
-        message.success("Inbound Ticket created successfully!");
-        navigate("/company-admin/inbound-ticket-management");
+        const ticketData = res.data;
+
+        // 2. NGAY LẬP TỨC GỌI WEBHOOK n8n ĐỂ CHẠY STORAGE RECOMMENDATION
+        try {
+          await api.post(
+            "http://localhost:5678/webhook/storage-recommendation",
+            {
+              inboundTicketId: ticketData.id,
+              userId: Number(userId),
+              companyId: Number(companyId),
+              warehouseId: ticketData.warehouseId,
+            },
+          );
+          console.log("Đã trigger webhook n8n thành công!");
+        } catch (webhookError) {
+          console.error("Lỗi khi gọi n8n Webhook:", webhookError);
+          message.warning(
+            "Ticket created but AI recommendation trigger failed.",
+          );
+        }
+
+        message.success("Inbound Ticket created & AI recommendation started!");
+
+        // 3. Điều hướng dựa trên roleId
+        const roleId = Number(localStorage.getItem("roleId"));
+        const basePath =
+          roleId === 2
+            ? "/company-admin"
+            : roleId === 4
+              ? "/staff"
+              : "/manager";
+
+        navigate(`${basePath}/inbound-ticket-management`);
       }
     } catch (error) {
       console.error("Create ticket error:", error);
@@ -93,7 +133,6 @@ const InboundTicketCreate = () => {
   return (
     <div className="pt-7 px-12 bg-[#F8FAFC] min-h-screen font-sans">
       <DetailsHeader
-        // Không hardcode Approved nếu data đã có status từ API
         data={data}
         onApprove={handleCreateTicket}
         isApproving={isCreating}
@@ -112,7 +151,6 @@ const InboundTicketCreate = () => {
 
           <div className="w-[30%] space-y-6">
             <DetailsSidebarInfo
-              // Truyền toàn bộ data. Warehouse lúc này nằm trong data.warehouse
               data={data}
               users={users}
               selectedStaffId={selectedStaffId}

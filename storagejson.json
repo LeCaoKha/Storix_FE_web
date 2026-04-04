@@ -1,0 +1,82 @@
+[
+  {
+    "success": true,
+    "totalProcessed": 2,
+    "results": [
+      {
+        "id": 54,
+        "companyId": 10,
+        "sku": "CCC-123",
+        "name": "CCC",
+        "typeId": 15,
+        "unit": "box",
+        "weight": 123,
+        "description": "123",
+        "createdAt": "2026-03-20T07:37:05.108147",
+        "updatedAt": "2026-03-20T08:02:40.298148",
+        "image": "https://res.cloudinary.com/dhrd2odvd/image/upload/v1773992223/products/ljaluit3tcmf6s3z08ak.png",
+        "width": 123,
+        "length": 123,
+        "height": 123,
+        "categoryId": 8,
+        "category": {
+          "id": 8,
+          "companyId": 10,
+          "name": "123",
+          "parentCategoryId": 6,
+          "level": 2,
+          "createdAt": "2026-03-20T07:19:47.322328",
+          "company": null,
+          "inverseParentCategory": [],
+          "parentCategory": null,
+          "products": [null]
+        },
+        "company": null,
+        "status": "SUCCESS",
+        "recommendation": {
+          "binId": "bin-1773993342251-0.6429834106626294",
+          "path": "Zone 2 > S-2 > L-1 > B-1",
+          "distanceInfo": 532
+        },
+        "aiExplanation": "Đây là vị trí trống đầu tiên hệ thống tìm thấy, tối ưu hóa thời gian nhập kho xe nâng (putaway time)."
+      },
+      {
+        "id": 53,
+        "companyId": 10,
+        "sku": "QWE-13",
+        "name": "qwe",
+        "typeId": 15,
+        "unit": "box",
+        "weight": 123,
+        "description": "123",
+        "createdAt": "2026-03-20T06:56:22.415077",
+        "updatedAt": "2026-03-20T08:02:54.087703",
+        "image": "https://res.cloudinary.com/dhrd2odvd/image/upload/v1773989781/products/ybkr6cd258z4kjomsfu4.png",
+        "width": 123,
+        "length": 123,
+        "height": 123,
+        "categoryId": 10,
+        "category": {
+          "id": 10,
+          "companyId": 10,
+          "name": "41",
+          "parentCategoryId": 9,
+          "level": 2,
+          "createdAt": "2026-03-20T07:36:16.773361",
+          "company": null,
+          "inverseParentCategory": [],
+          "parentCategory": null,
+          "products": [null]
+        },
+        "company": null,
+        "status": "SUCCESS",
+        "recommendation": {
+          "binId": "bin-1773993281426-0.9419600854856157",
+          "path": "Zone 1 > S-1 > L-1 > B-1",
+          "distanceInfo": 410
+        },
+        "aiExplanation": "Là vị trí trống đầu tiên được tìm thấy, nhằm tối ưu hóa thời gian nhập kho."
+      }
+    ]
+  }
+]

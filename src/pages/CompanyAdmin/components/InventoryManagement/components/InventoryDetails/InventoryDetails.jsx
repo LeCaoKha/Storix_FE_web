@@ -18,14 +18,15 @@ const InventoryDetails = () => {
   const { id: warehouseId } = useParams();
   const navigate = useNavigate();
 
-  const [inventoryData, setInventoryData] = useState({
-    items: [],
-    totalProducts: 0,
-  });
+  // Đã sửa: Khởi tạo state là một mảng rỗng để khớp với API trả về
+  const [inventoryData, setInventoryData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchText, setSearchText] = useState("");
 
   const companyId = localStorage.getItem("companyId");
+  const roleId = Number(localStorage.getItem("roleId"));
+
+  console.log("inventory data: ", inventoryData);
 
   // --- FETCH INVENTORY LOGIC ---
   const fetchInventory = async () => {
@@ -43,6 +44,7 @@ const InventoryDetails = () => {
       const response = await api.get(
         `/company-warehouses/${companyId}/warehouses/${warehouseId}/inventory`,
       );
+      // response.data lúc này là mảng các object [{...}, {...}]
       setInventoryData(response.data);
     } catch (error) {
       console.error("Fetch inventory error:", error);
@@ -58,33 +60,34 @@ const InventoryDetails = () => {
     fetchInventory();
   }, [companyId, warehouseId]);
 
-  const items = inventoryData.items || [];
+  // Đã sửa: Trực tiếp gán mảng inventoryData
+  const items = inventoryData || [];
 
   // --- ANTD TABLE COLUMNS ---
   const columns = [
     {
       title: "SKU",
-      dataIndex: "sku",
-      key: "sku",
+      dataIndex: "productSku", // Đã sửa: map đúng field productSku
+      key: "productSku",
       width: 200,
-      render: (sku) => (
+      render: (productSku) => (
         <span className="!font-mono !text-slate-500 !bg-slate-100 !px-3 !py-1.5 !rounded-md">
-          {sku}
+          {productSku}
         </span>
       ),
     },
     {
       title: "Product Name",
-      dataIndex: "name",
-      key: "name",
+      dataIndex: "productName", // Đã sửa: map đúng field productName
+      key: "productName",
       render: (text) => (
         <span className="!font-bold !text-slate-800 !text-base">{text}</span>
       ),
     },
     {
       title: "Quantity Available",
-      dataIndex: "quantity",
-      key: "quantity",
+      dataIndex: "availableQuantity", // Đã sửa: map đúng field availableQuantity
+      key: "availableQuantity",
       width: 200,
       render: (quantity) => (
         <span className="!font-black !text-lg !text-slate-700">{quantity}</span>
@@ -92,10 +95,11 @@ const InventoryDetails = () => {
     },
   ];
 
+  // Đã sửa: Filter theo đúng trường productName và productSku
   const filteredData = items.filter(
     (item) =>
-      item.name?.toLowerCase().includes(searchText.toLowerCase()) ||
-      item.sku?.toLowerCase().includes(searchText.toLowerCase()),
+      item.productName?.toLowerCase().includes(searchText.toLowerCase()) ||
+      item.productSku?.toLowerCase().includes(searchText.toLowerCase()),
   );
 
   return (
@@ -105,12 +109,16 @@ const InventoryDetails = () => {
           {/* PAGE HEADER */}
           <div className="!flex !flex-col md:!flex-row !justify-between !items-start md:!items-center !mb-8 !gap-4">
             <div className="!flex !items-center !gap-4">
-              <Button
-                type="text"
-                icon={<ArrowLeft size={20} />}
-                onClick={() => navigate(-1)}
-                className="hover:!text-[#39c6c6] !flex !items-center !justify-center !bg-white !rounded-full !w-10 !h-10 !shadow-sm"
-              />
+              {roleId !== 3 ? (
+                <Button
+                  type="text"
+                  icon={<ArrowLeft size={20} />}
+                  onClick={() => navigate(-1)}
+                  className="hover:!text-[#39c6c6] !flex !items-center !justify-center !bg-white !rounded-full !w-10 !h-10 !shadow-sm"
+                />
+              ) : (
+                <></>
+              )}
               <div>
                 <Title
                   level={3}

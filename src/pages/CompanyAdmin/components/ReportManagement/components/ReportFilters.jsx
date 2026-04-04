@@ -1,5 +1,5 @@
 import React from "react";
-import { Card, Select, DatePicker, Row, Col, Space, Button } from "antd";
+import { Select, DatePicker, Row, Col, Button } from "antd";
 import { Filter, RefreshCw } from "lucide-react";
 import { REPORT_TYPES } from "./ReportUtils";
 
@@ -11,53 +11,44 @@ const ReportFilters = ({ filters, onFilterChange, onRefresh, loading, warehouses
     const handleDateChange = (dates) => onFilterChange({ ...filters, dateRange: dates });
 
     return (
-        <Card className="shadow-sm border-slate-200 mb-6">
-            <Row gutter={[16, 16]} align="middle">
-                <Col xs={24} sm={24} md={18} lg={20}>
-                    <Space wrap size="middle">
-                        <div className="flex items-center gap-2">
-                            <Filter size={16} className="text-slate-400" />
-                            <span className="text-sm font-semibold text-slate-600">Filters:</span>
-                        </div>
+        <div className="flex flex-col xl:flex-row gap-4 mb-6 items-stretch xl:items-center">
+            <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <Select
+                    placeholder="Report Type"
+                    allowClear
+                    className="!w-full !h-12 !rounded-full !border !border-slate-300 hover:!border-[#39C6C6] focus-within:!border-[#39C6C6] overflow-hidden transition-all"
+                    value={filters.type}
+                    onChange={handleTypeChange}
+                    options={REPORT_TYPES}
+                />
 
-                        <Select
-                            placeholder="Report Type"
-                            allowClear
-                            className="w-48"
-                            value={filters.type}
-                            onChange={handleTypeChange}
-                            options={REPORT_TYPES}
-                        />
+                <Select
+                    placeholder="All Warehouses"
+                    allowClear
+                    className="!w-full !h-12 !rounded-full !border !border-slate-300 hover:!border-[#39C6C6] focus-within:!border-[#39C6C6] overflow-hidden transition-all"
+                    value={filters.warehouseId}
+                    onChange={handleWarehouseChange}
+                    options={warehouses.map(w => ({ value: w.id, label: w.name }))}
+                />
 
-                        <Select
-                            placeholder="All Warehouses"
-                            allowClear
-                            className="w-48"
-                            value={filters.warehouseId}
-                            onChange={handleWarehouseChange}
-                            options={warehouses.map(w => ({ value: w.id, label: w.name }))}
-                        />
+                <RangePicker
+                    value={filters.dateRange}
+                    onChange={handleDateChange}
+                    className="!w-full !h-12 !rounded-full !border-slate-300 hover:!border-[#39C6C6] focus-within:!border-[#39C6C6]"
+                />
+            </div>
 
-                        <RangePicker
-                            value={filters.dateRange}
-                            onChange={handleDateChange}
-                            className="border-slate-300"
-                        />
-                    </Space>
-                </Col>
-
-                <Col xs={24} sm={24} md={6} lg={4} className="text-right">
-                    <Button
-                        icon={<RefreshCw size={14} className={loading ? "animate-spin" : ""} />}
-                        onClick={onRefresh}
-                        loading={loading}
-                        className="flex items-center gap-2 font-medium"
-                    >
-                        Refresh List
-                    </Button>
-                </Col>
-            </Row>
-        </Card>
+            <div className="flex xl:justify-end">
+                <Button
+                    icon={<RefreshCw size={14} className={loading ? "!animate-spin" : ""} />}
+                    onClick={onRefresh}
+                    loading={loading}
+                    className="!h-12 !px-6 !rounded-2xl !border-slate-200 !font-bold !text-slate-600 hover:!text-[#39C6C6] hover:!border-[#39C6C6]"
+                >
+                    Refresh List
+                </Button>
+            </div>
+        </div>
     );
 };
 
