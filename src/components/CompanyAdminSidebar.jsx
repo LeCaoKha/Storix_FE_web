@@ -12,6 +12,7 @@ import {
   Truck,
   BarChart3,
   Archive,
+  ArrowRightLeft,
 } from "lucide-react";
 import { Tooltip } from "antd";
 import chooseImage from "../assets/images";
@@ -195,6 +196,15 @@ const CompanyAdminSidebar = ({
               to="outbound-management"
               icon={<ArrowUpCircle size={20} />}
               label="Outbound Request"
+              isCollapsed={isCollapsed}
+            />
+          )}
+
+          {(roleId === 2 || roleId === 3) && (
+            <SidebarItem
+              to="warehouse-transfer-management"
+              icon={<ArrowRightLeft size={20} />}
+              label="Warehouse Transfer"
               isCollapsed={isCollapsed}
             />
           )}

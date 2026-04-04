@@ -19,13 +19,16 @@ const ReportGeneratorModal = ({ visible, onCancel, onGenerate, loading, warehous
             title={
                 <div className="flex items-center gap-2 text-slate-800">
                     <FileText size={20} className="text-[#39C6C6]" />
-                    <span>Generate New Report</span>
+                    <span className="text-xl font-bold">Generate New Report</span>
                 </div>
             }
             open={visible}
             onCancel={onCancel}
+            centered
+            width={560}
+            styles={{ body: { paddingTop: 12 } }}
             footer={[
-                <Button key="back" onClick={onCancel}>
+                <Button key="back" onClick={onCancel} className="!h-11 !px-6 !rounded-xl !font-medium">
                     Cancel
                 </Button>,
                 <Button
@@ -34,49 +37,47 @@ const ReportGeneratorModal = ({ visible, onCancel, onGenerate, loading, warehous
                     icon={loading ? <Loader2 size={16} className="animate-spin" /> : <FileText size={16} />}
                     loading={loading}
                     onClick={handleSubmit}
-                    className="bg-[#39C6C6] hover:bg-[#2eb1b1] border-none font-bold"
+                    className="!h-11 !px-6 !bg-[#39C6C6] !border-none !rounded-xl !font-bold hover:!bg-[#2eb1b1] !shadow-lg !shadow-[#39C6C6]/20"
                 >
                     Generate Report
                 </Button>,
             ]}
-            width={500}
-            centered
             maskClosable={!loading}
         >
-            <div className="py-4">
-                <Form form={form} layout="vertical">
+            <div className="py-2">
+                <Form form={form} layout="vertical" className="!mt-1">
                     <Form.Item
                         name="reportType"
-                        label={<span className="font-semibold text-slate-600">Report Type</span>}
+                        label={<span className="!text-slate-500 !font-bold !uppercase !text-[10px] !tracking-widest">Report Type</span>}
                         rules={[{ required: true, message: "Please select a report type" }]}
                     >
                         <Select
                             placeholder="Select report type"
                             options={REPORT_TYPES}
-                            className="h-10"
+                            className="!w-full report-generate-select"
                         />
                     </Form.Item>
 
                     <Form.Item
                         name="warehouseId"
-                        label={<span className="font-semibold text-slate-600">Warehouse (Optional)</span>}
+                        label={<span className="!text-slate-500 !font-bold !uppercase !text-[10px] !tracking-widest">Warehouse (Optional)</span>}
                     >
                         <Select
                             placeholder="Select warehouse (empty for all)"
                             allowClear
                             options={warehouses.map(w => ({ value: w.id, label: w.name }))}
                             suffixIcon={<Box size={14} />}
-                            className="h-10"
+                            className="!w-full report-generate-select"
                         />
                     </Form.Item>
 
                     <Form.Item
                         name="dateRange"
-                        label={<span className="font-semibold text-slate-600">Time Range</span>}
+                        label={<span className="!text-slate-500 !font-bold !uppercase !text-[10px] !tracking-widest">Time Range</span>}
                         rules={[{ required: true, message: "Please select a time range" }]}
                     >
                         <RangePicker
-                            className="w-full h-10 border-slate-200"
+                            className="!w-full report-generate-range"
                             suffixIcon={<Calendar size={14} />}
                         />
                     </Form.Item>
@@ -85,10 +86,37 @@ const ReportGeneratorModal = ({ visible, onCancel, onGenerate, loading, warehous
                         message="Reports may take a moment to generate depending on the data volume."
                         type="info"
                         showIcon
-                        className="mt-4 bg-slate-50 border-slate-200 text-slate-500 text-xs"
+                        className="!mt-4 !rounded-xl !border-[#39C6C6]/30 !bg-[#39C6C6]/10 !text-slate-600 text-xs"
                     />
                 </Form>
             </div>
+
+            <style jsx global>{`
+                .report-generate-select .ant-select-selector {
+                    height: 44px !important;
+                    border-radius: 12px !important;
+                    background: #f8fafc !important;
+                    border-color: #e2e8f0 !important;
+                    display: flex !important;
+                    align-items: center !important;
+                }
+
+                .report-generate-select.ant-select-focused .ant-select-selector {
+                    border-color: #39c6c6 !important;
+                    box-shadow: 0 0 0 2px rgba(57, 198, 198, 0.18) !important;
+                }
+
+                .report-generate-range {
+                    height: 44px !important;
+                    border-radius: 12px !important;
+                    background: #f8fafc !important;
+                    border-color: #e2e8f0 !important;
+                }
+
+                .report-generate-range .ant-picker-input > input {
+                    height: 42px !important;
+                }
+            `}</style>
         </Modal>
     );
 };
