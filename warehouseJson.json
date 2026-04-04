@@ -1,106 +1,103 @@
 [
   {
-    "status": "success",
-    "summary": {
-      "totalDistance": 806.11,
-      "totalShelvesPicked": 2
-    },
-    "pickingSequence": [
+    "success": true,
+    "totalProcessed": 2,
+    "results": [
       {
-        "shelfIdCode": "s-1775206127377",
-        "pickedAtAccessNode": "acc-left-1775206171324",
-        "distanceFromPrevious": 131.15
+        "id": 71,
+        "companyId": 16,
+        "sku": "SKA204",
+        "name": "phat quang SKA-204",
+        "unit": "reel",
+        "weight": 10,
+        "description": "123",
+        "createdAt": "2026-04-03T10:24:54.919401",
+        "updatedAt": null,
+        "image": null,
+        "width": 10,
+        "length": 10,
+        "height": 10,
+        "categoryId": 17,
+        "category": {
+          "id": 17,
+          "companyId": 16,
+          "name": "diot phat quang",
+          "parentCategoryId": 16,
+          "level": 2,
+          "createdAt": "2026-04-03T04:50:05.289034",
+          "company": null,
+          "inverseParentCategory": [],
+          "parentCategory": null,
+          "products": [null]
+        },
+        "company": null,
+        "status": "SUCCESS",
+        "totalQuantity": 100,
+        "unallocatedQuantity": 0,
+        "allocations": [
+          {
+            "binId": "bin-1775209200233-0.8774651657898719",
+            "allocatedQuantity": 72,
+            "path": "Zone 1 > S-1 > L-1 > B-3",
+            "distanceInfo": 142
+          },
+          {
+            "binId": "bin-1775209202686-0.41902788106518907",
+            "allocatedQuantity": 28,
+            "path": "Zone 1 > S-1 > L-1 > B-4",
+            "distanceInfo": 142
+          }
+        ],
+        "systemMessage": "",
+        "aiExplanation": "Thông báo cất hàng:\n\n*   Sản phẩm: phat quang SKA-204 (Tổng số lượng: 100 cuộn)\n*   Cất 72 cuộn vào vị trí: Zone 1 > S-1 > L-1 > B-3\n*   Cất 28 cuộn vào vị trí: Zone 1 > S-1 > L-1 > B-4\n*   Lưu ý: Do số lượng vượt quá sức chứa của 1 rổ, hệ thống đã tự động chia nhỏ và phân bổ sang các rổ lân cận để tối ưu không gian."
       },
       {
-        "shelfIdCode": "s-1775206128782",
-        "pickedAtAccessNode": "acc-left-1775206173155",
-        "distanceFromPrevious": 369.04
-      }
-    ],
-    "fullOptimizedPath": [
-      "n-1775206143263",
-      "n-1775206147106",
-      "acc-left-1775206171324",
-      "n-1775206147106",
-      "n-1775206144231",
-      "n-1775206144964",
-      "n-1775206145519",
-      "acc-left-1775206173155",
-      "n-1775206145519",
-      "n-1775206144964",
-      "n-1775206150520",
-      "n-1775206151278"
-    ],
-    "itemsToPick": [
-      {
-        "id": 32,
-        "productId": 65,
-        "productName": "phat quang SKA-201",
-        "productSku": "SKA201",
-        "quantityToPick": 10,
-        "pricingMethod": "SpecificIdentification",
-        "locationData": {
-          "requiredQuantity": 10,
-          "availableShelves": [
-            {
-              "shelfId": 78,
-              "shelfCode": "S-1",
-              "shelfIdCode": "s-1775206127377",
-              "zoneId": 60,
-              "warehouseId": 19,
-              "availableQuantity": 10
-            }
-          ],
-          "availableBins": [
-            {
-              "binId": 378,
-              "binCode": "B-1",
-              "binIdCode": "bin-1775206135405-0.019421744461969537",
-              "levelId": 143,
-              "shelfId": 78,
-              "inventoryId": 183,
-              "percentage": null,
-              "width": null,
-              "height": null,
-              "length": null
-            }
-          ]
-        }
-      },
-      {
-        "id": 33,
-        "productId": 68,
-        "productName": "phat quang SKA-202",
-        "productSku": "SKA-2023",
-        "quantityToPick": 10,
-        "pricingMethod": "SpecificIdentification",
-        "locationData": {
-          "requiredQuantity": 10,
-          "availableShelves": [
-            {
-              "shelfId": 79,
-              "shelfCode": "S-2",
-              "shelfIdCode": "s-1775206128782",
-              "zoneId": 60,
-              "warehouseId": 19,
-              "availableQuantity": 10
-            }
-          ],
-          "availableBins": [
-            {
-              "binId": 379,
-              "binCode": "B-1",
-              "binIdCode": "bin-1775206137764-0.5999768092382307",
-              "levelId": 144,
-              "shelfId": 79,
-              "inventoryId": 184,
-              "percentage": null,
-              "width": null,
-              "height": null,
-              "length": null
-            }
-          ]
-        }
+        "id": 70,
+        "companyId": 16,
+        "sku": "SKA-2032",
+        "name": "phat quang SKA-203",
+        "unit": "reels",
+        "weight": 10,
+        "description": "123",
+        "createdAt": "2026-04-03T10:06:15.142797",
+        "updatedAt": null,
+        "image": null,
+        "width": 10,
+        "length": 10,
+        "height": 10,
+        "categoryId": 17,
+        "category": {
+          "id": 17,
+          "companyId": 16,
+          "name": "diot phat quang",
+          "parentCategoryId": 16,
+          "level": 2,
+          "createdAt": "2026-04-03T04:50:05.289034",
+          "company": null,
+          "inverseParentCategory": [],
+          "parentCategory": null,
+          "products": [null]
+        },
+        "company": null,
+        "status": "SUCCESS",
+        "totalQuantity": 100,
+        "unallocatedQuantity": 0,
+        "allocations": [
+          {
+            "binId": "bin-1775209202686-0.41902788106518907",
+            "allocatedQuantity": 43,
+            "path": "Zone 1 > S-1 > L-1 > B-4",
+            "distanceInfo": 142
+          },
+          {
+            "binId": "bin-1775209202844-0.8281118022059947",
+            "allocatedQuantity": 57,
+            "path": "Zone 1 > S-1 > L-1 > B-5",
+            "distanceInfo": 142
+          }
+        ],
+        "systemMessage": "",
+        "aiExplanation": "Hướng dẫn cất hàng:\n*   Sản phẩm: phat quang SKA-203\n*   Tổng số lượng: 100 cuộn\n*   Cất 43 cuộn vào vị trí: Zone 1 > S-1 > L-1 > B-4\n*   Cất 57 cuộn vào vị trí: Zone 1 > S-1 > L-1 > B-5\n*   Do số lượng vượt quá sức chứa của 1 rổ, hệ thống đã tự động chia nhỏ và phân bổ sang các rổ lân cận để tối ưu không gian."
       }
     ]
   }
