@@ -106,7 +106,13 @@ const WarehouseConfiguration = () => {
               x: s.x ?? 20,
               y: s.y ?? 20,
               width: s.width || 40,
-              height: s.height || 100,
+              // ===== FIX START =====
+              // FIX CONCEPTUAL MISMATCH: Map API length -> state height (2D canvas rendering depth)
+              // Map API height -> state verticalHeight (Real world vertical height, unrendered)
+              // Removed duplicate length/height properties to resolve Vite warnings
+              height: s.length || 100,
+              verticalHeight: s.height || 0,
+              // ===== FIX END =====
               accessNodes: (s.accessNodes || []).map((a) => ({
                 id: a.id,
                 side: a.side || "none",
@@ -222,7 +228,14 @@ const WarehouseConfiguration = () => {
             x: s.x,
             y: s.y,
             width: s.width,
-            height: s.height,
+            // ===== FIX START =====
+            // RE-MAP TO API STRUCTURE:
+            // Send internal 2D state 'height' as API 'length'
+            // Send internal vertical 'verticalHeight' as API 'height'
+            // Cleaned duplicate properties.
+            length: s.height,
+            height: s.verticalHeight ?? 0,
+            // ===== FIX END =====
             accessNodes: (s.accessNodes || []).map((a) => ({
               id: a.id,
               side: a.side || "none",
@@ -241,6 +254,11 @@ const WarehouseConfiguration = () => {
                   b.status === false || b.status === "inactive"
                     ? "inactive"
                     : "active",
+                // ===== ADDED CODE START =====
+                width: s.width || 0,
+                length: (s.height || 0) / (l.bins?.length || 1),
+                height: (s.verticalHeight || 0) / (s.levels?.length || 1),
+                // ===== ADDED CODE END =====
               })),
             })),
           })),
@@ -280,6 +298,26 @@ const WarehouseConfiguration = () => {
   };
 
   // --- LOGIC FUNCTIONS ---
+  // ===== ADDED CODE START =====
+  const handleUpdateShelfDimension = (zoneId, shelfId, field, value) => {
+    // Avoid NaN crashing Konva, fallback to 0 safely
+    const numValue = Math.max(0, Number(value) || 0);
+    setData((prev) => ({
+      ...prev,
+      zones: prev.zones.map((z) => {
+        if (z.id !== zoneId) return z;
+        return {
+          ...z,
+          shelves: z.shelves.map((s) => {
+            if (s.id !== shelfId) return s;
+            return { ...s, [field]: numValue };
+          }),
+        };
+      }),
+    }));
+  };
+  // ===== ADDED CODE END =====
+
   const getNextShelfCode = (currentData) => {
     let maxNum = 0;
     currentData.zones.forEach((z) => {
@@ -523,7 +561,12 @@ const WarehouseConfiguration = () => {
         x: 20,
         y: 20,
         width: 40,
+        // ===== FIX START =====
+        // FIX OVERRIDE: Keep 2D depth mapped to state height, vertical height mapped to state verticalHeight
+        // Cleaned up duplicate keys
         height: 100,
+        verticalHeight: 0,
+        // ===== FIX END =====
         accessNodes: [],
         levels: [],
       };
@@ -1403,6 +1446,64 @@ const WarehouseConfiguration = () => {
                 </div>
 
                 <div className="!mt-6">
+                  <p className="!text-xs !text-[#10b981] !font-bold !mb-4 !flex !items-center !gap-2">
+                    DIMENSIONS
+                  </p>
+                  <div className="!flex !flex-col !gap-3">
+                    <div className="!flex !justify-between !items-center !bg-slate-700/50 !p-2 !rounded-md !border !border-slate-600">
+                      <span className="!text-sm !text-slate-200">Width</span>
+                      <input
+                        type="number"
+                        value={activeShelf.width ?? 0}
+                        onChange={(e) =>
+                          handleUpdateShelfDimension(
+                            activeShelf.zoneId,
+                            activeShelf.id,
+                            "width",
+                            e.target.value,
+                          )
+                        }
+                        className="!w-24 !p-1 !bg-slate-800 !text-white !rounded !border !border-slate-600 !outline-none focus:!border-[#10b981] !text-right"
+                      />
+                    </div>
+                    <div className="!flex !justify-between !items-center !bg-slate-700/50 !p-2 !rounded-md !border !border-slate-600">
+                      {/* Note: Length in UI corresponds to Canvas/Internal Height (2D Depth) */}
+                      <span className="!text-sm !text-slate-200">Length</span>
+                      <input
+                        type="number"
+                        value={activeShelf.height ?? 0}
+                        onChange={(e) =>
+                          handleUpdateShelfDimension(
+                            activeShelf.zoneId,
+                            activeShelf.id,
+                            "height",
+                            e.target.value,
+                          )
+                        }
+                        className="!w-24 !p-1 !bg-slate-800 !text-white !rounded !border !border-slate-600 !outline-none focus:!border-[#10b981] !text-right"
+                      />
+                    </div>
+                    <div className="!flex !justify-between !items-center !bg-slate-700/50 !p-2 !rounded-md !border !border-slate-600">
+                      {/* Note: Height in UI corresponds to Real-world verticalHeight (Not visual) */}
+                      <span className="!text-sm !text-slate-200">Height</span>
+                      <input
+                        type="number"
+                        value={activeShelf.verticalHeight ?? 0}
+                        onChange={(e) =>
+                          handleUpdateShelfDimension(
+                            activeShelf.zoneId,
+                            activeShelf.id,
+                            "verticalHeight",
+                            e.target.value,
+                          )
+                        }
+                        className="!w-24 !p-1 !bg-slate-800 !text-white !rounded !border !border-slate-600 !outline-none focus:!border-[#10b981] !text-right"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="!mt-6">
                   <div className="!flex !justify-between !items-center !mb-3">
                     <p className="!text-xs !text-[#10b981] !font-bold !m-0">
                       LEVELS & BINS
@@ -1614,8 +1715,6 @@ const WarehouseConfiguration = () => {
                         Requires MSD (Moisture control)
                       </span>
                     </label>
-                    {/* ===== ADDED CODE START ===== */}
-                    {/* New checkboxes for the updated API boolean fields */}
                     <label className="!flex !items-center !text-sm !text-slate-200 !cursor-pointer !p-2 !bg-slate-700/50 !rounded-md !border !border-slate-600">
                       <input
                         type="checkbox"
@@ -1661,7 +1760,6 @@ const WarehouseConfiguration = () => {
                       />
                       <span className="!ml-3">High Value / Secure</span>
                     </label>
-                    {/* ===== ADDED CODE END ===== */}
                   </div>
                 </div>
 
