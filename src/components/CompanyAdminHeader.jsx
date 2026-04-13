@@ -9,6 +9,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import api from "../api/axios";
+import NotificationDropdown from "./NotificationDropdown";
 
 const CompanyAdminHeader = ({ isCollapsed, basePath = "/company-admin" }) => {
   const navigate = useNavigate();
@@ -18,7 +19,6 @@ const CompanyAdminHeader = ({ isCollapsed, basePath = "/company-admin" }) => {
   const dropdownRef = useRef(null);
 
   const userId = localStorage.getItem("userId");
-
   useEffect(() => {
     const fetchUserProfile = async () => {
       if (!userId) return;
@@ -30,7 +30,7 @@ const CompanyAdminHeader = ({ isCollapsed, basePath = "/company-admin" }) => {
       }
     };
     fetchUserProfile();
-  }, []);
+  }, [userId]);
 
   const fullName = userProfile?.fullName || "User";
 
@@ -56,10 +56,7 @@ const CompanyAdminHeader = ({ isCollapsed, basePath = "/company-admin" }) => {
         }`}
       >
         <div className="!flex !items-center !gap-6">
-          <button className="!relative !p-2 !text-slate-400 hover:!bg-slate-50 !rounded-full !transition-colors">
-            <Bell size={22} />
-            <span className="!absolute !top-2.5 !right-2.5 !w-2 !h-2 !bg-red-500 !rounded-full !border-2 !border-white"></span>
-          </button>
+          <NotificationDropdown userId={userId} />
 
           <div className="!relative" ref={dropdownRef}>
             <div
