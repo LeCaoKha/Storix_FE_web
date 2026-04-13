@@ -1670,7 +1670,7 @@ const WarehouseTransferManagement = () => {
                   Select staff in charge of this warehouse transfer.
                 </Text>
 
-                <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr] gap-3 items-center">
+                <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr] gap-3 items-start">
                   <div>
                     <Select
                       className=" !h-[44px]  !w-full transfer-detail-select"
@@ -1737,7 +1737,7 @@ const WarehouseTransferManagement = () => {
 
               {EDITABLE_STATUSES.includes(selectedStatus) && (
                 <Form form={addItemForm} layout="vertical" className="!mt-4">
-                  <div className="grid grid-cols-1 md:grid-cols-[2fr_120px_170px] gap-3 items-center">
+                  <div className="grid grid-cols-1 md:grid-cols-[2fr_80px_140px] gap-3 items-start !w-full">
                     <div>
                       <Form.Item
                         name="productId"
