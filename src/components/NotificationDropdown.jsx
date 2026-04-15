@@ -3,6 +3,7 @@ import {
   Bell, 
   Check, 
   Inbox, 
+  Trash2,
   Clock, 
   MoreHorizontal, 
   Package, 
@@ -55,6 +56,34 @@ const NotificationDropdown = ({ userId }) => {
     activeTab === "unread"
       ? notifications.filter((n) => !n.isRead)
       : notifications;
+
+  const handleDelete = async (e, userNotificationId) => {
+    e.stopPropagation(); // Ngăn chặn sự kiện click vào item
+    try {
+      await api.delete(`/Notification/delete/${userId}/${userNotificationId}`);
+      setNotifications((prev) => prev.filter((n) => n.id !== userNotificationId));
+    } catch (error) {
+      console.error("Error deleting notification:", error);
+    }
+  };
+
+  const handleClearAll = async () => {
+    if (notifications.length === 0) return;
+    if (!window.confirm("Are you sure you want to clear all notifications?")) return;
+
+    try {
+      // Vì BE có thể chưa có api delete-all, ta lặp hoặc nếu có thì gọi.
+      // Theo screenshot của user thì có api delete theo id, ta sẽ lặp.
+      await Promise.all(
+        notifications.map((n) =>
+          api.delete(`/Notification/delete/${userId}/${n.id}`)
+        )
+      );
+      setNotifications([]);
+    } catch (error) {
+      console.error("Error clearing all notifications:", error);
+    }
+  };
 
   const handleMarkAsRead = async (userNotificationId) => {
     try {
@@ -146,13 +175,23 @@ const NotificationDropdown = ({ userId }) => {
                     </span>
                   )}
                 </div>
-                <button 
-                  onClick={handleMarkAllAsRead}
-                  className="!p-2 !text-slate-500 hover:!bg-slate-100 !rounded-full !transition-colors"
-                  title="Mark all as read"
-                >
-                  <Check size={20} />
-                </button>
+                <div className="!flex !items-center !gap-1">
+                  <button 
+                    onClick={handleMarkAllAsRead}
+                    className="!p-2 !text-slate-500 hover:!bg-slate-100 !rounded-full !transition-colors"
+                    title="Mark all as read"
+                  >
+                    <Check size={20} />
+                  </button>
+                  <button 
+                    onClick={handleClearAll}
+                    className="!flex !items-center !gap-1 !px-2 !py-1 !text-slate-500 hover:!bg-red-50 hover:!text-red-500 !rounded-lg !transition-colors !group/clear"
+                    title="Clear all notifications"
+                  >
+                    <Trash2 size={16} className="group-hover/clear:!text-red-500" />
+                    <span className="!text-xs !font-bold">Clear All</span>
+                  </button>
+                </div>
               </div>
 
               {/* Tabs style Facebook */}
@@ -231,12 +270,19 @@ const NotificationDropdown = ({ userId }) => {
                         </div>
                       </div>
 
-                      {/* Dấu chấm xanh unread bên phải kiểu FB */}
-                      {!notif.isRead && (
-                        <div className="!flex !items-center !pr-1">
-                          <div className="!w-2.5 !h-2.5 !bg-[#39c6c6] !rounded-full"></div>
+                      {/* Cột trạng thái: Nút xóa luôn hiện mờ */}
+                      <div className="!flex !items-center !justify-center !w-10">
+                        <div className="!relative !flex !items-center !justify-center !w-full !h-full">
+                          {/* Nút xóa - Luôn hiện mờ mờ, hiện rõ khi hover */}
+                          <button
+                            onClick={(e) => handleDelete(e, notif.id)}
+                            className="!absolute !inset-0 !flex !items-center !justify-center !opacity-30 group-hover:!opacity-100 !text-slate-400 hover:!text-red-500 !transition-all !duration-200"
+                            title="Xóa thông báo"
+                          >
+                            <Trash2 size={18} />
+                          </button>
                         </div>
-                      )}
+                      </div>
                     </div>
                   ))
                 ) : (
