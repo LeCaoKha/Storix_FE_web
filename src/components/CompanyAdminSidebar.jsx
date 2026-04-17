@@ -1,5 +1,5 @@
-import React from "react";
-import { NavLink, useNavigate } from "react-router-dom";
+import React, { useState } from "react";
+import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
   UserCircle,
@@ -12,12 +12,14 @@ import {
   Truck,
   BarChart3,
   Archive,
+  ClipboardList,
+  ChevronDown,
   ArrowRightLeft,
 } from "lucide-react";
 import { Tooltip } from "antd";
 import chooseImage from "../assets/images";
 
-// --- SUB-COMPONENT: SIDEBAR ITEM ---
+// --- SUB-COMPONENT: SIDEBAR ITEM (Link Đơn) ---
 const SidebarItem = ({ to, icon, label, isCollapsed }) => (
   <Tooltip
     title={isCollapsed ? label : ""}
@@ -40,6 +42,70 @@ const SidebarItem = ({ to, icon, label, isCollapsed }) => (
   </Tooltip>
 );
 
+// --- SUB-COMPONENT: SIDEBAR SUB-MENU (Dropdown) ---
+const SidebarSubMenu = ({
+  icon,
+  label,
+  isCollapsed,
+  isOpen,
+  onToggle,
+  isActive,
+  children,
+}) => (
+  <div className="!flex !flex-col">
+    <Tooltip
+      title={isCollapsed ? label : ""}
+      placement="right"
+      mouseEnterDelay={0.1}
+    >
+      <button
+        onClick={onToggle}
+        className={`!w-full !flex !items-center !justify-between !px-4 !py-3 !rounded-xl !transition-all !duration-300 ${
+          isActive
+            ? "!bg-[#39c6c6]/10 !text-[#39c6c6] !font-semibold"
+            : "!text-slate-500 hover:!bg-slate-50 hover:!text-slate-700"
+        } ${isCollapsed ? "!justify-center !px-0 !mx-0" : ""}`}
+      >
+        <div className="!flex !items-center !gap-3">
+          <div className="!shrink-0">{icon}</div>
+          {!isCollapsed && <span className="!text-sm !truncate">{label}</span>}
+        </div>
+        {!isCollapsed && (
+          <div
+            className={`!transition-transform !duration-300 ${
+              isOpen ? "!rotate-180 text-[#39c6c6]" : "text-slate-400"
+            }`}
+          >
+            <ChevronDown size={16} />
+          </div>
+        )}
+      </button>
+    </Tooltip>
+
+    {/* ĐÃ SỬA: Xóa bỏ đường line dọc (border-l) */}
+    {isOpen && !isCollapsed && (
+      <div className="!flex !flex-col !gap-1 !mt-1">{children}</div>
+    )}
+  </div>
+);
+
+// --- SUB-COMPONENT: SIDEBAR SUB-ITEM (Link con bên trong Dropdown) ---
+const SidebarSubItem = ({ to, label }) => (
+  <NavLink
+    to={to}
+    className={({ isActive }) =>
+      // ĐÃ SỬA: Tăng padding-left (pl-12) để thụt lề chữ vào trong, xóa icon dấu chấm
+      `!flex !items-center !pl-12 !pr-4 !py-2.5 !rounded-xl !transition-all !duration-300 ${
+        isActive
+          ? "!bg-[#39c6c6]/10 !text-[#39c6c6] !font-semibold"
+          : "!text-slate-500 hover:!bg-slate-50 hover:!text-slate-700"
+      }`
+    }
+  >
+    <span className="!text-sm !truncate">{label}</span>
+  </NavLink>
+);
+
 // --- MAIN COMPONENT: SIDEBAR ---
 const CompanyAdminSidebar = ({
   isCollapsed,
@@ -47,10 +113,33 @@ const CompanyAdminSidebar = ({
   basePath = "/company-admin",
 }) => {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Quản lý trạng thái đóng/mở của các Dropdown
+  const [openMenus, setOpenMenus] = useState({
+    inbound: false,
+    outbound: false,
+  });
 
   // Lấy thông tin từ localStorage
   const roleId = Number(localStorage.getItem("roleId"));
   const warehouseId = localStorage.getItem("warehouseId");
+
+  // Hàm xử lý đóng mở Menu
+  const handleToggleMenu = (menuKey) => {
+    if (isCollapsed) {
+      // Nếu sidebar đang thu gọn, click vào thì tự động mở rộng sidebar và mở menu đó
+      setIsCollapsed(false);
+      setOpenMenus((prev) => ({ ...prev, [menuKey]: true }));
+    } else {
+      // Toggle bình thường
+      setOpenMenus((prev) => ({ ...prev, [menuKey]: !prev[menuKey] }));
+    }
+  };
+
+  // Xác định xem URL hiện tại có đang nằm trong nhánh Inbound/Outbound hay không để highlight icon cha
+  const isInboundActive = location.pathname.includes("inbound");
+  const isOutboundActive = location.pathname.includes("outbound");
 
   return (
     <aside
@@ -93,7 +182,7 @@ const CompanyAdminSidebar = ({
             </p>
           )}
 
-          {/* Dashboard: Hiển thị cho Admin (2), Manager (3), và Staff (4) */}
+          {/* Dashboard */}
           {(roleId === 2 || roleId === 3 || roleId === 4) && (
             <SidebarItem
               to="dashboard"
@@ -103,7 +192,7 @@ const CompanyAdminSidebar = ({
             />
           )}
 
-          {/* Account: Chỉ Admin (2) */}
+          {/* Account */}
           {roleId === 2 && (
             <SidebarItem
               to="account-management"
@@ -113,7 +202,7 @@ const CompanyAdminSidebar = ({
             />
           )}
 
-          {/* Product: Admin (2) và Manager (3) */}
+          {/* Product */}
           {(roleId === 2 || roleId === 3) && (
             <SidebarItem
               to="product-management"
@@ -123,15 +212,19 @@ const CompanyAdminSidebar = ({
             />
           )}
 
-          {/* Warehouse, Supplier, Reports: Chỉ Admin (2) */}
+          {/* Warehouse */}
+          {(roleId === 2 || roleId === 3) && (
+            <SidebarItem
+              to="warehouse-management"
+              icon={<Warehouse size={20} />}
+              label="Warehouse"
+              isCollapsed={isCollapsed}
+            />
+          )}
+
+          {/* Supplier, Reports */}
           {roleId === 2 && (
             <>
-              <SidebarItem
-                to="warehouse-management"
-                icon={<Warehouse size={20} />}
-                label="Warehouse"
-                isCollapsed={isCollapsed}
-              />
               <SidebarItem
                 to="supplier-management"
                 icon={<Truck size={20} />}
@@ -156,7 +249,7 @@ const CompanyAdminSidebar = ({
             </p>
           )}
 
-          {/* INVENTORY: Admin (2), Manager (3), và Staff (4) */}
+          {/* INVENTORY */}
           {(roleId === 2 || roleId === 3 || roleId === 4) && (
             <SidebarItem
               to={
@@ -170,34 +263,57 @@ const CompanyAdminSidebar = ({
             />
           )}
 
-          {/* INBOUND REQUEST: Admin (2) và Staff (4) */}
-          {(roleId === 2 || roleId === 4) && (
+          {/* INVENTORY COUNT */}
+          {roleId === 3 && (
             <SidebarItem
-              to="inbound-request-management"
-              icon={<ArrowDownCircle size={20} />}
-              label="Inbound Request"
+              to="inventory-count"
+              icon={<ClipboardList size={20} />}
+              label="Inventory Count"
               isCollapsed={isCollapsed}
             />
           )}
 
-          {/* INBOUND TICKET: Chỉ dành cho Admin (2) */}
-          {roleId === 2 && (
-            <SidebarItem
-              to="inbound-ticket-management"
-              icon={<FileText size={20} />}
-              label="Inbound Ticket"
-              isCollapsed={isCollapsed}
-            />
-          )}
-
-          {/* OUTBOUND: Admin (2), Manager (3), và Staff (4) */}
+          {/* ===== DROPDOWN INBOUND ===== */}
           {(roleId === 2 || roleId === 3 || roleId === 4) && (
-            <SidebarItem
-              to="outbound-management"
-              icon={<ArrowUpCircle size={20} />}
-              label="Outbound Request"
+            <SidebarSubMenu
+              icon={<ArrowDownCircle size={20} />}
+              label="Inbound"
               isCollapsed={isCollapsed}
-            />
+              isOpen={openMenus.inbound}
+              isActive={isInboundActive}
+              onToggle={() => handleToggleMenu("inbound")}
+            >
+              <SidebarSubItem
+                to="inbound-request-management"
+                label="Requests"
+              />
+              {(roleId === 2 || roleId === 3) && (
+                <SidebarSubItem
+                  to="inbound-ticket-management"
+                  label="Tickets"
+                />
+              )}
+            </SidebarSubMenu>
+          )}
+
+          {/* ===== DROPDOWN OUTBOUND ===== */}
+          {(roleId === 2 || roleId === 3 || roleId === 4) && (
+            <SidebarSubMenu
+              icon={<ArrowUpCircle size={20} />}
+              label="Outbound"
+              isCollapsed={isCollapsed}
+              isOpen={openMenus.outbound}
+              isActive={isOutboundActive}
+              onToggle={() => handleToggleMenu("outbound")}
+            >
+              <SidebarSubItem to="outbound-management" label="Requests" />
+              {(roleId === 2 || roleId === 3) && (
+                <SidebarSubItem
+                  to="outbound-ticket-management"
+                  label="Tickets"
+                />
+              )}
+            </SidebarSubMenu>
           )}
 
           {(roleId === 2 || roleId === 3) && (

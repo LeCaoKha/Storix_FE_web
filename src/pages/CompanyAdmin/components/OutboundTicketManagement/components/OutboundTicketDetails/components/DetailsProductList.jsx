@@ -1,11 +1,10 @@
 import React from "react";
-import { Card, Avatar, Typography, Space, Empty, Tooltip } from "antd";
+import { Card, Avatar, Typography, Space, Tooltip } from "antd";
 import { Package, Search } from "lucide-react";
 
 const { Text } = Typography;
 
 const DetailsProductList = ({ items }) => {
-  console.log("item", items);
   return (
     <Card
       title={
@@ -18,26 +17,20 @@ const DetailsProductList = ({ items }) => {
       <div className="mt-2">
         {items && items.length > 0 ? (
           <div>
-            {/* Header của danh sách - Giữ cố định ở trên */}
+            {/* Header của danh sách */}
             <div className="flex items-center px-4 text-[10px] !uppercase !font-bold text-slate-400 !tracking-widest mb-3">
               <span className="flex-1">Product</span>
               <div className="flex items-center text-right">
-                <span className="w-24 text-center">Quantity</span>
+                <span className="w-24 text-center">Qty / Picked</span>
                 <span className="w-32 pr-4">Unit Price</span>
                 <span className="w-32 pr-4 text-right">Total Price</span>
               </div>
             </div>
 
-            {/* Vùng danh sách: Giới hạn 3 sản phẩm (~320px), cuộn từ sản phẩm thứ 4 */}
+            {/* Vùng danh sách */}
             <div className="space-y-3 max-h-[280px] overflow-y-auto overflow-x-hidden">
               {items.map((item) => {
-                // Giữ nguyên logic tính toán giá và chiết khấu
-                const hasDiscount = item.lineDiscount > 0;
-                const finalUnitPrice = hasDiscount
-                  ? item.price - (item.price * item.lineDiscount) / 100
-                  : item.price;
-                const totalPrice =
-                  finalUnitPrice * (item.expectedQuantity || 1);
+                const totalPrice = (item.price || 0) * (item.quantity || 1);
 
                 return (
                   <div
@@ -49,20 +42,20 @@ const DetailsProductList = ({ items }) => {
                       <Avatar
                         shape="square"
                         size={48}
-                        src={item.image || item.imageUrl}
+                        src={item.productImageUrl || null} // Thêm hình ảnh nếu API có
                         icon={<Package />}
                         className="!bg-slate-50 !text-slate-300 !shrink-0"
                       />
                       <div className="flex flex-col min-w-0">
-                        <Tooltip title={item.name} placement="topLeft">
+                        <Tooltip title={item.productName} placement="topLeft">
                           <Text className="!font-bold !text-slate-800">
-                            {item.name.length > 20
-                              ? `${item.name.substring(0, 20)}...`
-                              : item.name}
+                            {item.productName?.length > 20
+                              ? `${item.productName.substring(0, 20)}...`
+                              : item.productName || "Unknown Product"}
                           </Text>
                         </Tooltip>
                         <Text className="!text-xs !text-slate-400 !font-mono !italic">
-                          {item.sku}
+                          {item.productSku || "No SKU"}
                         </Text>
                       </div>
                     </div>
@@ -70,27 +63,21 @@ const DetailsProductList = ({ items }) => {
                     <div className="flex items-center">
                       {/* Số lượng */}
                       <div className="w-24 flex justify-center">
-                        <div className="h-10 px-4 flex items-center justify-center rounded-lg bg-slate-50 text-slate-700 font-bold min-w-[40px]">
-                          {item.expectedQuantity}
+                        <div className="h-10 px-4 flex flex-col items-center justify-center rounded-lg bg-slate-50 text-slate-700 min-w-[40px]">
+                          <span className="font-bold text-sm leading-tight">
+                            {item.quantity}
+                          </span>
+                          <span className="text-[9px] text-slate-400 font-medium leading-tight">
+                            {item.receivedQuantity || 0} picked
+                          </span>
                         </div>
                       </div>
 
                       {/* Đơn giá */}
                       <div className="w-32 text-right pr-4">
-                        {hasDiscount ? (
-                          <div className="flex flex-col items-end">
-                            <Text className="!font-bold !text-[#38c6c6] !block !leading-tight">
-                              {Math.floor(finalUnitPrice).toLocaleString()} ₫
-                            </Text>
-                            <Text className="!text-[11px] !text-slate-400 !line-through !block !leading-tight !opacity-70">
-                              {item.price.toLocaleString()} ₫
-                            </Text>
-                          </div>
-                        ) : (
-                          <Text className="!font-bold !text-[#38c6c6] !block">
-                            {(item.price || 0).toLocaleString()} ₫
-                          </Text>
-                        )}
+                        <Text className="!font-bold !text-[#38c6c6] !block">
+                          {(item.price || 0).toLocaleString()} ₫
+                        </Text>
                       </div>
 
                       {/* Thành tiền */}

@@ -1,7 +1,7 @@
 import React from "react";
-import { useLocation } from "react-router-dom"; // Import useLocation
+import { useLocation } from "react-router-dom";
 import { Card, Avatar, Typography, Select } from "antd";
-import { Truck, Warehouse, Calendar, User, Users } from "lucide-react";
+import { MapPin, Warehouse, Calendar, User, Users } from "lucide-react";
 
 const { Text } = Typography;
 
@@ -13,11 +13,17 @@ const DetailsSidebarInfo = ({
 }) => {
   const location = useLocation();
 
-  // CHỈ KHÓA (ReadOnly) khi đường dẫn chứa "management" VÀ đồng thời là trang "details"
-  // Nếu là trang "create" thì isReadOnly sẽ là false -> Vẫn cho phép chọn staff
+  // Kiểm tra nếu là trang quản lý Ticket VÀ đang ở chi tiết thì khóa không cho sửa
   const isReadOnly =
-    location.pathname.includes("inbound-ticket-management") &&
+    location.pathname.includes("outbound-ticket-management") &&
     location.pathname.includes("/details/");
+
+  const roleId = Number(localStorage.getItem("roleId"));
+  const isStaff = roleId === 4;
+  const isCompleted = data?.status === "Completed";
+
+  // Tổng hợp điều kiện khóa Select
+  const disabledSelect = isReadOnly || isStaff || isCompleted;
 
   return (
     <div className="space-y-6">
@@ -25,31 +31,27 @@ const DetailsSidebarInfo = ({
       <div>
         <Card className="!rounded-2xl !shadow-sm !border-slate-100 !overflow-visible">
           <div className="space-y-6">
-            {/* Supplier Information */}
+            {/* Destination Information */}
             <div>
               <Text className="block !font-bold !text-slate-700 mb-2 uppercase text-[10px] tracking-widest flex items-center gap-2">
-                <Truck size={14} className="text-[#38c6c6]" /> Supplier
+                <MapPin size={14} className="text-[#38c6c6]" /> Destination
               </Text>
               <div className="!h-12 !flex !items-center !px-4 !rounded-xl !bg-slate-50 !border-none !font-medium !text-slate-700">
-                <Avatar
-                  size="small"
-                  icon={<User size={14} />}
-                  className="!bg-slate-100 !text-slate-400 !mr-3"
-                />
                 <Text className="!font-medium !text-slate-700 truncate">
-                  {data?.supplier?.name || "N/A"}
+                  {data?.destination || "N/A"}
                 </Text>
               </div>
             </div>
 
-            {/* Destination Warehouse */}
+            {/* Source Warehouse */}
             <div>
               <Text className="block !font-bold !text-slate-700 mb-2 uppercase text-[10px] tracking-widest flex items-center gap-2">
-                <Warehouse size={14} className="text-[#38c6c6]" /> Destination
+                <Warehouse size={14} className="text-[#38c6c6]" /> Source
+                Warehouse
               </Text>
               <div className="!h-12 !flex !items-center !px-4 !rounded-xl !bg-slate-100 !border-none !font-medium !text-slate-400">
                 <Warehouse size={18} className="text-slate-400 mr-3" />
-                {data?.warehouse?.name || "My warehouse"}
+                {data?.warehouse?.name || "N/A"}
               </div>
             </div>
           </div>
@@ -68,16 +70,15 @@ const DetailsSidebarInfo = ({
             value={selectedStaffId}
             onChange={onStaffChange}
             variant="borderless"
-            // VÔ HIỆU HÓA NẾU LÀ TRANG DETAILS, MỞ NẾU LÀ TRANG CREATE
-            disabled={isReadOnly}
+            disabled={disabledSelect}
             style={{
-              backgroundColor: isReadOnly ? "#f1f5f9" : "#f8fafc",
+              backgroundColor: disabledSelect ? "#f1f5f9" : "#f8fafc",
               borderRadius: "12px",
-              cursor: isReadOnly ? "not-allowed" : "pointer",
+              cursor: disabledSelect ? "not-allowed" : "pointer",
             }}
           >
             {users
-              .filter((user) => user.roleId === 4)
+              .filter((user) => user.roleId === 4) // Lọc nhân viên kho (Role 4)
               .map((user) => (
                 <Select.Option key={user.id} value={user.id}>
                   <div className="flex items-center gap-2">
@@ -91,9 +92,6 @@ const DetailsSidebarInfo = ({
                       <span className="font-medium text-slate-700">
                         {user.fullName}
                       </span>
-                      <span className="text-[10px] text-slate-400 uppercase tracking-tighter">
-                        {user.roleName}
-                      </span>
                     </div>
                   </div>
                 </Select.Option>
@@ -102,16 +100,17 @@ const DetailsSidebarInfo = ({
         </Card>
       </div>
 
-      {/* SECTION: EXPECTED DELIVERY DATE */}
+      {/* SECTION: CREATED DATE */}
       <div>
         <Card className="!rounded-2xl !shadow-sm !border-slate-100">
           <Text className="block !font-bold !text-slate-700 mb-3 uppercase text-[10px] tracking-widest flex items-center gap-2">
-            <Calendar size={14} className="text-[#38c6c6]" /> Expected Delivery
-            Date
+            <Calendar size={14} className="text-[#38c6c6]" /> Created Date
           </Text>
           <div className="!h-12 !flex !items-center !px-4 !rounded-xl !bg-slate-50 !border-none !font-medium !text-slate-700">
             <Calendar size={18} className="text-slate-300 mr-3" />
-            {data?.expectedArrivalDate || "YYYY-MM-DD"}
+            {data?.createdAt
+              ? new Date(data.createdAt).toLocaleDateString("vi-VN")
+              : "YYYY-MM-DD"}
           </div>
         </Card>
       </div>

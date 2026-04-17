@@ -35,7 +35,7 @@ const InboundTicketManagement = () => {
       const response = await api.get(`/InventoryInbound/tickets/${companyId}`);
       setInboundTickets(response.data);
     } catch (error) {
-      message.error("Failed to fetch inbound tickets");
+      message.error("Failed to fetch inbound tickets", error);
     } finally {
       setLoading(false);
     }

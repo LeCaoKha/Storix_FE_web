@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react"; // Thêm useEffect vào đây
+import React, { useState, useEffect } from "react";
 import {
   Card,
   Input,
@@ -14,6 +14,7 @@ import {
   Row,
   Col,
   message,
+  Tooltip, // Thêm Tooltip từ antd
 } from "antd";
 import { Search, Package, Trash2, Plus } from "lucide-react";
 
@@ -40,21 +41,16 @@ const ProductSelectionOutbound = ({
   // --- FIX: Logic click outside để đóng dropdown ---
   useEffect(() => {
     const handleClickOutside = (event) => {
-      // Nếu vùng tìm kiếm tồn tại và cú click chuột KHÔNG nằm trong vùng đó
       if (searchRef.current && !searchRef.current.contains(event.target)) {
         setIsSearching(false);
       }
     };
 
-    // Đăng ký sự kiện click khi component mounted
     document.addEventListener("mousedown", handleClickOutside);
-
-    // Hủy đăng ký sự kiện khi component unmounted để tránh rò rỉ bộ nhớ
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [searchRef, setIsSearching]);
-  // -----------------------------------------------
 
   const originalPriceRaw = Form.useWatch("price", priceForm) || "0";
   const lineDiscountValueRaw = Form.useWatch("discountValue", priceForm) || "0";
@@ -146,9 +142,13 @@ const ProductSelectionOutbound = ({
                             className="!bg-slate-100 !text-slate-400"
                           />
                           <div className="flex flex-col">
-                            <Text className="block font-bold text-slate-800">
-                              {item.name}
-                            </Text>
+                            <Tooltip title={item.name} mouseEnterDelay={0.5}>
+                              <Text className="block font-bold text-slate-800">
+                                {item.name.length > 20
+                                  ? `${item.name.substring(0, 20)}...`
+                                  : item.name}
+                              </Text>
+                            </Tooltip>
                             <Text className="text-[10px] text-slate-400 uppercase font-bold tracking-tight">
                               SKU: {item.sku}
                             </Text>
@@ -194,9 +194,13 @@ const ProductSelectionOutbound = ({
                       className="!bg-slate-50 !text-slate-300"
                     />
                     <div className="flex flex-col min-w-0">
-                      <Text className="!font-bold block text-slate-800 truncate">
-                        {item.name}
-                      </Text>
+                      <Tooltip title={item.name} placement="topLeft">
+                        <Text className="!font-bold block text-slate-800 truncate">
+                          {item.name.length > 20
+                            ? `${item.name.substring(0, 20)}...`
+                            : item.name}
+                        </Text>
+                      </Tooltip>
                       <Text className="text-xs text-slate-400 font-mono italic">
                         {item.sku}
                       </Text>

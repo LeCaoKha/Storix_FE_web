@@ -16,7 +16,6 @@ const InboundRequestCreate = () => {
   const [submitting, setSubmitting] = useState(false);
   const [productTypes, setProductTypes] = useState([]);
   const searchRef = useRef(null);
-  const [creating, setCreating] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
