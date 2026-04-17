@@ -9,7 +9,7 @@ const ReportTable = ({ reports, loading, onView, onExport, pagination, onTableCh
         {
             title: "ID",
             dataIndex: "id",
-            render: (_, r) => <span className="font-mono text-slate-400 text-xs">#{r.id}</span>,
+                render: (_, r) => <span className="font-medium text-slate-700">#{r.id}</span>,
             width: 80,
         },
         {
@@ -17,10 +17,10 @@ const ReportTable = ({ reports, loading, onView, onExport, pagination, onTableCh
             dataIndex: "reportType",
             render: (_, r) => (
                 <div className="flex items-center gap-2">
-                    <div className="p-1.5 bg-slate-100 rounded-lg text-slate-500">
+                        <div className="p-1.5 bg-slate-100 rounded-lg text-slate-500">
                         <FileText size={14} />
                     </div>
-                    <span className="font-bold text-slate-700">{formatReportType(r.reportType)}</span>
+                        <span className="font-medium text-slate-700">{formatReportType(r.reportType)}</span>
                 </div>
             ),
         },
@@ -29,7 +29,7 @@ const ReportTable = ({ reports, loading, onView, onExport, pagination, onTableCh
             dataIndex: "warehouseId",
             render: (_, r) => {
                 const w = warehouses.find(w => w.id === r.warehouseId);
-                return <span className="text-slate-500">{w ? w.name : "All Warehouses"}</span>;
+                    return <span className="text-slate-600 font-medium">{w ? w.name : "All Warehouses"}</span>;
             },
         },
         {
@@ -46,7 +46,7 @@ const ReportTable = ({ reports, loading, onView, onExport, pagination, onTableCh
             title: "Status",
             dataIndex: "status",
             render: (_, r) => (
-                <Tag color={getStatusColor(r.status)} className="rounded-full px-3 py-0.5 font-bold uppercase text-[10px]">
+                    <Tag color={getStatusColor(r.status)} className="!rounded-md !px-3 !py-0.5 !font-bold uppercase text-[10px]">
                     {r.status}
                 </Tag>
             ),
@@ -55,13 +55,14 @@ const ReportTable = ({ reports, loading, onView, onExport, pagination, onTableCh
             title: "Actions",
             key: "actions",
             render: (_, r) => (
-                <Space size="small">
+                    <Space size="small" wrap>
                     <Tooltip title="View Summary">
                         <Button
                             type="text"
                             icon={<Eye size={16} className="text-slate-500" />}
                             onClick={() => onView(r)}
                             disabled={r.status !== REPORT_STATUS.SUCCEEDED}
+                                className="!h-8 !w-8 !p-0 !rounded-md"
                         />
                     </Tooltip>
                     <Tooltip title="Export PDF">
@@ -70,6 +71,7 @@ const ReportTable = ({ reports, loading, onView, onExport, pagination, onTableCh
                             icon={<Download size={16} className="text-[#39C6C6]" />}
                             onClick={() => onExport(r)}
                             disabled={r.status !== REPORT_STATUS.SUCCEEDED}
+                                className="!h-8 !w-8 !p-0 !rounded-md"
                         />
                     </Tooltip>
                     {r.status === REPORT_STATUS.FAILED && (
@@ -83,7 +85,7 @@ const ReportTable = ({ reports, loading, onView, onExport, pagination, onTableCh
     ];
 
     return (
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+        <div className="bg-white rounded-[1rem] shadow-2xl shadow-slate-200/60 border border-white overflow-hidden p-6">
             <Table
                 columns={columns}
                 dataSource={reports}
@@ -91,7 +93,7 @@ const ReportTable = ({ reports, loading, onView, onExport, pagination, onTableCh
                 loading={loading}
                 pagination={pagination}
                 onChange={onTableChange}
-                className="report-table"
+                className="report-table storix-table"
                 locale={{
                     emptyText: (
                         <div className="py-12 flex flex-col items-center justify-center text-slate-400">

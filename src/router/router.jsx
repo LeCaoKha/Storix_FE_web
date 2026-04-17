@@ -39,6 +39,8 @@ import OutboundTicketCreate from "../pages/CompanyAdmin/components/OutboundTicke
 import OutboundTicketDetails from "../pages/CompanyAdmin/components/OutboundTicketManagement/components/OutboundTicketDetails/OutboundTicketDetails";
 import InventoryCount from "../pages/CompanyAdmin/components/InventoryCount/InventoryCount";
 import InventoryCountCreate from "../pages/CompanyAdmin/components/InventoryCount/components/InventoryCountCreate/InventoryCountCreate";
+import WarehouseTransferManagement from "../pages/Manager/components/WarehouseTransferManagement/WarehouseTransferManagement";
+import ManagerDashboard from "../pages/Manager/components/Dashboard/Dashboard";
 
 /**
  * 1. SHARED ADMIN ROUTES (Quyền hạn đầy đủ cho Admin & Manager)
@@ -123,6 +125,16 @@ const sharedAdminRoutes = [
   // INVENTORY COUNT MANAGEMENT
   { path: "inventory-count", element: <InventoryCount /> },
   { path: "inventory-count/create", element: <InventoryCountCreate /> },
+  // WAREHOUSE TRANSFER MANAGEMENT
+  {
+    path: "warehouse-transfer-management",
+    element: <WarehouseTransferManagement />,
+  },
+];
+
+const managerRoutes = [
+  { path: "dashboard", element: <ManagerDashboard /> },
+  ...sharedAdminRoutes.filter((route) => route.path !== "dashboard"),
 ];
 
 /**
@@ -200,7 +212,7 @@ const router = createBrowserRouter([
   {
     path: "/manager",
     element: <AdminLayout allowedRoles={[3]} />,
-    children: sharedAdminRoutes,
+    children: managerRoutes,
   },
   {
     path: "/staff",

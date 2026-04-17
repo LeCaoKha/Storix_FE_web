@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { message, Button } from "antd";
+import { message, Button, Space } from "antd";
 import { PlusCircle, FileText } from "lucide-react";
 import { motion } from "framer-motion";
 import api from "../../../../api/axios";
@@ -163,26 +163,37 @@ const ReportManagement = () => {
   };
 
   return (
-    <div className="md:px-16 lg:px-12 pt-7 pb-12 space-y-6">
+    <div className="bg-slate-50 min-h-screen text-slate-900">
+      <section className="md:px-16 lg:px-12 pt-7 pb-10 space-y-6">
       {/* Header */}
-      <motion.div initial="hidden" animate="visible" variants={fadeUp}
-        className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <motion.div
+        initial="hidden"
+        animate="visible"
+        variants={fadeUp}
+        className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4"
+      >
         <div>
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Analytics Hub</p>
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">
+            Analytics Hub
+          </p>
           <h1 className="text-2xl md:text-3xl font-black text-slate-800 tracking-tight">
             Inventory <span className="text-[#39C6C6]">Reports</span>
           </h1>
-          <p className="text-slate-400 mt-1 text-sm font-medium">Generate and analyze warehouse performance data</p>
+          <p className="text-slate-400 mt-1 text-sm font-medium">
+            Generate and analyze warehouse performance data
+          </p>
         </div>
 
-        <Button
-          type="primary"
-          icon={<PlusCircle size={18} />}
-          onClick={() => setIsGeneratorOpen(true)}
-          className="h-12 px-6 rounded-2xl bg-[#39C6C6] hover:bg-[#2eb1b1] border-none font-bold shadow-lg shadow-[#39C6C6]/20 flex items-center gap-2"
-        >
-          Generate New Report
-        </Button>
+        <Space size="middle" className="w-full md:w-auto">
+          <Button
+            type="primary"
+            icon={<PlusCircle size={18} />}
+            onClick={() => setIsGeneratorOpen(true)}
+            className="!h-12 !px-8 !bg-[#39C6C6] !border-none !rounded-2xl !font-bold hover:!bg-[#2eb1b1] !shadow-lg !shadow-[#39C6C6]/20 !flex !items-center"
+          >
+            Generate New Report
+          </Button>
+        </Space>
       </motion.div>
 
       {/* Filters */}
@@ -225,6 +236,7 @@ const ReportManagement = () => {
         onExport={handleExportPDF}
         exporting={exportingId === selectedReport?.id}
       />
+      </section>
     </div>
   );
 };

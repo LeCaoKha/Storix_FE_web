@@ -14,6 +14,7 @@ import {
   Archive,
   ClipboardList,
   ChevronDown,
+  ArrowRightLeft,
 } from "lucide-react";
 import { Tooltip } from "antd";
 import chooseImage from "../assets/images";
@@ -313,6 +314,15 @@ const CompanyAdminSidebar = ({
                 />
               )}
             </SidebarSubMenu>
+          )}
+
+          {(roleId === 2 || roleId === 3) && (
+            <SidebarItem
+              to="warehouse-transfer-management"
+              icon={<ArrowRightLeft size={20} />}
+              label="Warehouse Transfer"
+              isCollapsed={isCollapsed}
+            />
           )}
         </div>
       </div>
