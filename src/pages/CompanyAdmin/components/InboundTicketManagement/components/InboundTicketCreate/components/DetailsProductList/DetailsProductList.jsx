@@ -13,6 +13,7 @@ import {
   Input,
   Button,
   message,
+  Tooltip,
 } from "antd";
 import { Package, Search } from "lucide-react";
 
@@ -107,9 +108,13 @@ const DetailsProductList = ({ items, onUpdatePrice }) => {
                       className="!bg-slate-50 !text-slate-300 !shrink-0"
                     />
                     <div className="flex flex-col min-w-0">
-                      <Text className="!font-bold !text-slate-800 !truncate">
-                        {item.name}
-                      </Text>
+                      <Tooltip title={item.name} placement="topLeft">
+                        <Text className="!font-bold !text-slate-800">
+                          {item.name.length > 20
+                            ? `${item.name.substring(0, 20)}...`
+                            : item.name}
+                        </Text>
+                      </Tooltip>
                       <Text className="!text-xs !text-slate-400 !font-mono !italic">
                         {item.sku}
                       </Text>

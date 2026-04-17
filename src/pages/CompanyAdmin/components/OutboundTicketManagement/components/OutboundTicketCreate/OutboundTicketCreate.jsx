@@ -29,6 +29,11 @@ const OutboundTicketCreate = () => {
   const companyId = localStorage.getItem("companyId");
   const userId = localStorage.getItem("userId");
 
+  // ===== FIX START =====
+  // Lấy thêm warehouseId từ localStorage để gửi api path-optimization
+  const warehouseId = localStorage.getItem("warehouseId");
+  // ===== FIX END =====
+
   // Xác định base path để điều hướng sau khi tạo xong
   const roleId = Number(localStorage.getItem("roleId"));
   const getBasePath = () => {
@@ -86,13 +91,38 @@ const OutboundTicketCreate = () => {
         pricingMethod: "SpecificIdentification",
       };
 
+      // 1. GỌI API TẠO TICKET
       const res = await api.post(
         `/InventoryOutbound/create-outbound-ticket/${id}/tickets`,
         payload,
       );
 
       if (res.status === 200 || res.status === 201) {
-        message.success("Outbound Ticket created successfully!");
+        // Lấy ticketId từ response trả về (thường là res.data.id)
+        const ticketData = res.data;
+        const ticketId = ticketData.id;
+
+        // ===== FIX START =====
+        // 2. GỌI API PATH OPTIMIZATION NGAY SAU KHI TẠO TICKET THÀNH CÔNG
+        try {
+          await api.post(`http://localhost:5678/webhook/path-optimization`, {
+            outboundTicketId: Number(ticketId),
+            userId: Number(userId),
+            companyId: Number(companyId),
+            warehouseId: Number(warehouseId),
+          });
+          message.success(
+            "Outbound Ticket created & Path optimized successfully!",
+          );
+        } catch (optError) {
+          console.error("Path optimization error:", optError);
+          message.warning(
+            "Ticket created successfully, but Path Optimization failed.",
+          );
+        }
+        // ===== FIX END =====
+
+        // 3. ĐIỀU HƯỚNG VỀ TRANG QUẢN LÝ
         navigate(`${getBasePath()}/outbound-ticket-management`);
       }
     } catch (error) {

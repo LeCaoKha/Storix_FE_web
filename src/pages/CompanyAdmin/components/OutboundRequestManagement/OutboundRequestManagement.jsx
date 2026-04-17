@@ -50,6 +50,7 @@ const OutboundRequestManagement = () => {
       );
       setOutboundRequests(response.data);
     } catch (error) {
+      console.log(error);
       message.error("Failed to fetch outbound requests.");
     } finally {
       setLoading(false);

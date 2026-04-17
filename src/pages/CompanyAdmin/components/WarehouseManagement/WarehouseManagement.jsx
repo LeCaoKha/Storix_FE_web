@@ -30,8 +30,28 @@ const WarehouseManagement = () => {
   const [searchText, setSearchText] = useState("");
   const navigate = useNavigate();
 
+  // ===== FIX START =====
+  const roleId = localStorage.getItem("roleId");
+  const localWarehouseId = localStorage.getItem("warehouseId");
+
+  // Xử lý chuyển hướng ngay lập tức nếu role là Manager (3)
+  useEffect(() => {
+    if (roleId === "3" && localWarehouseId) {
+      // Dùng { replace: true } để người dùng không bị kẹt khi bấm nút Back của trình duyệt
+      navigate(`/manager/warehouse-management/details/${localWarehouseId}`, {
+        replace: true,
+      });
+    }
+  }, [navigate, roleId, localWarehouseId]);
+  // ===== FIX END =====
+
   // --- FETCH WAREHOUSES LOGIC ---
   const fetchWarehouses = async () => {
+    // ===== FIX START =====
+    // Nếu là Manager thì không cần tốn thời gian gọi API tải danh sách kho
+    if (roleId === "3") return;
+    // ===== FIX END =====
+
     setLoading(true);
     try {
       const companyId = localStorage.getItem("companyId");
@@ -163,6 +183,13 @@ const WarehouseManagement = () => {
   const filteredData = warehouses.filter((w) =>
     w.name?.toLowerCase().includes(searchText.toLowerCase()),
   );
+
+  // ===== FIX START =====
+  // Ẩn giao diện đi nếu là Manager (để tránh hiện chớp nhoáng UI trước khi navigate hoạt động)
+  if (roleId === "3") {
+    return null;
+  }
+  // ===== FIX END =====
 
   return (
     <div className="bg-slate-50 font-sans text-slate-900">

@@ -36,6 +36,9 @@ import InventoryDetails from "../pages/CompanyAdmin/components/InventoryManageme
 import OutboundRequestDetails from "../pages/CompanyAdmin/components/OutboundRequestManagement/components/OutboundRequestDetails/OutboundRequestDetails";
 import OutboundTicketManagement from "../pages/CompanyAdmin/components/OutboundTicketManagement/OutboundTicketManagement";
 import OutboundTicketCreate from "../pages/CompanyAdmin/components/OutboundTicketManagement/components/OutboundTicketCreate/OutboundTicketCreate";
+import OutboundTicketDetails from "../pages/CompanyAdmin/components/OutboundTicketManagement/components/OutboundTicketDetails/OutboundTicketDetails";
+import InventoryCount from "../pages/CompanyAdmin/components/InventoryCount/InventoryCount";
+import InventoryCountCreate from "../pages/CompanyAdmin/components/InventoryCount/components/InventoryCountCreate/InventoryCountCreate";
 
 /**
  * 1. SHARED ADMIN ROUTES (Quyền hạn đầy đủ cho Admin & Manager)
@@ -59,6 +62,10 @@ const sharedAdminRoutes = [
   {
     path: "outbound-ticket-management/create/:id",
     element: <OutboundTicketCreate />,
+  },
+  {
+    path: "outbound-ticket-management/details/:id",
+    element: <OutboundTicketDetails />,
   },
 
   // PRODUCT MANAGEMENT
@@ -112,6 +119,10 @@ const sharedAdminRoutes = [
   // INVENTORY MANAGEMENT
   { path: "inventory-management", element: <InventoryManagement /> },
   { path: "inventory-management/details/:id", element: <InventoryDetails /> },
+
+  // INVENTORY COUNT MANAGEMENT
+  { path: "inventory-count", element: <InventoryCount /> },
+  { path: "inventory-count/create", element: <InventoryCountCreate /> },
 ];
 
 /**

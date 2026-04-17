@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { Spin, message } from "antd";
-import { useReactToPrint } from "react-to-print"; // Import thư viện in
+import { useReactToPrint } from "react-to-print";
 import api from "../../../../../../api/axios";
 
 // Components
@@ -10,7 +10,7 @@ import DetailsProductList from "../InboundTicketCreate/components/DetailsProduct
 import DetailsSidebarInfo from "../InboundTicketCreate/components/DetailsSidebarInfo/DetailsSidebarInfo";
 import DetailsPayment from "../InboundTicketCreate/components/DetailsPayment/DetailsPayment";
 import DetailsNotes from "../InboundTicketCreate/components/DetailsNotes/DetailsNotes";
-import InboundPrintTemplate from "./components/InboundPrintTemplate/InboundPrintTemplate"; // Import Template in
+import InboundPrintTemplate from "./components/InboundPrintTemplate/InboundPrintTemplate";
 
 const InboundTicketDetails = () => {
   const { id } = useParams();
@@ -19,6 +19,9 @@ const InboundTicketDetails = () => {
   const [selectedStaffId, setSelectedStaffId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
+
+  // State quản lý loading cho nút Recommendation
+  const [isCreatingRec, setIsCreatingRec] = useState(false);
 
   const companyId = localStorage.getItem("companyId");
 
@@ -34,21 +37,33 @@ const InboundTicketDetails = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [ticketRes, usersRes] = await Promise.all([
-        api.get(`/InventoryInbound/tickets/${companyId}/${id}`),
-        api.get(`/Users`),
-      ]);
 
+      // 1. Lấy thông tin Ticket trước để có warehouseId
+      const ticketRes = await api.get(
+        `/InventoryInbound/tickets/${companyId}/${id}`,
+      );
       const ticketData = ticketRes.data;
       setData(ticketData);
-      setUsers(usersRes.data);
+
+      // 2. Lấy warehouseId từ dữ liệu ticket
+      const warehouseId = ticketData.warehouseId;
+
+      if (warehouseId) {
+        // 3. Gọi API lấy users dựa trên warehouseId của ticket
+        const usersRes = await api.get(
+          `/Users/get-users-by-warehouse/${warehouseId}`,
+        );
+        setUsers(usersRes.data);
+      } else {
+        console.warn("Warehouse ID not found in ticket data");
+      }
 
       if (ticketData.staffId) {
         setSelectedStaffId(ticketData.staffId);
       }
     } catch (error) {
       console.error("Fetch error:", error);
-      message.error("Failed to load ticket details");
+      message.error("Failed to load ticket details or staff list");
     } finally {
       setLoading(false);
     }
@@ -72,9 +87,49 @@ const InboundTicketDetails = () => {
       message.success("Ticket updated successfully!");
       fetchData();
     } catch (error) {
-      message.error("Failed to update ticket");
+      message.error("Failed to update ticket", error);
     } finally {
       setIsUpdating(false);
+    }
+  };
+
+  // Hàm xử lý gọi Webhook n8n
+  const handleCreateRecommendation = async () => {
+    const userId = localStorage.getItem("userId");
+    const warehouseId =
+      localStorage.getItem("warehouseId") || data?.warehouseId;
+
+    if (!userId || !companyId || !warehouseId) {
+      message.error(
+        "Missing necessary context data (User/Company/Warehouse ID).",
+      );
+      return;
+    }
+
+    try {
+      setIsCreatingRec(true);
+
+      const payload = {
+        inboundTicketId: Number(id),
+        userId: Number(userId),
+        companyId: Number(companyId),
+        warehouseId: Number(warehouseId),
+      };
+
+      // Gọi thẳng URL của webhook
+      await api.post(
+        "http://localhost:5678/webhook/storage-recommendation",
+        payload,
+      );
+
+      message.success("AI Recommendation process started successfully!");
+    } catch (error) {
+      console.error("Webhook trigger error:", error);
+      message.warning(
+        "Recommendation triggered, but received an error from the webhook.",
+      );
+    } finally {
+      setIsCreatingRec(false);
     }
   };
 
@@ -93,7 +148,10 @@ const InboundTicketDetails = () => {
         data={{ ...data, code: data.referenceCode }}
         onApprove={handleUpdateTicket}
         isApproving={isUpdating}
-        onExportPDF={() => handlePrint()} // Truyền hàm in vào Header
+        onExportPDF={() => handlePrint()}
+        // Truyền props mới xuống Header
+        onCreateRecommendation={handleCreateRecommendation}
+        isCreatingRec={isCreatingRec}
       />
 
       <div className="mt-8 pb-20">

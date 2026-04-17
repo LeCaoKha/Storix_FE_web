@@ -8,6 +8,11 @@ const { Title } = Typography;
 const DetailsHeader = ({ data, onApprove, isApproving, onExportPDF }) => {
   const navigate = useNavigate();
 
+  // ===== FIX START =====
+  // Lấy role ID từ localStorage (localStorage luôn trả về chuỗi, ví dụ: "4")
+  const userRole = localStorage.getItem("roleId");
+  // ===== FIX END =====
+
   return (
     <div className="flex justify-between items-center mb-10">
       <div className="flex items-center gap-4">
@@ -63,8 +68,9 @@ const DetailsHeader = ({ data, onApprove, isApproving, onExportPDF }) => {
           Export PDF
         </Button>
 
-        {/* Approve Request Button - Only shown when status is Pending */}
-        {data?.status === "Pending" && (
+        {/* ===== FIX START ===== */}
+        {/* Approve Request Button - Only shown when status is Pending AND role ID is NOT "4" */}
+        {data?.status === "Pending" && userRole !== "4" && (
           <Button
             type="primary"
             icon={<CheckCircle2 size={18} />}
@@ -75,6 +81,7 @@ const DetailsHeader = ({ data, onApprove, isApproving, onExportPDF }) => {
             Approve Request
           </Button>
         )}
+        {/* ===== FIX END ===== */}
       </Space>
     </div>
   );

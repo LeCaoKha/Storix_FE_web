@@ -1,12 +1,18 @@
 import React from "react";
 import { Button, Space, Typography } from "antd";
-import { ArrowLeft, Save, CheckCircle2, X } from "lucide-react";
+import { ArrowLeft, Save, X } from "lucide-react"; // Đã xóa import CheckCircle2
 import { useNavigate } from "react-router-dom";
 
 const { Title, Text } = Typography;
 
 const InboundHeader = ({ onCreate, loading }) => {
   const navigate = useNavigate();
+
+  // ===== ADDED CODE START =====
+  // Lấy role từ localStorage (thêm toLowerCase để so sánh an toàn)
+  const userRole = localStorage.getItem("role")?.toLowerCase();
+  // ===== ADDED CODE END =====
+
   return (
     <div className="flex justify-between items-center mb-10">
       <div className="flex items-center gap-4">
@@ -36,26 +42,21 @@ const InboundHeader = ({ onCreate, loading }) => {
           Cancel
         </Button>
 
-        {/* Nút Create PO: Kích hoạt gọi API */}
-        <Button
-          icon={<Save size={18} />}
-          onClick={() => onCreate(false)}
-          loading={loading}
-          className="!flex !items-center !gap-2 !h-11 !px-6 !font-bold !text-slate-600 !bg-white !border-slate-200 !rounded-xl shadow-sm hover:!border-[#39c6c6] hover:!text-[#39c6c6]"
-        >
-          Create PO
-        </Button>
+        {/* ===== ADDED CODE START ===== */}
+        {/* Nút Create PO: Ẩn nếu role là staff */}
+        {userRole !== "staff" && (
+          <Button
+            icon={<Save size={18} />}
+            onClick={() => onCreate(false)}
+            loading={loading}
+            className="!flex !items-center !gap-2 !h-11 !px-6 !font-bold !text-slate-600 !bg-white !border-slate-200 !rounded-xl shadow-sm hover:!border-[#39c6c6] hover:!text-[#39c6c6]"
+          >
+            Create PO
+          </Button>
+        )}
+        {/* ===== ADDED CODE END ===== */}
 
-        {/* Nút Create & Approve: Kích hoạt gọi API */}
-        <Button
-          type="primary"
-          icon={<CheckCircle2 size={18} />}
-          onClick={() => onCreate(true)}
-          loading={loading}
-          className="!flex !items-center !gap-2 !h-11 !px-6 !font-bold !bg-[#39c6c6] hover:!bg-[#2eb1b1] !border-none !rounded-xl shadow-lg shadow-[#39c6c6]/20"
-        >
-          Create & Approve
-        </Button>
+        {/* Đã xóa hoàn toàn nút Create & Approve ở đây */}
       </Space>
     </div>
   );

@@ -18,6 +18,8 @@ const InboundRequestDetails = () => {
   const [loading, setLoading] = useState(true);
   const [isApproving, setIsApproving] = useState(false);
 
+  console.log("data", data);
+
   // printRef trỏ tới Template In, không trỏ tới giao diện Web
   const printRef = useRef(null);
 

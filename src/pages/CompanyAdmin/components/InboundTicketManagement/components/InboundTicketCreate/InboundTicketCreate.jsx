@@ -21,6 +21,11 @@ const InboundTicketCreate = () => {
   const companyId = localStorage.getItem("companyId");
   const userId = localStorage.getItem("userId");
 
+  // ===== FIX START =====
+  // Lấy thêm warehouseId từ localStorage để gọi API nhân viên
+  const warehouseId = localStorage.getItem("warehouseId");
+  // ===== FIX END =====
+
   const fetchData = async () => {
     try {
       setLoading(true);
@@ -33,7 +38,12 @@ const InboundTicketCreate = () => {
 
       // 2. Lấy danh sách User (Bọc try...catch riêng để chống sập nếu Staff bị lỗi 403)
       try {
-        const usersRes = await api.get(`/Users`);
+        // ===== FIX START =====
+        // Sửa API endpoint để chỉ lấy những staff thuộc về warehouse hiện tại
+        const usersRes = await api.get(
+          `/Users/get-users-by-warehouse/${warehouseId}`,
+        );
+        // ===== FIX END =====
         setUsers(usersRes.data);
       } catch (userError) {
         console.warn(

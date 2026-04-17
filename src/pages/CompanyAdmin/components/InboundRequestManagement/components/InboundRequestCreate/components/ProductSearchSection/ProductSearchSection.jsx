@@ -14,6 +14,7 @@ import {
   Form,
   Row,
   Col,
+  Tooltip,
 } from "antd";
 import { Search, Plus, Package, Trash2 } from "lucide-react";
 
@@ -160,9 +161,13 @@ const ProductSearchSection = ({
                             src={item.image || item.imageUrl}
                           />
                           <div className="!flex !flex-col !min-w-0">
-                            <Text className="!text-md !text-slate-800 !line-clamp-1 !font-bold">
-                              {item.name}
-                            </Text>
+                            <Tooltip title={item.name} mouseEnterDelay={0.5}>
+                              <Text className="!text-md !text-slate-800 !font-bold">
+                                {item.name.length > 20
+                                  ? `${item.name.substring(0, 20)}...`
+                                  : item.name}
+                              </Text>
+                            </Tooltip>
                             <Text className="!text-[10px] !text-slate-500 !uppercase !font-bold">
                               SKU: {item.sku || "N/A"}
                             </Text>
@@ -210,9 +215,13 @@ const ProductSearchSection = ({
                       className="!bg-slate-50 !text-slate-300 !shrink-0"
                     />
                     <div className="flex flex-col min-w-0">
-                      <Text className="!font-bold !text-slate-800 !truncate">
-                        {item.name}
-                      </Text>
+                      <Tooltip title={item.name} placement="topLeft">
+                        <Text className="!font-bold !text-slate-800">
+                          {item.name.length > 20
+                            ? `${item.name.substring(0, 20)}...`
+                            : item.name}
+                        </Text>
+                      </Tooltip>
                       <Text className="!text-xs !text-slate-400 !font-mono !italic">
                         {item.sku}
                       </Text>
