@@ -24,33 +24,47 @@ const InventoryCountCreate = () => {
   const [users, setUsers] = useState([]);
   const [selectedProducts, setSelectedProducts] = useState([]);
 
-  // Cập nhật cấu trúc countConfig để khớp Payload mới (storageZoneIds)
   const [countConfig, setCountConfig] = useState({
     name: "",
     description: "",
     plannedAt: null,
-    scopeType: "All",
-    storageZoneIds: [], // Chuyển từ scopeId sang mảng storageZoneIds
+    scopeType: "Product", // Mặc định là Product vì đang chọn theo danh sách SP
+    storageZoneIds: [],
     assignedTo: null,
   });
 
   const userId = localStorage.getItem("userId");
   const warehouseId = localStorage.getItem("warehouseId");
+  const companyId = localStorage.getItem("companyId");
 
   // ==========================================
   // 1. LOGIC FETCH DỮ LIỆU
   // ==========================================
   const fetchData = async () => {
-    if (!userId || !warehouseId) return;
+    if (!userId || !warehouseId || !companyId) {
+      message.error("Missing credentials in local storage");
+      return;
+    }
     setLoading(true);
     try {
-      const [prodRes, usersRes] = await Promise.all([
-        api.get(`/Products/get-all/${userId}`),
+      const [inventoryRes, usersRes] = await Promise.all([
+        api.get(
+          `/company-warehouses/${companyId}/warehouses/${warehouseId}/inventory`,
+        ),
         api.get(`/Users/get-users-by-warehouse/${warehouseId}`),
       ]);
 
-      setAllProducts(prodRes.data || []);
-      setFilteredProducts(prodRes.data || []);
+      const mappedProducts = (inventoryRes.data || []).map((item) => ({
+        id: item.productId,
+        productId: item.productId,
+        name: item.productName,
+        sku: item.productSku,
+        quantity: item.quantity,
+        locations: item.locations, // Quan trọng: Giữ lại thông tin locations để lấy zoneId
+      }));
+
+      setAllProducts(mappedProducts);
+      setFilteredProducts(mappedProducts);
       setUsers(usersRes.data || []);
     } catch (error) {
       console.error("Fetch Error:", error);
@@ -86,24 +100,20 @@ const InventoryCountCreate = () => {
   };
 
   const handleSelectProduct = (product) => {
-    const isExist = selectedProducts.find((p) => p.id === product.id);
+    const isExist = selectedProducts.find(
+      (p) => p.productId === product.productId,
+    );
     if (isExist) {
       message.info("This product is already in the list");
       return;
     }
-
-    setSelectedProducts([
-      ...selectedProducts,
-      {
-        ...product,
-        productId: product.id,
-        // Đã xóa locationId vì API Payload mới không yêu cầu trong items
-      },
-    ]);
+    setSelectedProducts([...selectedProducts, product]);
   };
 
   const handleRemoveProduct = (productId) => {
-    setSelectedProducts(selectedProducts.filter((p) => p.id !== productId));
+    setSelectedProducts(
+      selectedProducts.filter((p) => p.productId !== productId),
+    );
   };
 
   const handleConfigChange = (key, value) => {
@@ -111,49 +121,78 @@ const InventoryCountCreate = () => {
   };
 
   // ==========================================
-  // 3. LOGIC GỬI API (PAYLOAD MỚI)
+  // 3. LOGIC GỬI API (PAYLOAD CHUẨN)
   // ==========================================
   const handleCreateCountTicket = async () => {
-    // Validation
-    if (!countConfig.name) return message.warning("Please enter a Count Name");
-    if (!countConfig.assignedTo)
+    // 1. Kiểm tra tính hợp lệ của dữ liệu (Validation)
+    if (!countConfig.name) {
+      return message.warning("Please enter a Count Name");
+    }
+    if (!countConfig.assignedTo) {
       return message.warning("Please assign a staff member");
-    if (!countConfig.plannedAt)
+    }
+    if (!countConfig.plannedAt) {
       return message.warning("Please select a planned date");
+    }
+    if (selectedProducts.length === 0) {
+      return message.warning("Please select at least one product to count");
+    }
 
     setIsSubmitting(true);
+
     try {
-      // Mapping Payload theo cấu trúc mới
+      // 2. Logic trích xuất Storage Zone IDs duy nhất
+      // flatMap sẽ duyệt qua các sản phẩm, lấy mảng locations và trải phẳng tất cả zoneId ra 1 mảng
+      const allZoneIds = selectedProducts.flatMap((p) =>
+        p.locations ? p.locations.map((loc) => loc.zoneId) : [],
+      );
+
+      // Sử dụng Set để loại bỏ các zoneId trùng lặp và chuyển về mảng số nguyên
+      const uniqueZoneIds = [...new Set(allZoneIds)].map((id) => Number(id));
+
+      // 3. Định dạng lại thời gian (Xóa chữ Z ở cuối chuỗi ISO)
+      // Chuyển "2026-04-17T09:19:09.654Z" thành "2026-04-17T09:19:09.654"
+      const formattedPlannedAt = countConfig.plannedAt
+        .toISOString()
+        .split("Z")[0];
+
+      // 4. Xây dựng Payload đúng cấu trúc JSON yêu cầu
       const payload = {
         warehouseId: Number(warehouseId),
         performedBy: Number(userId),
-        assignedTo: countConfig.assignedTo,
+        assignedTo: Number(countConfig.assignedTo),
         name: countConfig.name,
         description: countConfig.description || "",
         scopeType: countConfig.scopeType,
-        // Gửi mảng storageZoneIds (Nếu UI chọn 1 zone thì bọc vào mảng [id])
-        storageZoneIds: Array.isArray(countConfig.storageZoneIds)
-          ? countConfig.storageZoneIds
-          : [countConfig.storageZoneIds],
-        plannedAt: countConfig.plannedAt.toISOString(),
+        storageZoneIds: uniqueZoneIds, // Mảng ID của các khu vực chứa sản phẩm
+        plannedAt: formattedPlannedAt, // Thời gian đã bỏ ký tự Z
         items: selectedProducts.map((p) => ({
-          productId: p.productId, // Chỉ còn productId
+          productId: Number(p.productId), // Chỉ gửi productId theo yêu cầu
         })),
       };
 
+      // Log payload để kiểm tra lần cuối trước khi gửi
+      console.log("Final Payload to API:", payload);
+
+      // 5. Gọi API POST
       const res = await api.post("/InventoryCount/create-ticket", payload);
 
+      // 6. Xử lý phản hồi từ server
       if (res.status === 200 || res.status === 201) {
         message.success("Inventory Count created successfully!");
+
+        // Chuyển hướng người dùng sau khi thành công
         const roleId = Number(localStorage.getItem("roleId"));
         const basePath = roleId === 2 ? "/company-admin" : "/manager";
         navigate(`${basePath}/inventory-count`);
       }
     } catch (error) {
+      // Xử lý lỗi (Lỗi 400, 500, v.v.)
       console.error("Submission Error:", error);
-      message.error(
-        error.response?.data?.message || "Failed to create count ticket",
-      );
+      const errorMsg =
+        error.response?.data?.message ||
+        "An error occurred while creating the count ticket.";
+      message.error(errorMsg);
     } finally {
       setIsSubmitting(false);
     }
@@ -175,7 +214,6 @@ const InventoryCountCreate = () => {
       />
 
       <div className="flex justify-center gap-x-6 pb-20">
-        {/* CỘT TRÁI: SEARCH & LIST */}
         <div className="w-[60%] space-y-6">
           <ProductSearchSection
             searchRef={searchRef}
@@ -187,22 +225,24 @@ const InventoryCountCreate = () => {
             selectedProducts={selectedProducts}
             onSelectProduct={handleSelectProduct}
             onRemoveProduct={handleRemoveProduct}
-            // Trong mode này ProductSearchSection sẽ không hiển thị chọn Location cho từng dòng SP nữa
             isInventoryCountMode={true}
           />
         </div>
 
-        {/* CỘT PHẢI: SIDEBAR CONFIG */}
         <div className="w-[30%] space-y-6">
-          <DetailsSidebarInfo
-            users={users}
-            selectedStaffId={countConfig.assignedTo}
-            onStaffChange={(val) => handleConfigChange("assignedTo", val)}
-          />
-          <DetailsCountConfig
-            config={countConfig}
-            onDataChange={handleConfigChange}
-          />
+          <div>
+            <DetailsSidebarInfo
+              users={users}
+              selectedStaffId={countConfig.assignedTo}
+              onStaffChange={(val) => handleConfigChange("assignedTo", val)}
+            />
+          </div>
+          <div>
+            <DetailsCountConfig
+              config={countConfig}
+              onDataChange={handleConfigChange}
+            />
+          </div>
         </div>
       </div>
     </div>
