@@ -30,6 +30,7 @@ import {
   Divider,
   Tag,
   Typography,
+  Spin, // ===== ADDED CODE START: Imported Spin =====
 } from "antd";
 import api from "../../api/axios";
 
@@ -55,6 +56,11 @@ const WarehouseConfiguration = () => {
   const [selectionBox, setSelectionBox] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
 
+  // ===== ADDED CODE START =====
+  // 1. Detect Loading: Thêm state isLoading
+  const [isLoading, setIsLoading] = useState(true);
+  // ===== ADDED CODE END =====
+
   // Khôi phục kích thước Stage gốc
   const [data, setData] = useState({
     width: 1200,
@@ -68,7 +74,16 @@ const WarehouseConfiguration = () => {
   useEffect(() => {
     const fetchWarehouseStructure = async () => {
       const companyId = localStorage.getItem("companyId");
-      if (!companyId || !warehouseId) return;
+      if (!companyId || !warehouseId) {
+        // ===== ADDED CODE START =====
+        setIsLoading(false);
+        // ===== ADDED CODE END =====
+        return;
+      }
+
+      // ===== ADDED CODE START =====
+      setIsLoading(true);
+      // ===== ADDED CODE END =====
 
       try {
         const response = await api.get(
@@ -94,25 +109,17 @@ const WarehouseConfiguration = () => {
             zoneType: z.zoneType || "NORMAL",
             isEsd: z.isEsd ?? z.isESD ?? false,
             isMsd: z.isMsd ?? z.isMSD ?? false,
-            // ===== ADDED CODE START =====
-            // Load the new boolean fields
             isCold: z.isCold ?? false,
             isVulnerable: z.isVulnerable ?? false,
             isHighValue: z.isHighValue ?? false,
-            // ===== ADDED CODE END =====
             shelves: (z.shelves || []).map((s, sIndex) => ({
               id: s.id || `s-${Date.now()}-${sIndex}`,
               code: s.code || `S-${sIndex + 1}`,
               x: s.x ?? 20,
               y: s.y ?? 20,
               width: s.width || 40,
-              // ===== FIX START =====
-              // FIX CONCEPTUAL MISMATCH: Map API length -> state height (2D canvas rendering depth)
-              // Map API height -> state verticalHeight (Real world vertical height, unrendered)
-              // Removed duplicate length/height properties to resolve Vite warnings
               height: s.length || 100,
               verticalHeight: s.height || 0,
-              // ===== FIX END =====
               accessNodes: (s.accessNodes || []).map((a) => ({
                 id: a.id,
                 side: a.side || "none",
@@ -179,6 +186,10 @@ const WarehouseConfiguration = () => {
         if (error.response && error.response.status !== 404) {
           message.error("Failed to load existing warehouse structure.");
         }
+      } finally {
+        // ===== ADDED CODE START =====
+        setIsLoading(false);
+        // ===== ADDED CODE END =====
       }
     };
 
@@ -216,26 +227,17 @@ const WarehouseConfiguration = () => {
           zoneType: z.zoneType || "NORMAL",
           isEsd: z.isEsd ?? z.isESD ?? false,
           isMsd: z.isMsd ?? z.isMSD ?? false,
-          // ===== ADDED CODE START =====
-          // Include the new fields in the payload
           isCold: z.isCold ?? false,
           isVulnerable: z.isVulnerable ?? false,
           isHighValue: z.isHighValue ?? false,
-          // ===== ADDED CODE END =====
           shelves: z.shelves.map((s) => ({
             id: s.id,
             code: s.code || "",
             x: s.x,
             y: s.y,
             width: s.width,
-            // ===== FIX START =====
-            // RE-MAP TO API STRUCTURE:
-            // Send internal 2D state 'height' as API 'length'
-            // Send internal vertical 'verticalHeight' as API 'height'
-            // Cleaned duplicate properties.
             length: s.height,
             height: s.verticalHeight ?? 0,
-            // ===== FIX END =====
             accessNodes: (s.accessNodes || []).map((a) => ({
               id: a.id,
               side: a.side || "none",
@@ -254,11 +256,9 @@ const WarehouseConfiguration = () => {
                   b.status === false || b.status === "inactive"
                     ? "inactive"
                     : "active",
-                // ===== ADDED CODE START =====
                 width: s.width || 0,
                 length: (s.height || 0) / (l.bins?.length || 1),
                 height: (s.verticalHeight || 0) / (s.levels?.length || 1),
-                // ===== ADDED CODE END =====
               })),
             })),
           })),
@@ -298,7 +298,6 @@ const WarehouseConfiguration = () => {
   };
 
   // --- LOGIC FUNCTIONS ---
-  // ===== ADDED CODE START =====
   const handleUpdateShelfDimension = (zoneId, shelfId, field, value) => {
     // Avoid NaN crashing Konva, fallback to 0 safely
     const numValue = Math.max(0, Number(value) || 0);
@@ -316,7 +315,6 @@ const WarehouseConfiguration = () => {
       }),
     }));
   };
-  // ===== ADDED CODE END =====
 
   const getNextShelfCode = (currentData) => {
     let maxNum = 0;
@@ -530,12 +528,9 @@ const WarehouseConfiguration = () => {
       zoneType: "NORMAL",
       isEsd: false,
       isMsd: false,
-      // ===== ADDED CODE START =====
-      // Initialize new fields as false for new zones
       isCold: false,
       isVulnerable: false,
       isHighValue: false,
-      // ===== ADDED CODE END =====
     };
     setData((prev) => ({ ...prev, zones: [...prev.zones, newZone] }));
     setSelectedIds([nid]);
@@ -561,12 +556,8 @@ const WarehouseConfiguration = () => {
         x: 20,
         y: 20,
         width: 40,
-        // ===== FIX START =====
-        // FIX OVERRIDE: Keep 2D depth mapped to state height, vertical height mapped to state verticalHeight
-        // Cleaned up duplicate keys
         height: 100,
         verticalHeight: 0,
-        // ===== FIX END =====
         accessNodes: [],
         levels: [],
       };
@@ -1072,6 +1063,19 @@ const WarehouseConfiguration = () => {
     }));
   };
 
+  // ===== ADDED CODE START: Conditional Rendering =====
+  if (isLoading) {
+    return (
+      <div className="!flex !flex-col !items-center !justify-center !h-screen !w-screen !bg-slate-900 !gap-4">
+        <Spin size="large" />
+        <span className="!text-lg !font-bold !text-slate-400">
+          Loading warehouse layout. It may take a while
+        </span>
+      </div>
+    );
+  }
+  // ===== ADDED CODE END =====
+
   return (
     <ConfigProvider theme={{ token: { colorPrimary: "#39c6c6" } }}>
       <div className="!flex !w-screen !h-screen !bg-slate-900 !overflow-hidden !font-sans">
@@ -1095,7 +1099,7 @@ const WarehouseConfiguration = () => {
                   setSelectedIds([]);
                 }}
               >
-                <Box size={14} /> Vật thể
+                <Box size={14} /> Object
               </button>
               <button
                 className={`!flex-1 !py-2 !rounded-lg !text-xs !font-bold !transition-all !flex !items-center !justify-center !gap-2 ${
@@ -1108,7 +1112,7 @@ const WarehouseConfiguration = () => {
                   setSelectedIds([]);
                 }}
               >
-                <Navigation size={14} /> Điều hướng
+                <Navigation size={14} /> Navigate
               </button>
             </div>
 

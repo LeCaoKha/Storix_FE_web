@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import {
   Card,
   Input,
@@ -9,12 +9,7 @@ import {
   Empty,
   Button,
   Skeleton,
-  Modal,
-  Form,
-  Row,
-  Col,
-  message,
-  Tooltip, // Thêm Tooltip từ antd
+  Tooltip,
 } from "antd";
 import { Search, Package, Trash2, Plus } from "lucide-react";
 
@@ -30,15 +25,10 @@ const ProductSelectionOutbound = ({
   onSelectProduct,
   onUpdateQuantity,
   onRemoveProduct,
-  onUpdatePrice,
   onOpenCreateModal,
   loading,
 }) => {
-  const [isPriceModalOpen, setIsPriceModalOpen] = useState(false);
-  const [editingProduct, setEditingProduct] = useState(null);
-  const [priceForm] = Form.useForm();
-
-  // --- FIX: Logic click outside để đóng dropdown ---
+  // --- Logic click outside để đóng dropdown ---
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (searchRef.current && !searchRef.current.contains(event.target)) {
@@ -51,39 +41,6 @@ const ProductSelectionOutbound = ({
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [searchRef, setIsSearching]);
-
-  const originalPriceRaw = Form.useWatch("price", priceForm) || "0";
-  const lineDiscountValueRaw = Form.useWatch("discountValue", priceForm) || "0";
-
-  const calculateFinalPrice = () => {
-    const price = Number(originalPriceRaw);
-    const discount = Number(lineDiscountValueRaw);
-    const finalPrice = price - (price * discount) / 100;
-    return Math.max(0, Math.floor(finalPrice));
-  };
-
-  const handleOpenPriceModal = (product) => {
-    setEditingProduct(product);
-    priceForm.setFieldsValue({
-      price: String(product.price || 0),
-      discountValue: String(product.lineDiscount || 0),
-    });
-    setIsPriceModalOpen(true);
-  };
-
-  const handleApplyPrice = () => {
-    const finalPrice = calculateFinalPrice();
-    if (onUpdatePrice) {
-      onUpdatePrice(
-        editingProduct.id,
-        finalPrice,
-        originalPriceRaw,
-        lineDiscountValueRaw,
-      );
-    }
-    setIsPriceModalOpen(false);
-    message.success("Unit price updated");
-  };
 
   return (
     <div className="space-y-6">
@@ -154,9 +111,6 @@ const ProductSelectionOutbound = ({
                             </Text>
                           </div>
                         </Space>
-                        <Text className="!font-black !text-[#38c6c6]">
-                          {(item.price || 0).toLocaleString()} ₫
-                        </Text>
                       </div>
                     )}
                   />
@@ -175,8 +129,6 @@ const ProductSelectionOutbound = ({
               <div className="flex px-4 text-[10px] uppercase font-bold text-slate-400 tracking-widest mb-1">
                 <span className="flex-1">Product</span>
                 <span className="w-24 text-center">Qty</span>
-                <span className="w-32 text-right pr-4">Unit Price</span>
-                <span className="w-32 text-right pr-4">Total</span>
                 <div className="w-10"></div>
               </div>
 
@@ -196,8 +148,8 @@ const ProductSelectionOutbound = ({
                     <div className="flex flex-col min-w-0">
                       <Tooltip title={item.name} placement="topLeft">
                         <Text className="!font-bold block text-slate-800 truncate">
-                          {item.name.length > 20
-                            ? `${item.name.substring(0, 20)}...`
+                          {item.name.length > 30
+                            ? `${item.name.substring(0, 30)}...`
                             : item.name}
                         </Text>
                       </Tooltip>
@@ -218,104 +170,26 @@ const ProductSelectionOutbound = ({
                     />
                   </div>
 
-                  <div className="w-32 text-right pr-4">
-                    <div
-                      className="cursor-pointer"
-                      onClick={() => handleOpenPriceModal(item)}
-                    >
-                      <Text className="!font-bold !text-[#38c6c6] block hover:underline">
-                        {(item.price || 0).toLocaleString()} ₫
-                      </Text>
-                    </div>
+                  <div className="w-10 flex justify-end">
+                    <Button
+                      type="text"
+                      danger
+                      icon={<Trash2 size={18} />}
+                      onClick={() => onRemoveProduct(item.id)}
+                      className="!flex !items-center !justify-center hover:!bg-rose-50 !rounded-xl"
+                    />
                   </div>
-
-                  <div className="w-32 text-right pr-4">
-                    <Text className="!font-black !text-slate-700">
-                      {(
-                        (item.price || 0) * (item.quantity || 1)
-                      ).toLocaleString()}{" "}
-                      ₫
-                    </Text>
-                  </div>
-
-                  <Button
-                    type="text"
-                    danger
-                    icon={<Trash2 size={18} />}
-                    onClick={() => onRemoveProduct(item.id)}
-                    className="!flex !items-center !justify-center hover:!bg-rose-50 !rounded-xl"
-                  />
                 </div>
               ))}
             </div>
           ) : (
-            <div className="h-40 border-2 border-dashed border-slate-100 rounded-2xl flex flex-col items-center justify-center text-slate-300">
+            <div className="h-40 border-2 border-dashed border-slate-100 rounded-2xl flex flex-col items-center justify-center bg-slate-50/50 text-slate-400">
               <Package size={32} className="mb-2 opacity-20" />
               <Text className="text-xs">No products selected for outbound</Text>
             </div>
           )}
         </div>
       </Card>
-
-      {/* 4. MODAL ĐIỀU CHỈNH GIÁ SẢN PHẨM */}
-      <Modal
-        title={<span className="font-bold text-lg">Adjust Item Price</span>}
-        open={isPriceModalOpen}
-        onCancel={() => setIsPriceModalOpen(false)}
-        centered
-        footer={[
-          <Button
-            key="cancel"
-            onClick={() => setIsPriceModalOpen(false)}
-            className="!rounded-xl"
-          >
-            Cancel
-          </Button>,
-          <Button
-            key="apply"
-            type="primary"
-            onClick={handleApplyPrice}
-            className="!bg-[#38c6c6] !border-none !rounded-xl !font-bold"
-          >
-            Apply
-          </Button>,
-        ]}
-      >
-        <Form form={priceForm} layout="vertical" className="mt-4">
-          <Row gutter={16}>
-            <Col span={16}>
-              <Form.Item
-                label={<span className="font-bold">Unit Price</span>}
-                name="price"
-              >
-                <Input
-                  className="!h-11 !rounded-xl !bg-slate-50 !border-none !font-bold"
-                  suffix="₫"
-                />
-              </Form.Item>
-            </Col>
-            <Col span={8}>
-              <Form.Item
-                label={<span className="font-bold">Disc %</span>}
-                name="discountValue"
-              >
-                <Input
-                  className="!h-11 !rounded-xl !bg-slate-50 !border-none !font-bold !text-center"
-                  suffix="%"
-                />
-              </Form.Item>
-            </Col>
-          </Row>
-          <div className="p-4 bg-slate-50 rounded-2xl border border-dashed border-slate-200 text-center">
-            <p className="text-[10px] uppercase font-black text-slate-400 tracking-widest mb-1">
-              Final Price
-            </p>
-            <Text className="text-3xl font-black text-[#38c6c6]">
-              {calculateFinalPrice().toLocaleString()} ₫
-            </Text>
-          </div>
-        </Form>
-      </Modal>
 
       <style jsx global>{`
         .ant-card-head {

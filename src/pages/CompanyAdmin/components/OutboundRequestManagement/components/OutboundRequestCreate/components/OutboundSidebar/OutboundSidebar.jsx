@@ -57,59 +57,65 @@ const OutboundSidebar = ({ onDataChange, outboundData }) => {
   return (
     <div className="space-y-6">
       {/* SECTION: ORIGIN WAREHOUSE */}
-      <Card className="!rounded-2xl !shadow-sm !border-slate-100">
-        <Skeleton loading={loading} active paragraph={{ rows: 2 }}>
-          <div>
-            <Text className="block !font-bold !text-slate-700 mb-2 uppercase text-[10px] tracking-widest flex items-center gap-2">
-              <Warehouse size={14} className="text-[#38c6c6]" /> Origin
-              Warehouse
-            </Text>
-            <Select
-              placeholder="Select shipping warehouse"
-              className="w-full !h-12 custom-sidebar-select"
-              value={outboundData?.warehouseId}
-              onChange={(val) => handleChange("warehouseId", val)}
-              suffixIcon={<Warehouse size={18} className="text-slate-400" />}
-              // Thêm disabled nếu bạn không muốn người dùng bấm mở dropdown (vì đằng nào cũng chỉ có 1 lựa chọn)
-              // disabled={warehouses.length <= 1}
-            >
-              {warehouses.map((w) => (
-                <Option key={w.id} value={w.id}>
-                  {w.name}
-                </Option>
-              ))}
-            </Select>
-          </div>
-        </Skeleton>
-      </Card>
+      <div>
+        <Card className="!rounded-2xl !shadow-sm !border-slate-100">
+          <Skeleton loading={loading} active paragraph={{ rows: 2 }}>
+            <div>
+              <Text className="block !font-bold !text-slate-700 mb-2 uppercase text-[10px] tracking-widest flex items-center gap-2">
+                <Warehouse size={14} className="text-[#38c6c6]" /> Origin
+                Warehouse
+              </Text>
+              <Select
+                placeholder="Select shipping warehouse"
+                className="w-full !h-12 custom-sidebar-select"
+                value={outboundData?.warehouseId}
+                onChange={(val) => handleChange("warehouseId", val)}
+                suffixIcon={<Warehouse size={18} className="text-slate-400" />}
+                // Thêm disabled nếu bạn không muốn người dùng bấm mở dropdown (vì đằng nào cũng chỉ có 1 lựa chọn)
+                // disabled={warehouses.length <= 1}
+              >
+                {warehouses.map((w) => (
+                  <Option key={w.id} value={w.id}>
+                    {w.name}
+                  </Option>
+                ))}
+              </Select>
+            </div>
+          </Skeleton>
+        </Card>
+      </div>
 
       {/* SECTION: DESTINATION ADDRESS (NEW) */}
-      <Card className="!rounded-2xl !shadow-sm !border-slate-100">
-        <Text className="block !font-bold !text-slate-700 mb-3 uppercase text-[10px] tracking-widest flex items-center gap-2">
-          <MapPin size={14} className="text-[#38c6c6]" /> Destination Address
-        </Text>
-        <Input
-          size="large"
-          placeholder="Enter shipping address or dispatch point..."
-          value={outboundData?.destination}
-          onChange={(e) => handleChange("destination", e.target.value)}
-          className="!h-12 !rounded-xl !bg-slate-50 !border-none focus:!bg-white focus:!ring-2 focus:!ring-[#38c6c6]/20 transition-all"
-        />
-      </Card>
+      <div>
+        <Card className="!rounded-2xl !shadow-sm !border-slate-100">
+          <Text className="block !font-bold !text-slate-700 mb-3 uppercase text-[10px] tracking-widest flex items-center gap-2">
+            <MapPin size={14} className="text-[#38c6c6]" /> Destination Address
+          </Text>
+          <Input
+            size="large"
+            placeholder="Enter shipping address or dispatch point..."
+            value={outboundData?.destination}
+            onChange={(e) => handleChange("destination", e.target.value)}
+            className="!h-12 !rounded-xl !bg-slate-50 !border-none focus:!bg-white focus:!ring-2 focus:!ring-[#38c6c6]/20 transition-all"
+          />
+        </Card>
+      </div>
 
       {/* SECTION: INTERNAL NOTES */}
-      <Card className="!rounded-2xl !shadow-sm !border-slate-100">
-        <Text className="block !font-bold !text-slate-700 mb-3 uppercase text-[10px] tracking-widest flex items-center gap-2">
-          <StickyNote size={14} className="text-[#38c6c6]" /> Internal Notes
-        </Text>
-        <TextArea
-          rows={4}
-          placeholder="Enter any shipment instructions or notes..."
-          value={outboundData?.notes}
-          className="!rounded-xl !bg-slate-50 !border-none !p-4 transition-all focus:!bg-white focus:!ring-2 focus:!ring-[#38c6c6]/20"
-          onChange={(e) => handleChange("notes", e.target.value)}
-        />
-      </Card>
+      <div>
+        <Card className="!rounded-2xl !shadow-sm !border-slate-100">
+          <Text className="block !font-bold !text-slate-700 mb-3 uppercase text-[10px] tracking-widest flex items-center gap-2">
+            <StickyNote size={14} className="text-[#38c6c6]" /> Internal Notes
+          </Text>
+          <TextArea
+            rows={4}
+            placeholder="Enter any shipment instructions or notes..."
+            value={outboundData?.notes}
+            className="!rounded-xl !bg-slate-50 !border-none !p-4 transition-all focus:!bg-white focus:!ring-2 focus:!ring-[#38c6c6]/20"
+            onChange={(e) => handleChange("notes", e.target.value)}
+          />
+        </Card>
+      </div>
 
       {/* Style CSS cho Select */}
       <style jsx global>{`

@@ -35,6 +35,7 @@ const ProductSearchSection = ({
   onSelectProduct,
   onRemoveProduct,
 }) => {
+  console.log("selected product: ", selectedProducts);
   // Hàm render nội dung bên trong Popover
   const renderLocationList = (locations) => (
     <div className="flex flex-col gap-2 max-h-[250px] overflow-y-auto p-1">
@@ -96,7 +97,8 @@ const ProductSearchSection = ({
                         <Avatar
                           shape="square"
                           size={40}
-                          src={item.imageUrl || item.image}
+                          // ĐÃ SỬA: Thay imageUrl/image bằng productImage
+                          src={item.productImage}
                           icon={<Package />}
                           className="!bg-slate-100 !text-slate-400"
                         />
@@ -145,8 +147,10 @@ const ProductSearchSection = ({
                     <Avatar
                       shape="square"
                       size={44}
-                      src={item.imageUrl || item.image}
-                      className="!bg-slate-50"
+                      // ĐÃ SỬA: Thay imageUrl/image bằng productImage
+                      src={item.productImage}
+                      icon={<Package />}
+                      className="!bg-slate-50 !text-slate-400"
                     />
                     <div className="flex flex-col min-w-0">
                       <Text className="!font-bold !text-slate-800 !truncate !block !max-w-[180px]">

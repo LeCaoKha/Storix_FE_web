@@ -4,17 +4,12 @@ import { Card, Typography, Divider, Tag } from "antd";
 const { Text } = Typography;
 
 const DetailsPayment = ({ data }) => {
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat("vi-VN", {
-      style: "currency",
-      currency: "VND",
-    }).format(amount || 0);
-  };
-
   const totalItems = data?.items?.reduce(
     (sum, item) => sum + (item.quantity || 0),
     0,
   );
+
+  const totalSKUs = data?.items?.length || 0;
 
   return (
     <Card className="!rounded-2xl !shadow-sm !border-slate-100">
@@ -22,27 +17,26 @@ const DetailsPayment = ({ data }) => {
         Dispatch Summary
       </Text>
       <div className="space-y-4">
-        {/* Phương pháp tính giá đích danh */}
         <div className="flex justify-between items-center text-slate-600">
-          <span>Pricing Method</span>
+          <span>Picking Strategy</span>
           <Tag color="cyan" className="!rounded-md !border-none !font-bold">
             Specific Identification
           </Tag>
         </div>
 
         <div className="flex justify-between items-center text-slate-600">
-          <span>Total Items</span>
-          <span className="font-bold text-slate-800">
-            {totalItems || 0} pcs
-          </span>
+          <span>Unique SKUs</span>
+          <span className="font-bold text-slate-800">{totalSKUs}</span>
         </div>
+
         <Divider className="!my-4 border-slate-100" />
+
         <div className="flex justify-between items-center">
           <span className="font-bold text-slate-800 text-base">
-            Total Value
+            Total Units
           </span>
           <span className="font-black text-2xl text-[#39c6c6]">
-            {formatCurrency(data?.totalPrice)}
+            {totalItems || 0}
           </span>
         </div>
       </div>

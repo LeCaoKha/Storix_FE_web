@@ -61,14 +61,6 @@ const OutboundRequestManagement = () => {
     fetchOutboundRequests();
   }, []);
 
-  // Format tiền tệ VND
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat("vi-VN", {
-      style: "currency",
-      currency: "VND",
-    }).format(amount || 0);
-  };
-
   const columns = [
     {
       title: "ID",
@@ -162,16 +154,6 @@ const OutboundRequestManagement = () => {
           </div>
         );
       },
-    },
-    {
-      title: "Total Value",
-      dataIndex: "totalPrice",
-      key: "totalPrice",
-      render: (price) => (
-        <div className="flex items-center gap-1 text-[#39C6C6] font-black">
-          <span>{formatCurrency(price)}</span>
-        </div>
-      ),
     },
   ];
 

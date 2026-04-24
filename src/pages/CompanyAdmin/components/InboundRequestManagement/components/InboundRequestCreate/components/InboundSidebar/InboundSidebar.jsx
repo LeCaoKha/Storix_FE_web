@@ -35,7 +35,7 @@ const { Option } = Select; // Thêm Option để dùng trong Select
 
 const InboundSidebar = ({ onDataChange, summary, inboundData }) => {
   const [suppliers, setSuppliers] = useState([]);
-  const [warehouses, setWarehouses] = useState([]); // State mới để lưu danh sách kho
+  const [warehouses, setWarehouses] = useState([]); // State lưu danh sách kho
   const [filteredSuppliers, setFilteredSuppliers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [isSearchingSupplier, setIsSearchingSupplier] = useState(false);
@@ -50,6 +50,10 @@ const InboundSidebar = ({ onDataChange, summary, inboundData }) => {
   const fetchSidebarData = async () => {
     const userId = localStorage.getItem("userId");
     const companyId = localStorage.getItem("companyId"); // Lấy companyId để gọi API kho
+
+    // ĐÃ THÊM: Lấy warehouseId hiện tại từ local storage
+    const currentWarehouseId = localStorage.getItem("warehouseId");
+
     if (!userId) return;
 
     setLoading(true);
@@ -62,11 +66,17 @@ const InboundSidebar = ({ onDataChange, summary, inboundData }) => {
 
       setSuppliers(supplierRes.data);
       setFilteredSuppliers(supplierRes.data);
-      setWarehouses(warehouseRes.data); // Lưu danh sách kho vào state
 
-      // Nếu có danh sách kho và chưa chọn kho nào, mặc định chọn kho đầu tiên
-      if (warehouseRes.data.length > 0 && !inboundData?.warehouseId) {
-        if (onDataChange) onDataChange("warehouseId", warehouseRes.data[0].id);
+      // ĐÃ CẬP NHẬT: Lọc danh sách kho, chỉ lấy kho trùng với warehouseId trong local storage
+      const matchedWarehouses = warehouseRes.data.filter(
+        (w) => String(w.id) === String(currentWarehouseId),
+      );
+
+      setWarehouses(matchedWarehouses);
+
+      // Tự động chọn kho đầu tiên (kho đã lọc) nếu chưa có dữ liệu
+      if (matchedWarehouses.length > 0 && !inboundData?.warehouseId) {
+        if (onDataChange) onDataChange("warehouseId", matchedWarehouses[0].id);
       }
     } catch (error) {
       message.error("Failed to load resources");
@@ -222,6 +232,7 @@ const InboundSidebar = ({ onDataChange, summary, inboundData }) => {
                   className="w-full !h-12 custom-warehouse-select"
                   value={inboundData?.warehouseId} // Lấy từ state cha thông qua prop
                   onChange={(val) => handleChange("warehouseId", val)}
+                  disabled={true} // Vô hiệu hóa vì chỉ có 1 kho cố định
                   suffixIcon={
                     <Warehouse size={18} className="text-slate-400" />
                   }
@@ -359,6 +370,10 @@ const InboundSidebar = ({ onDataChange, summary, inboundData }) => {
         .custom-warehouse-select .ant-select-selection-item {
           font-weight: 500;
           color: #334155; /* slate-700 */
+        }
+        .custom-warehouse-select.ant-select-disabled .ant-select-selector {
+          background-color: #f1f5f9 !important; /* bg-slate-100 khi bị disabled */
+          color: #64748b !important;
         }
       `}</style>
     </div>
