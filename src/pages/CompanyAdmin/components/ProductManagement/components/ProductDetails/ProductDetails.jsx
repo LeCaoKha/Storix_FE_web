@@ -40,6 +40,9 @@ const ProductDetails = () => {
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // --- ĐÃ THÊM: Lấy roleId từ localStorage ---
+  const roleId = Number(localStorage.getItem("roleId"));
+
   // Lấy dữ liệu sản phẩm từ API
   const fetchProductDetails = async () => {
     const userId = localStorage.getItem("userId");
@@ -112,16 +115,19 @@ const ProductDetails = () => {
             </div>
           </div>
 
-          <Button
-            type="primary"
-            onClick={() =>
-              navigate(`/company-admin/product-management/edit/${id}`)
-            }
-            icon={<Edit3 size={18} />}
-            className="!h-12 !px-8 !bg-[#39C6C6] !border-none !rounded-2xl !font-bold hover:!bg-[#2eb1b1] !shadow-lg !shadow-[#39C6C6]/20 !flex !items-center !gap-2"
-          >
-            Edit Product
-          </Button>
+          {/* --- ĐÃ CẬP NHẬT: Chỉ hiển thị nút Edit khi roleId là 2 --- */}
+          {roleId === 2 && (
+            <Button
+              type="primary"
+              onClick={() =>
+                navigate(`/company-admin/product-management/edit/${id}`)
+              }
+              icon={<Edit3 size={18} />}
+              className="!h-12 !px-8 !bg-[#39C6C6] !border-none !rounded-2xl !font-bold hover:!bg-[#2eb1b1] !shadow-lg !shadow-[#39C6C6]/20 !flex !items-center !gap-2"
+            >
+              Edit Product
+            </Button>
+          )}
         </div>
 
         {/* --- MAIN CONTENT --- */}

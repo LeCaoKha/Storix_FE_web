@@ -41,6 +41,9 @@ import InventoryCount from "../pages/CompanyAdmin/components/InventoryCount/Inve
 import InventoryCountCreate from "../pages/CompanyAdmin/components/InventoryCount/components/InventoryCountCreate/InventoryCountCreate";
 import WarehouseTransferManagement from "../pages/Manager/components/WarehouseTransferManagement/WarehouseTransferManagement";
 import ManagerDashboard from "../pages/Manager/components/Dashboard/Dashboard";
+import InventoryCountDetails from "../pages/CompanyAdmin/components/InventoryCount/components/InventoryCountDetails/InventoryCountDetails";
+import WarehouseTransferCreate from "../pages/Manager/components/WarehouseTransferManagement/components/WarehouseTransferCreate/WarehouseTransferCreate";
+import WarehouseTransferDetails from "../pages/Manager/components/WarehouseTransferManagement/components/WarehouseTransferDetails/WarehouseTransferDetails";
 
 /**
  * 1. SHARED ADMIN ROUTES (Quyền hạn đầy đủ cho Admin & Manager)
@@ -125,10 +128,20 @@ const sharedAdminRoutes = [
   // INVENTORY COUNT MANAGEMENT
   { path: "inventory-count", element: <InventoryCount /> },
   { path: "inventory-count/create", element: <InventoryCountCreate /> },
+  { path: "inventory-count/details/:id", element: <InventoryCountDetails /> },
+
   // WAREHOUSE TRANSFER MANAGEMENT
   {
     path: "warehouse-transfer-management",
     element: <WarehouseTransferManagement />,
+  },
+  {
+    path: "warehouse-transfer-management/create",
+    element: <WarehouseTransferCreate />,
+  },
+  {
+    path: "warehouse-transfer-management/details/:id",
+    element: <WarehouseTransferDetails />,
   },
 ];
 

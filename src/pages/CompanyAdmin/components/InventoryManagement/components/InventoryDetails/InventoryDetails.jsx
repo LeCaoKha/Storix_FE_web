@@ -145,19 +145,19 @@ const InventoryDetails = () => {
       align: "center",
       render: (q) => <span className="font-semibold text-slate-600">{q}</span>,
     },
-    {
-      title: "Reserved",
-      dataIndex: "reservedQuantity",
-      key: "reservedQuantity",
-      align: "center",
-      render: (r) => (
-        <span
-          className={r > 0 ? "text-orange-500 font-bold" : "text-slate-400"}
-        >
-          {r}
-        </span>
-      ),
-    },
+    // {
+    //   title: "Reserved",
+    //   dataIndex: "reservedQuantity",
+    //   key: "reservedQuantity",
+    //   align: "center",
+    //   render: (r) => (
+    //     <span
+    //       className={r > 0 ? "text-orange-500 font-bold" : "text-slate-400"}
+    //     >
+    //       {r}
+    //     </span>
+    //   ),
+    // },
     {
       title: "Available",
       dataIndex: "availableQuantity",
@@ -202,17 +202,6 @@ const InventoryDetails = () => {
                   <Box className="!text-[#39c6c6]" size={24} />
                   Live Inventory
                 </Title>
-                <div className="flex items-center gap-2">
-                  <Tag color="cyan">WH ID: {warehouseId}</Tag>
-                  <Text className="!text-slate-400 !text-xs italic">
-                    Last synced:{" "}
-                    {inventoryData[0]?.lastUpdated
-                      ? new Date(
-                          inventoryData[0].lastUpdated,
-                        ).toLocaleTimeString()
-                      : "N/A"}
-                  </Text>
-                </div>
               </div>
             </div>
 

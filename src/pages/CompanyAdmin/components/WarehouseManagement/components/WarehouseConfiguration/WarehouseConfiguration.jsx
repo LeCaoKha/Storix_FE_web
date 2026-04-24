@@ -582,7 +582,7 @@ const WarehouseConfiguration = () => {
                 setActiveNodeId(null);
               }}
             >
-              Vật thể
+              Object{" "}
             </button>
             <button
               style={{

@@ -30,7 +30,8 @@ const ProductManagement = () => {
   const [searchText, setSearchText] = useState("");
   const navigate = useNavigate();
 
-  console.log("product: ", products);
+  // Lấy roleId từ localStorage để phân quyền hiển thị nút
+  const roleId = Number(localStorage.getItem("roleId"));
 
   // --- FETCH PRODUCTS LOGIC ---
   const fetchProducts = async () => {
@@ -254,14 +255,18 @@ const ProductManagement = () => {
             >
               Sync Data
             </Button>
-            <Button
-              type="primary"
-              onClick={() => navigate("create")}
-              icon={<Plus size={20} />}
-              className="!h-12 !px-8 !bg-[#39C6C6] !border-none !rounded-2xl !font-bold hover:!bg-[#2eb1b1] !shadow-lg !shadow-[#39C6C6]/20 !flex !items-center"
-            >
-              Add New SKU
-            </Button>
+
+            {/* --- ĐÃ CẬP NHẬT: CHỈ HIỂN THỊ NÚT ADD NEW SKU NẾU ROLE ID LÀ 2 --- */}
+            {roleId === 2 && (
+              <Button
+                type="primary"
+                onClick={() => navigate("create")}
+                icon={<Plus size={20} />}
+                className="!h-12 !px-8 !bg-[#39C6C6] !border-none !rounded-2xl !font-bold hover:!bg-[#2eb1b1] !shadow-lg !shadow-[#39C6C6]/20 !flex !items-center"
+              >
+                Add New SKU
+              </Button>
+            )}
           </Space>
         </div>
 

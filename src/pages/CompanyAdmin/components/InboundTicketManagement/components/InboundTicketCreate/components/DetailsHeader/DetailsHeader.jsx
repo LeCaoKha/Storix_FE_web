@@ -1,12 +1,12 @@
 import React from "react";
-import { Button, Space, Typography, Tag } from "antd";
+import { Button, Space, Typography, Tag, Switch } from "antd"; // Import thêm Switch
 import {
   ArrowLeft,
   PlusCircle,
   CheckCircle2,
   FileText,
   Sparkles,
-} from "lucide-react"; // Thêm Sparkles icon cho AI
+} from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 
 const { Title } = Typography;
@@ -18,6 +18,9 @@ const DetailsHeader = ({
   onExportPDF,
   onCreateRecommendation,
   isCreatingRec,
+  // Nhận props quản lý AI từ component cha
+  useAi,
+  onToggleAi,
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -26,7 +29,7 @@ const DetailsHeader = ({
   const isCreatePage = location.pathname.includes("/create");
   const isDetailsPage = location.pathname.includes("/details/");
 
-  // KIỂM TRA NẾU LÀ QUẢN LÝ TICKET (Dựa trên keyword người dùng yêu cầu)
+  // KIỂM TRA NẾU LÀ QUẢN LÝ TICKET
   const isTicketManagement = location.pathname.includes(
     "inbound-ticket-management",
   );
@@ -76,6 +79,26 @@ const DetailsHeader = ({
       </div>
 
       <Space size="middle" className="mt-1">
+        {/* ===== THÊM MỚI: AI TOGGLE CHO TRANG CREATE ===== */}
+        {isCreatePage && (
+          <div className="flex items-center gap-2 mr-2 px-3 py-1.5 bg-white border border-slate-200 rounded-xl transition-all shadow-sm">
+            <Sparkles
+              size={16}
+              className={useAi ? "text-[#7C3AED]" : "text-slate-400"}
+            />
+            <Typography.Text
+              className={`!font-bold !text-sm ${useAi ? "!text-[#7C3AED]" : "!text-slate-500"}`}
+            >
+              AI Recommendation
+            </Typography.Text>
+            <Switch
+              checked={useAi}
+              onChange={onToggleAi}
+              className={`${useAi ? "!bg-[#7C3AED]" : "bg-slate-300"}`}
+            />
+          </div>
+        )}
+
         {/* NÚT TẠO GỢI Ý KHO (AI RECOMMENDATION): Chỉ hiển thị ở Ticket Details */}
         {isTicketManagement && isDetailsPage && (
           <Button

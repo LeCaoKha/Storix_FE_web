@@ -44,9 +44,6 @@ const DetailsHeader = ({ data, onApprove, isApproving, onExportPDF }) => {
             >
               {data.status || "Pending"}
             </Tag>
-            <Text className="text-slate-400 font-medium">
-              Ref: {data.referenceCode || "N/A"}
-            </Text>
           </Space>
         </div>
       </div>

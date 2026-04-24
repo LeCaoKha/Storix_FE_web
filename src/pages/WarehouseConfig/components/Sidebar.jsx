@@ -57,7 +57,7 @@ const Sidebar = ({
           >
             <div className="!flex !items-center !justify-center !gap-2">
               <Box size={16} />
-              Vật thể
+              Object{" "}
             </div>
           </button>
           <button

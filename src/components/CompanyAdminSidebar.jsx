@@ -82,7 +82,6 @@ const SidebarSubMenu = ({
       </button>
     </Tooltip>
 
-    {/* ĐÃ SỬA: Xóa bỏ đường line dọc (border-l) */}
     {isOpen && !isCollapsed && (
       <div className="!flex !flex-col !gap-1 !mt-1">{children}</div>
     )}
@@ -94,7 +93,6 @@ const SidebarSubItem = ({ to, label }) => (
   <NavLink
     to={to}
     className={({ isActive }) =>
-      // ĐÃ SỬA: Tăng padding-left (pl-12) để thụt lề chữ vào trong, xóa icon dấu chấm
       `!flex !items-center !pl-12 !pr-4 !py-2.5 !rounded-xl !transition-all !duration-300 ${
         isActive
           ? "!bg-[#39c6c6]/10 !text-[#39c6c6] !font-semibold"
@@ -273,8 +271,8 @@ const CompanyAdminSidebar = ({
             />
           )}
 
-          {/* ===== DROPDOWN INBOUND ===== */}
-          {(roleId === 2 || roleId === 3 || roleId === 4) && (
+          {/* ===== DROPDOWN INBOUND (Đã loại bỏ roleId === 2) ===== */}
+          {(roleId === 3 || roleId === 4) && (
             <SidebarSubMenu
               icon={<ArrowDownCircle size={20} />}
               label="Inbound"
@@ -287,7 +285,7 @@ const CompanyAdminSidebar = ({
                 to="inbound-request-management"
                 label="Requests"
               />
-              {(roleId === 2 || roleId === 3) && (
+              {roleId === 3 && (
                 <SidebarSubItem
                   to="inbound-ticket-management"
                   label="Tickets"
@@ -296,8 +294,8 @@ const CompanyAdminSidebar = ({
             </SidebarSubMenu>
           )}
 
-          {/* ===== DROPDOWN OUTBOUND ===== */}
-          {(roleId === 2 || roleId === 3 || roleId === 4) && (
+          {/* ===== DROPDOWN OUTBOUND (Đã loại bỏ roleId === 2) ===== */}
+          {(roleId === 3 || roleId === 4) && (
             <SidebarSubMenu
               icon={<ArrowUpCircle size={20} />}
               label="Outbound"
@@ -307,7 +305,7 @@ const CompanyAdminSidebar = ({
               onToggle={() => handleToggleMenu("outbound")}
             >
               <SidebarSubItem to="outbound-management" label="Requests" />
-              {(roleId === 2 || roleId === 3) && (
+              {roleId === 3 && (
                 <SidebarSubItem
                   to="outbound-ticket-management"
                   label="Tickets"

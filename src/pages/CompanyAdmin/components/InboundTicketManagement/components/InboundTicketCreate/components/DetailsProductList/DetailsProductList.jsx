@@ -103,7 +103,7 @@ const DetailsProductList = ({ items, onUpdatePrice }) => {
                     <Avatar
                       shape="square"
                       size={48}
-                      src={item.image || item.imageUrl}
+                      src={item.imageURL || item.imageUrl}
                       icon={<Package />}
                       className="!bg-slate-50 !text-slate-300 !shrink-0"
                     />

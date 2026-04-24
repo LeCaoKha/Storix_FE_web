@@ -5,13 +5,6 @@ import { Package } from "lucide-react";
 const { Text } = Typography;
 
 const DetailsProductList = ({ items = [] }) => {
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat("vi-VN", {
-      style: "currency",
-      currency: "VND",
-    }).format(amount || 0);
-  };
-
   const columns = [
     {
       title: "Product Name",
@@ -22,37 +15,24 @@ const DetailsProductList = ({ items = [] }) => {
       ),
     },
     {
-      title: "Quantity",
-      dataIndex: "quantity",
-      key: "quantity",
-      align: "center",
-      render: (qty) => (
-        <span className="font-bold text-[#39c6c6] bg-[#39c6c6]/10 px-3 py-1 rounded-lg">
-          {qty}
+      title: "SKU",
+      dataIndex: "productSku",
+      key: "productSku",
+      render: (text) => (
+        <span className="text-slate-500 font-mono text-xs">
+          {text || "N/A"}
         </span>
       ),
     },
     {
-      title: "Unit Price",
-      dataIndex: "price",
-      key: "price",
+      title: "Quantity",
+      dataIndex: "quantity",
+      key: "quantity",
       align: "right",
-      render: (price) => (
-        <Text className="text-slate-500 font-medium">
-          {price ? formatCurrency(price) : "N/A"}
-        </Text>
-      ),
-    },
-    {
-      title: "Total",
-      key: "total",
-      align: "right",
-      render: (_, record) => (
-        <Text className="font-black text-slate-700">
-          {record.price && record.quantity
-            ? formatCurrency(record.price * record.quantity)
-            : "N/A"}
-        </Text>
+      render: (qty) => (
+        <span className="font-bold text-[#39c6c6] bg-[#39c6c6]/10 px-3 py-1 rounded-lg">
+          {qty}
+        </span>
       ),
     },
   ];
