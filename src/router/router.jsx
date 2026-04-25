@@ -44,6 +44,7 @@ import ManagerDashboard from "../pages/Manager/components/Dashboard/Dashboard";
 import InventoryCountDetails from "../pages/CompanyAdmin/components/InventoryCount/components/InventoryCountDetails/InventoryCountDetails";
 import WarehouseTransferCreate from "../pages/Manager/components/WarehouseTransferManagement/components/WarehouseTransferCreate/WarehouseTransferCreate";
 import WarehouseTransferDetails from "../pages/Manager/components/WarehouseTransferManagement/components/WarehouseTransferDetails/WarehouseTransferDetails";
+import ReportDetail from "../pages/CompanyAdmin/components/ReportManagement/components/ReportDetail";
 
 /**
  * 1. SHARED ADMIN ROUTES (Quyền hạn đầy đủ cho Admin & Manager)
@@ -81,6 +82,7 @@ const sharedAdminRoutes = [
 
   // REPORT MANAGEMENT
   { path: "report-management", element: <ReportManagement /> },
+  { path: "report-management/details/:id", element: <ReportDetail /> },
 
   // ACCOUNT MANAGEMENT
   { path: "account-management", element: <AccountManagement /> },
