@@ -10,8 +10,6 @@ import {
   Tag,
   Avatar,
   Divider,
-  Modal,
-  Select,
 } from "antd";
 import {
   ArrowLeft,
@@ -23,12 +21,10 @@ import {
   Truck,
   Calendar,
   User,
-  Users,
 } from "lucide-react";
 import api from "../../../../../../api/axios";
 
 const { Title, Text } = Typography;
-const { Option } = Select;
 
 const WarehouseTransferDetails = () => {
   const { id } = useParams();
@@ -50,12 +46,6 @@ const WarehouseTransferDetails = () => {
   const [assignedStaffId, setAssignedStaffId] = useState(null);
   const [loadingSourceStaff, setLoadingSourceStaff] = useState(false);
 
-  // States cho Approve Modal (Đích)
-  const [isApproveModalOpen, setIsApproveModalOpen] = useState(false);
-  const [destStaffList, setDestStaffList] = useState([]);
-  const [receiverStaffId, setReceiverStaffId] = useState(null);
-  const [loadingStaff, setLoadingStaff] = useState(false);
-
   // ==========================================
   // 2. FETCH DATA
   // ==========================================
@@ -72,7 +62,6 @@ const WarehouseTransferDetails = () => {
     }
   }, [id]);
 
-  // THAY ĐỔI API: Lấy danh sách Staff theo Company và lọc cho kho Nguồn
   const fetchSourceStaff = useCallback(async () => {
     if (!companyId) return;
     setLoadingSourceStaff(true);
@@ -130,45 +119,16 @@ const WarehouseTransferDetails = () => {
     }
   };
 
-  // THAY ĐỔI API: Mở Modal Approve và lấy staff theo Company rồi lọc cho kho Đích
-  const handleOpenApproveModal = async () => {
-    setIsApproveModalOpen(true);
-    setLoadingStaff(true);
-    try {
-      const res = await api.get(`/Users/get-staffs-by-companyId/${companyId}`);
-      // Lọc lấy nhân viên (role 4) thuộc kho ĐÍCH của đơn hàng
-      const staffOnly = (res.data || []).filter(
-        (u) =>
-          u.roleId === 4 &&
-          String(u.warehouseId) === String(details.destinationWarehouseId),
-      );
-      setDestStaffList(staffOnly);
-    } catch (error) {
-      message.error("Failed to load destination staff list");
-    } finally {
-      setLoadingStaff(false);
-    }
-  };
-
-  // Nút gọi API Approve
+  // Nút gọi API Approve (Gọi thẳng API Decide)
   const handleApprove = async () => {
-    if (!receiverStaffId) {
-      return message.warning(
-        "Please select a receiver staff at the destination.",
-      );
-    }
-
     setIsSubmitting(true);
     try {
-      await api.post(`/warehouse-transfers/${id}/approve`, {
-        receiverStaffId: receiverStaffId,
+      await api.post(`/warehouse-transfers/${id}/decide`, {
+        isApprove: true,
+        reason: "Approved", // Bạn có thể tùy chỉnh reason nếu cần
       });
 
-      message.success(
-        "Transfer approved successfully! Tickets have been generated.",
-      );
-      setIsApproveModalOpen(false);
-      setReceiverStaffId(null);
+      message.success("Transfer approved successfully!");
       fetchDetails();
     } catch (error) {
       console.error("Approve error:", error);
@@ -184,20 +144,34 @@ const WarehouseTransferDetails = () => {
   // 4. RENDER HELPERS
   // ==========================================
   const getStatusColor = (status) => {
-    switch (status) {
-      case "Draft":
+    // Chuyển toàn bộ status về chữ thường (lowercase) để dễ check switch-case
+    // Tránh bị lỗi case-sensitive (ví dụ: "PENDING_APPROVAL" vs "Pending_Approval")
+    const safeStatus = (status || "").toLowerCase();
+
+    switch (safeStatus) {
+      case "draft":
         return "gold";
-      case "Submitted":
+      case "submitted":
+      case "pending_approval":
         return "blue";
-      case "Approved":
+      case "approved":
         return "green";
-      case "Completed":
+      case "completed":
         return "cyan";
-      case "Rejected":
+      case "rejected":
         return "red";
       default:
         return "default";
     }
+  };
+
+  const formatStatus = (status) => {
+    // Format lại chuỗi "PENDING_APPROVAL" thành "Pending Approval" cho đẹp mắt
+    if (!status) return "Unknown";
+    return status
+      .split("_")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(" ");
   };
 
   if (loading || !details) {
@@ -208,7 +182,10 @@ const WarehouseTransferDetails = () => {
     );
   }
 
-  const isDraft = details.status === "Draft";
+  // ĐÃ SỬA LẠI BIẾN KIỂM TRA TRẠNG THÁI Ở ĐÂY
+  const isDraft = details.status === "DRAFT";
+  const isPendingApproval = details.status === "PENDING_APPROVAL";
+
   const totalItems = details.items?.length || 0;
   const totalQuantity =
     details.items?.reduce((sum, item) => sum + (item.quantity || 0), 0) || 0;
@@ -236,7 +213,7 @@ const WarehouseTransferDetails = () => {
                 color={getStatusColor(details.status)}
                 className="!rounded-full !px-3 !py-0.5 !font-bold !uppercase !border-none"
               >
-                {details.status}
+                {formatStatus(details.status)}
               </Tag>
             </div>
             <Text className="text-slate-400 font-medium">
@@ -246,6 +223,7 @@ const WarehouseTransferDetails = () => {
         </div>
 
         <Space size="middle">
+          {/* Nút Submit hiển thị khi status là DRAFT */}
           {isDraft && (
             <Button
               icon={<Send size={18} />}
@@ -257,14 +235,18 @@ const WarehouseTransferDetails = () => {
             </Button>
           )}
 
-          <Button
-            type="primary"
-            icon={<CheckCircle size={18} />}
-            onClick={handleOpenApproveModal}
-            className="!flex !items-center !gap-2 !h-11 !px-6 !font-bold !text-white !bg-[#39c6c6] !border-none !rounded-xl shadow-lg shadow-[#39c6c6]/20 hover:!bg-[#2eb1b1]"
-          >
-            Approve Request
-          </Button>
+          {/* MỚI: Nút Approve hiển thị khi status là PENDING_APPROVAL */}
+          {isPendingApproval && (
+            <Button
+              type="primary"
+              icon={<CheckCircle size={18} />}
+              onClick={handleApprove}
+              loading={isSubmitting}
+              className="!flex !items-center !gap-2 !h-11 !px-6 !font-bold !text-white !bg-[#39c6c6] !border-none !rounded-xl shadow-lg shadow-[#39c6c6]/20 hover:!bg-[#2eb1b1]"
+            >
+              Approve Request
+            </Button>
+          )}
         </Space>
       </div>
 
@@ -331,9 +313,6 @@ const WarehouseTransferDetails = () => {
 
         {/* CỘT PHẢI (35%): THÔNG TIN VẬN CHUYỂN & SUMMARY */}
         <div className="flex-1 space-y-6">
-          {/* Card Assign To này đã được comment lại theo code của bạn */}
-          {/* <Card ... /> */}
-
           {/* ROUTE INFO */}
           <Card className="!rounded-2xl !shadow-sm !border-slate-100">
             <div className="space-y-5">
@@ -419,98 +398,6 @@ const WarehouseTransferDetails = () => {
           </Card>
         </div>
       </div>
-      <Modal
-        title={
-          <div className="flex items-center gap-2 pb-3 border-b border-slate-100">
-            <CheckCircle className="text-[#39c6c6]" size={22} />
-            <span className="text-lg font-extrabold text-slate-800">
-              Approve Transfer
-            </span>
-          </div>
-        }
-        open={isApproveModalOpen}
-        onCancel={() => {
-          setIsApproveModalOpen(false);
-          setReceiverStaffId(null);
-        }}
-        footer={null}
-        centered
-        className="custom-modal"
-      >
-        <div className="pt-2 pb-4">
-          <Text className="!block !mb-6 !text-slate-500">
-            Approving this request will officially deduct stock from the origin
-            warehouse and create corresponding inbound/outbound tickets. Please
-            assign a staff member at the destination warehouse to receive this
-            transfer.
-          </Text>
-
-          <Text className="!block !font-bold !text-slate-700 !mb-2 !uppercase !text-[10px] !tracking-widest !flex !items-center !gap-2">
-            <User size={14} className="!text-[#38c6c6]" /> Receiver Staff
-            (Destination)
-          </Text>
-          <Select
-            placeholder="Select staff member to receive goods..."
-            className="!w-full custom-staff-select !mb-8"
-            value={receiverStaffId}
-            onChange={(val) => setReceiverStaffId(val)}
-            loading={loadingStaff}
-            showSearch
-            optionFilterProp="children"
-          >
-            {destStaffList.map((staff) => (
-              <Option key={staff.id} value={staff.id}>
-                <div className="flex items-center justify-between w-full">
-                  <span className="font-medium text-slate-700">
-                    {staff.fullName}
-                  </span>
-                </div>
-              </Option>
-            ))}
-          </Select>
-
-          <div className="flex justify-end gap-3">
-            <Button
-              onClick={() => setIsApproveModalOpen(false)}
-              className="!h-11 !px-6 !rounded-xl !font-bold hover:!bg-slate-50"
-            >
-              Cancel
-            </Button>
-            <Button
-              type="primary"
-              loading={isSubmitting}
-              onClick={handleApprove}
-              disabled={!receiverStaffId}
-              className="!h-11 !px-8 !bg-[#39c6c6] !border-none !rounded-xl !font-bold shadow-lg shadow-[#39c6c6]/20"
-            >
-              Confirm Approval
-            </Button>
-          </div>
-        </div>
-      </Modal>
-
-      <style jsx global>{`
-        .custom-modal .ant-modal-content {
-          border-radius: 20px !important;
-          padding: 24px !important;
-        }
-        .custom-staff-select .ant-select-selector {
-          height: 48px !important;
-          border-radius: 12px !important;
-          background-color: #f8fafc !important;
-          border: 1px solid #f1f5f9 !important;
-          display: flex;
-          align-items: center;
-        }
-        .custom-staff-select.ant-select-focused .ant-select-selector {
-          box-shadow: 0 0 0 2px rgba(57, 198, 198, 0.2) !important;
-          border-color: #39c6c6 !important;
-        }
-        .custom-staff-select.ant-select-disabled .ant-select-selector {
-          background-color: #f1f5f9 !important;
-          color: #94a3b8 !important;
-        }
-      `}</style>
     </div>
   );
 };

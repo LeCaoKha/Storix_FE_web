@@ -22,6 +22,7 @@ import {
   Trash2,
   MapPin,
   ArrowRight,
+  Users, // Bổ sung icon Users
 } from "lucide-react";
 import api from "../../../../../../api/axios";
 
@@ -49,6 +50,11 @@ const WarehouseTransferCreate = () => {
   const [sourceId, setSourceId] = useState(Number(currentWarehouseId) || null);
   const [destId, setDestId] = useState(null);
 
+  // States: Staff
+  const [sourceStaffList, setSourceStaffList] = useState([]);
+  const [originWarehouseStaffId, setOriginWarehouseStaffId] = useState(null);
+  const [loadingStaff, setLoadingStaff] = useState(false);
+
   // States: Products
   const [allProducts, setAllProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
@@ -57,23 +63,33 @@ const WarehouseTransferCreate = () => {
   // ==========================================
   // 2. FETCH DATA
   // ==========================================
-  // Lấy danh sách kho
+  // Lấy danh sách kho và danh sách nhân viên
   useEffect(() => {
-    const fetchWarehouses = async () => {
+    const fetchInitialData = async () => {
       setLoading(true);
+      setLoadingStaff(true);
       try {
-        const res = await api.get(
-          `/company-warehouses/${companyId}/warehouses`,
-        );
-        setWarehouses(res.data || []);
+        const [warehouseRes, staffRes] = await Promise.all([
+          api.get(`/company-warehouses/${companyId}/warehouses`),
+          api.get(`/Users/get-users-by-warehouse/${currentWarehouseId}`),
+        ]);
+
+        setWarehouses(warehouseRes.data || []);
+
+        // Lọc danh sách nhân viên chỉ lấy Role Staff (Role ID = 4)
+        const staffOnly = (staffRes.data || []).filter((u) => u.roleId === 4);
+        setSourceStaffList(staffOnly);
       } catch (error) {
-        message.error("Failed to load warehouses data");
+        message.error("Failed to load initial data");
       } finally {
         setLoading(false);
+        setLoadingStaff(false);
       }
     };
-    if (companyId) fetchWarehouses();
-  }, [companyId]);
+    if (companyId && currentWarehouseId) {
+      fetchInitialData();
+    }
+  }, [companyId, currentWarehouseId]);
 
   // Lấy danh sách sản phẩm (tồn kho) dựa trên trạng thái chọn kho
   useEffect(() => {
@@ -189,12 +205,20 @@ const WarehouseTransferCreate = () => {
   // 4. SUBMIT HANDLER
   // ==========================================
   const handleCreateTransfer = async () => {
-    if (!sourceId || !destId)
+    if (!sourceId || !destId) {
       return message.warning("Please select Source and Destination warehouses");
-    if (sourceId === destId)
+    }
+    if (sourceId === destId) {
       return message.warning("Source and Destination cannot be the same");
-    if (selectedProducts.length === 0)
+    }
+    if (!originWarehouseStaffId) {
+      return message.warning(
+        "Please assign a staff member from the source warehouse",
+      );
+    }
+    if (selectedProducts.length === 0) {
       return message.warning("Please add at least one product");
+    }
 
     const hasInvalidStock = selectedProducts.some(
       (p) =>
@@ -212,6 +236,7 @@ const WarehouseTransferCreate = () => {
       const payload = {
         sourceWarehouseId: Number(sourceId),
         destinationWarehouseId: Number(destId),
+        originWarehouseStaffId: Number(originWarehouseStaffId),
         items: selectedProducts.map((p) => ({
           productId: Number(p.id),
           quantity: Number(p.transferQty || 1),
@@ -466,8 +491,47 @@ const WarehouseTransferCreate = () => {
           </Card>
         </div>
 
-        {/* CỘT PHẢI (30%): ROUTE & SUMMARY */}
+        {/* CỘT PHẢI (30%): ROUTE, STAFF & SUMMARY */}
         <div className="w-[30%] space-y-6">
+          {/* ASSIGN STAFF CARD */}
+          <Card className="!rounded-2xl !shadow-sm !border-slate-100">
+            <Text className="block !font-bold !text-slate-700 mb-3 uppercase text-[10px] tracking-widest flex items-center gap-2">
+              <Users size={14} className="text-[#38c6c6]" /> Assign To (Staff)
+            </Text>
+            <Select
+              placeholder="Select staff member..."
+              className="w-full !h-12 custom-staff-select"
+              value={originWarehouseStaffId}
+              onChange={setOriginWarehouseStaffId}
+              loading={loadingStaff}
+              showSearch
+              filterOption={(input, option) =>
+                (option?.label ?? "")
+                  .toLowerCase()
+                  .includes(input.toLowerCase())
+              }
+            >
+              {sourceStaffList.map((user) => (
+                <Option key={user.id} value={user.id} label={user.fullName}>
+                  <div className="flex items-center justify-between w-full">
+                    <div className="flex items-center gap-2">
+                      <Avatar
+                        size="small"
+                        className="!bg-[#38c6c6]/10 !text-[#38c6c6]"
+                      >
+                        {user.fullName?.charAt(0).toUpperCase()}
+                      </Avatar>
+                      <span className="font-medium text-slate-700">
+                        {user.fullName}
+                      </span>
+                    </div>
+                  </div>
+                </Option>
+              ))}
+            </Select>
+          </Card>
+
+          {/* ROUTE INFO */}
           <div>
             <Card className="!rounded-2xl !shadow-sm !border-slate-100">
               <div className="space-y-5">
@@ -538,9 +602,10 @@ const WarehouseTransferCreate = () => {
         </div>
       </div>
 
-      {/* Global CSS để bo cong, chỉnh màu background cho Ant Design Select */}
+      {/* Global CSS */}
       <style jsx global>{`
-        .custom-warehouse-select .ant-select-selector {
+        .custom-warehouse-select .ant-select-selector,
+        .custom-staff-select .ant-select-selector {
           height: 48px !important;
           border-radius: 12px !important;
           background-color: #f8fafc !important; /* bg-slate-50 */
@@ -548,18 +613,25 @@ const WarehouseTransferCreate = () => {
           display: flex;
           align-items: center;
         }
-        .custom-warehouse-select .ant-select-selection-item {
+        .custom-staff-select .ant-select-selector {
+          border: 1px solid #f1f5f9 !important;
+        }
+        .custom-warehouse-select .ant-select-selection-item,
+        .custom-staff-select .ant-select-selection-item {
           font-weight: 500;
           color: #334155; /* text-slate-700 */
         }
-        .custom-warehouse-select .ant-select-selection-placeholder {
+        .custom-warehouse-select .ant-select-selection-placeholder,
+        .custom-staff-select .ant-select-selection-placeholder {
           color: #94a3b8 !important; /* text-slate-400 */
           font-weight: 500;
         }
-        .custom-warehouse-select.ant-select-focused .ant-select-selector {
+        .custom-warehouse-select.ant-select-focused .ant-select-selector,
+        .custom-staff-select.ant-select-focused .ant-select-selector {
           box-shadow: 0 0 0 2px rgba(57, 198, 198, 0.2) !important;
         }
-        .custom-warehouse-select.ant-select-disabled .ant-select-selector {
+        .custom-warehouse-select.ant-select-disabled .ant-select-selector,
+        .custom-staff-select.ant-select-disabled .ant-select-selector {
           background-color: #f1f5f9 !important; /* bg-slate-100 khi bị disabled */
           color: #64748b !important;
         }
