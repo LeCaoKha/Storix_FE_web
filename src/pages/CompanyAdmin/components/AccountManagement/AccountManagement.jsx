@@ -64,7 +64,6 @@ const AccountManagement = () => {
     }
   };
 
-  // --- CHỈ THAY ĐỔI LOGIC RENDER ROLE TẠI ĐÂY ---
   const renderRoleTag = (roleId) => {
     const roles = {
       1: { name: "System Admin", color: "red" },
@@ -119,7 +118,7 @@ const AccountManagement = () => {
     },
     {
       title: "Role",
-      dataIndex: "roleId", // Thay đổi dataIndex để lấy roleId trực tiếp
+      dataIndex: "roleId",
       key: "role",
       render: (roleId) => renderRoleTag(roleId),
     },
@@ -143,10 +142,12 @@ const AccountManagement = () => {
       width: 190,
       render: (_, record) => {
         const isActive = record.status === "Active";
-        const isSystemAdmin = record.roleId === 1; // Kiểm tra roleId thay vì role name
+        // --- CHỈNH SỬA: Bảo vệ cả System Admin (1) và Company Admin (2) ---
+        const isProtected = record.roleId === 1 || record.roleId === 2;
+
         return (
           <Space size="middle">
-            {!isSystemAdmin ? (
+            {!isProtected ? (
               <div>
                 {isActive ? (
                   <Tooltip title="Ban Account">
@@ -187,16 +188,16 @@ const AccountManagement = () => {
                     <g
                       fill="none"
                       stroke="#62748e"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-miterlimit="10"
-                      stroke-width="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeMiterlimit="10"
+                      strokeWidth="1.5"
                     >
                       <path d="M12.113 21.98a.33.33 0 0 1-.226 0C10.917 21.64 4 18.94 4 11.252V4.304a.4.4 0 0 1 .303-.389l7.6-1.903a.4.4 0 0 1 .194 0l7.6 1.903a.4.4 0 0 1 .303.389v6.948c0 7.765-6.916 10.397-7.887 10.729" />
                       <path d="m11.43 10.284l.376-1.508c.05-.202.338-.202.388 0l.377 1.508a.2.2 0 0 0 .145.145l1.508.377c.202.05.202.337 0 .388l-1.508.377a.2.2 0 0 0-.145.145l-.377 1.508c-.05.202-.338.202-.388 0l-.377-1.508a.2.2 0 0 0-.145-.145l-1.508-.377c-.202-.05-.202-.338 0-.388l1.508-.377a.2.2 0 0 0 .145-.146" />
                     </g>
                   </svg>
-                  <p className="ml-1">System Protected</p>
+                  <p className="ml-1">Protected</p>
                 </span>
               </div>
             )}
@@ -211,7 +212,6 @@ const AccountManagement = () => {
       a.fullName?.toLowerCase().includes(searchText.toLowerCase()) ||
       a.email?.toLowerCase().includes(searchText.toLowerCase());
 
-    // Cập nhật logic lọc theo ID dạng string từ Select
     const matchesRole = filterRole === "All" || String(a.roleId) === filterRole;
     const matchesStatus = filterStatus === "All" || a.status === filterStatus;
 
@@ -276,7 +276,6 @@ const AccountManagement = () => {
               }
             >
               <Option value="All">All Roles</Option>
-              {/* Thay đổi Option value thành ID tương ứng */}
               <Option value="1">System Admin</Option>
               <Option value="2">Company Admin</Option>
               <Option value="3">Manager</Option>

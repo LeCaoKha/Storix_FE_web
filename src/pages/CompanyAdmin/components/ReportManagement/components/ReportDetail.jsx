@@ -23,8 +23,9 @@ import {
   Box,
   Clock,
   FileText,
-  Truck,
-  CheckCircle,
+  List,
+  Scale,
+  Camera,
 } from "lucide-react";
 import dayjs from "dayjs";
 import api from "../../../../../api/axios";
@@ -95,6 +96,7 @@ const ReportDetail = () => {
       case "Succeeded":
         return "green";
       case "Processing":
+      case "Running":
         return "blue";
       case "Failed":
         return "red";
@@ -106,7 +108,20 @@ const ReportDetail = () => {
   };
 
   const formatReportType = (type) => {
-    return type?.replace(/([A-Z])/g, " $1").trim() || "Unknown Report";
+    const types = {
+      InventorySnapshot: "Inventory Snapshot",
+      InventoryLedger: "Inventory Ledger",
+      InventoryInOutBalance: "Inventory In/Out Balance",
+      InventoryTracking: "Inventory Tracking (Stocktake)",
+    };
+    return types[type] || type?.replace(/([A-Z])/g, " $1").trim();
+  };
+
+  const formatCurrency = (value) => {
+    return new Intl.NumberFormat("vi-VN", {
+      style: "currency",
+      currency: "VND",
+    }).format(value || 0);
   };
 
   if (loading || !reportData) {
@@ -121,148 +136,9 @@ const ReportDetail = () => {
   const isSucceeded = reportData.status === "Succeeded";
 
   // ==========================================
-  // 4. DYNAMIC TABLES CONFIGURATION
+  // 4. DYNAMIC TABLES CONFIGURATION (Cập nhật cho 4 loại)
   // ==========================================
-  const getDailyColumns = () => {
-    const baseCol = {
-      title: "Date",
-      dataIndex: "day",
-      key: "day",
-      render: (text) => (
-        <span className="font-bold text-slate-700">
-          {dayjs(text).format("MMM DD, YYYY")}
-        </span>
-      ),
-    };
-
-    if (reportType === "InboundKpiBasic") {
-      return [
-        baseCol,
-        {
-          title: "Received Quantity",
-          dataIndex: "receivedQty",
-          key: "receivedQty",
-          align: "right",
-          render: (val) => (
-            <span className="font-bold text-[#38c6c6]">+{val}</span>
-          ),
-        },
-        {
-          title: "Orders Completed",
-          dataIndex: "count",
-          key: "count",
-          align: "center",
-          render: (val) => (
-            <Tag color="cyan" className="!rounded-md !m-0 font-bold">
-              {val}
-            </Tag>
-          ),
-        },
-      ];
-    }
-
-    if (reportType === "InventoryInOutBalance") {
-      return [
-        baseCol,
-        {
-          title: "Inbound Quantity",
-          dataIndex: "inboundQty",
-          key: "inboundQty",
-          align: "right",
-          render: (val) => (
-            <span className="font-bold text-[#38c6c6]">+{val}</span>
-          ),
-        },
-        {
-          title: "Outbound Quantity",
-          dataIndex: "outboundQty",
-          key: "outboundQty",
-          align: "right",
-          render: (val) => (
-            <span className="font-bold text-rose-500">-{val}</span>
-          ),
-        },
-      ];
-    }
-
-    // Default for InventoryTracking
-    return [
-      baseCol,
-      {
-        title: "Inbound Quantity",
-        dataIndex: "inboundQty",
-        key: "inboundQty",
-        align: "right",
-        render: (val) => (
-          <span className="font-bold text-[#38c6c6]">+{val}</span>
-        ),
-      },
-      {
-        title: "Outbound Quantity",
-        dataIndex: "outboundQty",
-        key: "outboundQty",
-        align: "right",
-        render: (val) => (
-          <span className="font-bold text-rose-500">-{val}</span>
-        ),
-      },
-      {
-        title: "Inbound Orders",
-        dataIndex: "inboundCount",
-        key: "inboundCount",
-        align: "center",
-        render: (val) => (
-          <Tag color="cyan" className="!rounded-md !m-0 font-bold">
-            {val}
-          </Tag>
-        ),
-      },
-      {
-        title: "Outbound Orders",
-        dataIndex: "outboundCount",
-        key: "outboundCount",
-        align: "center",
-        render: (val) => (
-          <Tag color="volcano" className="!rounded-md !m-0 font-bold">
-            {val}
-          </Tag>
-        ),
-      },
-    ];
-  };
-
-  const getSecondaryColumns = () => {
-    if (reportType === "InboundKpiBasic") {
-      return [
-        {
-          title: "Supplier Name",
-          dataIndex: "supplierName",
-          key: "supplierName",
-          render: (text) => (
-            <span className="font-bold text-slate-800">{text}</span>
-          ),
-        },
-        {
-          title: "Received Quantity",
-          dataIndex: "receivedQty",
-          key: "receivedQty",
-          align: "right",
-          render: (val) => (
-            <span className="font-bold text-[#38c6c6]">+{val}</span>
-          ),
-        },
-        {
-          title: "Completed Orders",
-          dataIndex: "completedCount",
-          key: "completedCount",
-          align: "center",
-          render: (val) => (
-            <span className="font-black text-slate-700">{val}</span>
-          ),
-        },
-      ];
-    }
-
+  const getTableColumns = () => {
     const baseProductCols = [
       {
         title: "Product Name",
@@ -281,153 +157,279 @@ const ReportDetail = () => {
       },
     ];
 
-    if (reportType === "InventoryInOutBalance") {
-      return [
-        ...baseProductCols,
-        {
-          title: "Opening Quantity",
-          dataIndex: "openingQty",
-          key: "openingQty",
-          align: "right",
-          render: (val) => (
-            <span className="font-bold text-slate-500">{val}</span>
-          ),
-        },
-        {
-          title: "Inbound Quantity",
-          dataIndex: "inboundQty",
-          key: "inboundQty",
-          align: "right",
-          render: (val) => (
-            <span className="font-bold text-[#38c6c6]">+{val}</span>
-          ),
-        },
-        {
-          title: "Outbound Quantity",
-          dataIndex: "outboundQty",
-          key: "outboundQty",
-          align: "right",
-          render: (val) => (
-            <span className="font-bold text-rose-500">-{val}</span>
-          ),
-        },
-        {
-          title: "Closing Quantity",
-          dataIndex: "closingQty",
-          key: "closingQty",
-          align: "right",
-          render: (val) => (
-            <span className="font-black text-slate-700">{val}</span>
-          ),
-        },
-      ];
+    switch (reportType) {
+      case "InventoryLedger":
+        return [
+          {
+            title: "Date & Time",
+            dataIndex: "day",
+            key: "day",
+            render: (text) => (
+              <span className="font-bold text-slate-700">
+                {dayjs(text).format("DD/MM/YYYY HH:mm")}
+              </span>
+            ),
+          },
+          {
+            title: "Transaction Type",
+            dataIndex: "transactionType",
+            key: "transactionType",
+            render: (val) => (
+              <Tag color="blue" className="!rounded-md !m-0 !font-bold">
+                {val}
+              </Tag>
+            ),
+          },
+          ...baseProductCols,
+          {
+            title: "In (+)",
+            dataIndex: "quantityIn",
+            key: "quantityIn",
+            align: "right",
+            render: (val) =>
+              val > 0 ? (
+                <span className="font-bold text-emerald-500">+{val}</span>
+              ) : (
+                <span className="text-slate-300">-</span>
+              ),
+          },
+          {
+            title: "Out (-)",
+            dataIndex: "quantityOut",
+            key: "quantityOut",
+            align: "right",
+            render: (val) =>
+              val > 0 ? (
+                <span className="font-bold text-rose-500">-{val}</span>
+              ) : (
+                <span className="text-slate-300">-</span>
+              ),
+          },
+          {
+            title: "Running Balance",
+            dataIndex: "runningQuantity",
+            key: "runningQuantity",
+            align: "right",
+            render: (val) => (
+              <span className="font-black text-slate-700">{val}</span>
+            ),
+          },
+        ];
+
+      case "InventoryInOutBalance":
+        return [
+          ...baseProductCols,
+          {
+            title: "Opening Qty",
+            dataIndex: "openingQty",
+            key: "openingQty",
+            align: "right",
+            render: (val) => (
+              <span className="font-bold text-slate-500">{val || 0}</span>
+            ),
+          },
+          {
+            title: "Inbound",
+            dataIndex: "inboundQty",
+            key: "inboundQty",
+            align: "right",
+            render: (val) => (
+              <span className="font-bold text-emerald-500">+{val || 0}</span>
+            ),
+          },
+          {
+            title: "Outbound",
+            dataIndex: "outboundQty",
+            key: "outboundQty",
+            align: "right",
+            render: (val) => (
+              <span className="font-bold text-rose-500">-{val || 0}</span>
+            ),
+          },
+          {
+            title: "Closing Qty",
+            dataIndex: "closingQty",
+            key: "closingQty",
+            align: "right",
+            render: (val) => (
+              <span className="font-black text-slate-700">{val || 0}</span>
+            ),
+          },
+        ];
+
+      case "InventoryTracking":
+        return [
+          ...baseProductCols,
+          {
+            title: "System Qty",
+            dataIndex: "systemQty",
+            key: "systemQty",
+            align: "right",
+            render: (val) => (
+              <span className="font-bold text-slate-500">{val || 0}</span>
+            ),
+          },
+          {
+            title: "Counted Qty",
+            dataIndex: "countedQty",
+            key: "countedQty",
+            align: "right",
+            render: (val) => (
+              <span className="font-bold text-[#38c6c6]">{val ?? "-"}</span>
+            ),
+          },
+          {
+            title: "Variance Qty",
+            dataIndex: "varianceQty",
+            key: "varianceQty",
+            align: "right",
+            render: (val) => (
+              <Tag
+                color={val > 0 ? "success" : val < 0 ? "error" : "default"}
+                className="!rounded-md !m-0 !font-bold"
+              >
+                {val > 0 ? `+${val}` : val || 0}
+              </Tag>
+            ),
+          },
+          {
+            title: "Variance Value",
+            dataIndex: "varianceValue",
+            key: "varianceValue",
+            align: "right",
+            render: (val) => (
+              <span
+                className={`font-bold ${
+                  val > 0
+                    ? "text-emerald-500"
+                    : val < 0
+                      ? "text-rose-500"
+                      : "text-slate-500"
+                }`}
+              >
+                {formatCurrency(val)}
+              </span>
+            ),
+          },
+        ];
+
+      case "InventorySnapshot":
+      default:
+        return [
+          ...baseProductCols,
+          {
+            title: "Unit Cost",
+            dataIndex: "unitCost",
+            key: "unitCost",
+            align: "right",
+            render: (val) => (
+              <span className="text-slate-500 font-medium">
+                {formatCurrency(val)}
+              </span>
+            ),
+          },
+          {
+            title: "Current Stock",
+            dataIndex: "quantity",
+            key: "quantity",
+            align: "right",
+            render: (val) => (
+              <span className="font-black text-[#38c6c6]">{val || 0}</span>
+            ),
+          },
+          {
+            title: "Inventory Value",
+            dataIndex: "inventoryValue",
+            key: "inventoryValue",
+            align: "right",
+            render: (val) => (
+              <span className="font-bold text-slate-700">
+                {formatCurrency(val)}
+              </span>
+            ),
+          },
+        ];
     }
-
-    // Default for InventoryTracking
-    return [
-      ...baseProductCols,
-      {
-        title: "Inbound Quantity",
-        dataIndex: "inboundQty",
-        key: "inboundQty",
-        align: "right",
-        render: (val) => (
-          <span className="font-bold text-[#38c6c6]">+{val}</span>
-        ),
-      },
-      {
-        title: "Outbound Quantity",
-        dataIndex: "outboundQty",
-        key: "outboundQty",
-        align: "right",
-        render: (val) => (
-          <span className="font-bold text-rose-500">-{val}</span>
-        ),
-      },
-      {
-        title: "Net Change",
-        dataIndex: "netChange",
-        key: "netChange",
-        align: "center",
-        render: (val) => (
-          <Tag
-            color={val > 0 ? "green" : val < 0 ? "red" : "default"}
-            className="!rounded-md !font-bold !m-0"
-          >
-            {val > 0 ? `+${val}` : val}
-          </Tag>
-        ),
-      },
-      {
-        title: "Current Stock",
-        dataIndex: "currentStock",
-        key: "currentStock",
-        align: "right",
-        render: (val) => (
-          <span className="font-black text-slate-700">{val}</span>
-        ),
-      },
-    ];
   };
 
-  const getSecondaryData = () => {
-    if (reportType === "InboundKpiBasic") return result?.data?.bySupplier || [];
-    if (reportType === "InventoryInOutBalance")
-      return result?.data?.byProduct || [];
-    return result?.data?.topProducts || [];
+  const getTableData = () => {
+    if (!result || !result.data) return [];
+    if (reportType === "InventoryLedger") return result.data.rows || [];
+    return result.data.items || result.data.byProduct || result.data || [];
   };
 
-  const getSecondaryTitle = () => {
-    if (reportType === "InboundKpiBasic") return "Supplier Performance";
-    if (reportType === "InventoryInOutBalance")
-      return "Inventory Balance by Product";
-    return "Top Products Movement";
-  };
-
-  const getSecondaryIcon = () => {
-    if (reportType === "InboundKpiBasic")
-      return <Truck size={16} className="text-[#38c6c6]" />;
-    return <Package size={16} className="text-[#38c6c6]" />;
+  const getTableIconAndTitle = () => {
+    switch (reportType) {
+      case "InventoryLedger":
+        return {
+          icon: <List size={18} className="text-[#38c6c6]" />,
+          title: "Transaction History (Ledger)",
+        };
+      case "InventoryInOutBalance":
+        return {
+          icon: <Scale size={18} className="text-[#38c6c6]" />,
+          title: "In/Out Balance Detail",
+        };
+      case "InventoryTracking":
+        return {
+          icon: <Activity size={18} className="text-[#38c6c6]" />,
+          title: "Stocktake Variance Detail",
+        };
+      case "InventorySnapshot":
+        return {
+          icon: <Camera size={18} className="text-[#38c6c6]" />,
+          title: "Current Stock Snapshot",
+        };
+      default:
+        return {
+          icon: <Package size={18} className="text-[#38c6c6]" />,
+          title: "Report Data",
+        };
+    }
   };
 
   // ==========================================
-  // 5. DYNAMIC SUMMARY CARDS
+  // 5. DYNAMIC SUMMARY CARDS (Cập nhật cho 4 loại)
   // ==========================================
   const renderSummaryCards = () => {
-    if (reportType === "InboundKpiBasic") {
+    const summary = result?.summary || {};
+
+    if (reportType === "InventoryLedger") {
       return (
         <Row gutter={24}>
-          <Col span={12}>
-            <Card className="!rounded-2xl !shadow-sm !border-slate-100 !bg-gradient-to-br from-white to-cyan-50/30">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-cyan-100/50 flex items-center justify-center text-[#38c6c6]">
-                  <TrendingUp size={24} />
-                </div>
-                <div className="flex flex-col">
-                  <Text className="text-slate-400 text-[10px] uppercase font-bold tracking-widest">
-                    Total Received Quantity
-                  </Text>
-                  <Text className="font-black text-2xl text-slate-800">
-                    +{result.summary?.totalReceivedQty || 0}
-                  </Text>
-                </div>
+          <Col span={8}>
+            <Card className="!rounded-2xl !shadow-sm !border-slate-100">
+              <div className="flex flex-col">
+                <Text className="text-slate-400 text-[10px] uppercase font-bold tracking-widest">
+                  Opening Balance
+                </Text>
+                <Text className="font-black text-2xl text-slate-800 mt-1">
+                  {summary.openingQuantity || 0}
+                </Text>
               </div>
             </Card>
           </Col>
-          <Col span={12}>
-            <Card className="!rounded-2xl !shadow-sm !border-slate-100 !bg-gradient-to-br from-white to-slate-50">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center text-slate-600">
-                  <CheckCircle size={24} />
-                </div>
-                <div className="flex flex-col">
-                  <Text className="text-slate-400 text-[10px] uppercase font-bold tracking-widest">
-                    Total Completed Orders
-                  </Text>
-                  <Text className="font-black text-2xl text-slate-800">
-                    {result.summary?.totalCompleted || 0}
-                  </Text>
-                </div>
+          <Col span={8}>
+            <Card className="!rounded-2xl !shadow-sm !border-slate-100 !bg-gradient-to-br from-white to-cyan-50/30">
+              <div className="flex flex-col">
+                <Text className="text-slate-400 text-[10px] uppercase font-bold tracking-widest">
+                  Closing Balance
+                </Text>
+                <Text className="font-black text-2xl text-[#38c6c6] mt-1">
+                  {summary.closingQuantity || 0}
+                </Text>
+              </div>
+            </Card>
+          </Col>
+          <Col span={8}>
+            <Card className="!rounded-2xl !shadow-sm !border-slate-100">
+              <div className="flex flex-col">
+                <Text className="text-slate-400 text-[10px] uppercase font-bold tracking-widest">
+                  Total Transactions (Entries)
+                </Text>
+                <Text className="font-black text-2xl text-slate-800 mt-1">
+                  {summary.entries || 0}
+                </Text>
               </div>
             </Card>
           </Col>
@@ -435,111 +437,173 @@ const ReportDetail = () => {
       );
     }
 
+    if (reportType === "InventoryInOutBalance") {
+      return (
+        <Row gutter={24}>
+          <Col span={6}>
+            <Card className="!rounded-2xl !shadow-sm !border-slate-100">
+              <div className="flex flex-col">
+                <Text className="text-slate-400 text-[10px] uppercase font-bold tracking-widest">
+                  Opening Qty
+                </Text>
+                <Text className="font-black text-2xl text-slate-800">
+                  {summary.totalOpeningQty || 0}
+                </Text>
+              </div>
+            </Card>
+          </Col>
+          <Col span={6}>
+            <Card className="!rounded-2xl !shadow-sm !border-emerald-100 !bg-emerald-50/30">
+              <div className="flex flex-col">
+                <Text className="text-slate-400 text-[10px] uppercase font-bold tracking-widest">
+                  Total Inbound (+)
+                </Text>
+                <Text className="font-black text-2xl text-emerald-600">
+                  +{summary.totalInboundQty || 0}
+                </Text>
+              </div>
+            </Card>
+          </Col>
+          <Col span={6}>
+            <Card className="!rounded-2xl !shadow-sm !border-rose-100 !bg-rose-50/30">
+              <div className="flex flex-col">
+                <Text className="text-slate-400 text-[10px] uppercase font-bold tracking-widest">
+                  Total Outbound (-)
+                </Text>
+                <Text className="font-black text-2xl text-rose-500">
+                  -{summary.totalOutboundQty || 0}
+                </Text>
+              </div>
+            </Card>
+          </Col>
+          <Col span={6}>
+            <Card className="!rounded-2xl !shadow-sm !border-[#38c6c6]/20 !bg-cyan-50/30">
+              <div className="flex flex-col">
+                <Text className="text-slate-400 text-[10px] uppercase font-bold tracking-widest">
+                  Closing Qty
+                </Text>
+                <Text className="font-black text-2xl text-[#38c6c6]">
+                  {summary.totalClosingQty || 0}
+                </Text>
+              </div>
+            </Card>
+          </Col>
+        </Row>
+      );
+    }
+
+    if (reportType === "InventoryTracking") {
+      return (
+        <Row gutter={24}>
+          <Col span={8}>
+            <Card className="!rounded-2xl !shadow-sm !border-slate-100">
+              <div className="flex flex-col">
+                <Text className="text-slate-400 text-[10px] uppercase font-bold tracking-widest">
+                  Total Items Checked
+                </Text>
+                <Text className="font-black text-2xl text-slate-800">
+                  {summary.totalItems || 0}
+                </Text>
+              </div>
+            </Card>
+          </Col>
+          <Col span={8}>
+            <Card
+              className={`!rounded-2xl !shadow-sm ${
+                (summary.totalVarianceQty || 0) < 0
+                  ? "!border-rose-100 !bg-rose-50/30"
+                  : (summary.totalVarianceQty || 0) > 0
+                    ? "!border-emerald-100 !bg-emerald-50/30"
+                    : "!border-slate-100"
+              }`}
+            >
+              <div className="flex flex-col">
+                <Text className="text-slate-400 text-[10px] uppercase font-bold tracking-widest">
+                  Total Variance Qty
+                </Text>
+                <Text
+                  className={`font-black text-2xl ${
+                    (summary.totalVarianceQty || 0) < 0
+                      ? "text-rose-500"
+                      : (summary.totalVarianceQty || 0) > 0
+                        ? "text-emerald-500"
+                        : "text-slate-700"
+                  }`}
+                >
+                  {(summary.totalVarianceQty || 0) > 0 ? "+" : ""}
+                  {summary.totalVarianceQty || 0}
+                </Text>
+              </div>
+            </Card>
+          </Col>
+          <Col span={8}>
+            <Card className="!rounded-2xl !shadow-sm !border-slate-100">
+              <div className="flex flex-col">
+                <Text className="text-slate-400 text-[10px] uppercase font-bold tracking-widest">
+                  Total Variance Value
+                </Text>
+                <Text
+                  className={`font-black text-2xl truncate ${
+                    (summary.totalVarianceValue || 0) < 0
+                      ? "text-rose-500"
+                      : (summary.totalVarianceValue || 0) > 0
+                        ? "text-emerald-500"
+                        : "text-slate-700"
+                  }`}
+                >
+                  {formatCurrency(summary.totalVarianceValue)}
+                </Text>
+              </div>
+            </Card>
+          </Col>
+        </Row>
+      );
+    }
+
+    // Snapshot Report Summary
     return (
       <Row gutter={24}>
-        <Col span={6}>
-          <Card className="!rounded-2xl !shadow-sm !border-slate-100 !bg-gradient-to-br from-white to-cyan-50/30">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-cyan-100/50 flex items-center justify-center text-[#38c6c6]">
-                <TrendingUp size={24} />
-              </div>
-              <div className="flex flex-col">
-                <Text className="text-slate-400 text-[10px] uppercase font-bold tracking-widest">
-                  Total Inbound Quantity
-                </Text>
-                <Text className="font-black text-2xl text-slate-800">
-                  +{result.summary?.totalInboundQty || 0}
-                </Text>
-              </div>
+        <Col span={8}>
+          <Card className="!rounded-2xl !shadow-sm !border-slate-100">
+            <div className="flex flex-col">
+              <Text className="text-slate-400 text-[10px] uppercase font-bold tracking-widest">
+                Total Unique Products (SKUs)
+              </Text>
+              <Text className="font-black text-2xl text-slate-800">
+                {summary.totalSkus || 0}
+              </Text>
             </div>
           </Card>
         </Col>
-        <Col span={6}>
-          <Card className="!rounded-2xl !shadow-sm !border-slate-100 !bg-gradient-to-br from-white to-rose-50/30">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-rose-100/50 flex items-center justify-center text-rose-500">
-                <TrendingDown size={24} />
-              </div>
-              <div className="flex flex-col">
-                <Text className="text-slate-400 text-[10px] uppercase font-bold tracking-widest">
-                  Total Outbound Quantity
-                </Text>
-                <Text className="font-black text-2xl text-slate-800">
-                  -{result.summary?.totalOutboundQty || 0}
-                </Text>
-              </div>
+        <Col span={8}>
+          <Card className="!rounded-2xl !shadow-sm !border-slate-100">
+            <div className="flex flex-col">
+              <Text className="text-slate-400 text-[10px] uppercase font-bold tracking-widest">
+                Total Stock Quantity
+              </Text>
+              <Text className="font-black text-2xl text-[#38c6c6]">
+                {summary.totalQuantity || 0}
+              </Text>
             </div>
           </Card>
         </Col>
-
-        {reportType === "InventoryInOutBalance" ? (
-          <>
-            <Col span={6}>
-              <Card className="!rounded-2xl !shadow-sm !border-slate-100">
-                <div className="flex flex-col">
-                  <Text className="text-slate-400 text-[10px] uppercase font-bold tracking-widest">
-                    Total Opening Quantity
-                  </Text>
-                  <Text className="font-black text-2xl text-slate-800">
-                    {result.summary?.totalOpeningQty || 0}
-                  </Text>
-                </div>
-              </Card>
-            </Col>
-            <Col span={6}>
-              <Card className="!rounded-2xl !shadow-sm !border-slate-100">
-                <div className="flex flex-col">
-                  <Text className="text-slate-400 text-[10px] uppercase font-bold tracking-widest">
-                    Total Closing Quantity
-                  </Text>
-                  <Text className="font-black text-2xl text-slate-800">
-                    {result.summary?.totalClosingQty || 0}
-                  </Text>
-                </div>
-              </Card>
-            </Col>
-          </>
-        ) : (
-          <>
-            <Col span={6}>
-              <Card className="!rounded-2xl !shadow-sm !border-slate-100">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500">
-                    <Package size={24} />
-                  </div>
-                  <div className="flex flex-col">
-                    <Text className="text-slate-400 text-[10px] uppercase font-bold tracking-widest">
-                      Inbound Transactions
-                    </Text>
-                    <Text className="font-black text-2xl text-slate-800">
-                      {result.summary?.totalInboundTransactions || 0}
-                    </Text>
-                  </div>
-                </div>
-              </Card>
-            </Col>
-            <Col span={6}>
-              <Card className="!rounded-2xl !shadow-sm !border-slate-100">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500">
-                    <Package size={24} />
-                  </div>
-                  <div className="flex flex-col">
-                    <Text className="text-slate-400 text-[10px] uppercase font-bold tracking-widest">
-                      Outbound Transactions
-                    </Text>
-                    <Text className="font-black text-2xl text-slate-800">
-                      {result.summary?.totalOutboundTransactions || 0}
-                    </Text>
-                  </div>
-                </div>
-              </Card>
-            </Col>
-          </>
-        )}
+        <Col span={8}>
+          <Card className="!rounded-2xl !shadow-sm !border-[#38c6c6]/20 !bg-cyan-50/30">
+            <div className="flex flex-col">
+              <Text className="text-slate-400 text-[10px] uppercase font-bold tracking-widest">
+                Total Inventory Value
+              </Text>
+              <Text className="font-black text-2xl text-slate-800 truncate">
+                {formatCurrency(summary.totalValue)}
+              </Text>
+            </div>
+          </Card>
+        </Col>
       </Row>
     );
   };
+
+  const { icon: tableIcon, title: tableTitle } = getTableIconAndTitle();
 
   return (
     <div className="pt-7 px-12 bg-[#F8FAFC] min-h-screen font-sans pb-20">
@@ -640,50 +704,33 @@ const ReportDetail = () => {
             {/* RENDER DYNAMIC SUMMARY CARDS */}
             {renderSummaryCards()}
 
-            {/* DAILY TRENDS */}
-            {result.data?.byDay && result.data.byDay.length > 0 && (
-              <Row gutter={24}>
-                <Col span={24}>
-                  <Card
-                    title={
-                      <Space className="!text-slate-700 !uppercase !text-xs !tracking-wider !font-bold !py-2">
-                        <Activity size={16} className="text-[#38c6c6]" /> Daily
-                        Activity Trends
-                      </Space>
-                    }
-                    className="!rounded-2xl !shadow-sm !border-slate-100"
-                  >
-                    <Table
-                      columns={getDailyColumns()}
-                      dataSource={result.data.byDay}
-                      rowKey="day"
-                      pagination={false}
-                      className="custom-details-table"
-                    />
-                  </Card>
-                </Col>
-              </Row>
-            )}
-
-            {/* SECONDARY TABLE (PRODUCTS OR SUPPLIERS) */}
+            {/* MAIN DATA TABLE */}
             <Row gutter={24}>
               <Col span={24}>
                 <Card
                   title={
                     <Space className="!text-slate-700 !uppercase !text-xs !tracking-wider !font-bold !py-2">
-                      {getSecondaryIcon()} {getSecondaryTitle()}
+                      {tableIcon} {tableTitle}
                     </Space>
                   }
                   className="!rounded-2xl !shadow-sm !border-slate-100"
                 >
                   <Table
-                    columns={getSecondaryColumns()}
-                    dataSource={getSecondaryData()}
-                    rowKey={(record) =>
-                      record.productId || record.supplierId || Math.random()
+                    columns={getTableColumns()}
+                    dataSource={getTableData()}
+                    rowKey={(record, index) =>
+                      record.productId || record.sku || index
                     }
-                    pagination={{ pageSize: 5 }}
+                    pagination={{ pageSize: 10 }}
                     className="custom-details-table"
+                    locale={{
+                      emptyText: (
+                        <div className="py-12 flex flex-col items-center text-slate-400">
+                          <Package size={40} className="opacity-20 mb-3" />
+                          <p>No data found for this report.</p>
+                        </div>
+                      ),
+                    }}
                   />
                 </Card>
               </Col>
