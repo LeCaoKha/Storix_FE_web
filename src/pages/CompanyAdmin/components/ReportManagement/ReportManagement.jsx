@@ -2,12 +2,12 @@ import React, { useState, useEffect, useCallback } from "react";
 import { message, Button, Space } from "antd";
 import { PlusCircle } from "lucide-react";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import api from "../../../../api/axios";
 
 // Components
 import ReportFilters from "./components/ReportFilters";
 import ReportTable from "./components/ReportTable";
-import ReportGeneratorModal from "./components/ReportGeneratorModal";
 import { MOCK_REPORTS } from "./components/ReportUtils";
 
 const fadeUp = {
@@ -17,12 +17,12 @@ const fadeUp = {
 
 const ReportManagement = () => {
   const companyId = localStorage.getItem("companyId");
+  const navigate = useNavigate();
 
   // States
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(false);
   const [warehouses, setWarehouses] = useState([]);
-  const [isGeneratorOpen, setIsGeneratorOpen] = useState(false);
 
   const [filters, setFilters] = useState({
     type: undefined,
@@ -42,6 +42,8 @@ const ReportManagement = () => {
     setLoading(true);
     try {
       const { type, warehouseId, dateRange } = filters;
+
+      // Không truyền skip và take để lấy toàn bộ dữ liệu
       const params = {
         companyId,
         type,
@@ -50,8 +52,6 @@ const ReportManagement = () => {
           ? dateRange[0].format("YYYY-MM-DDTHH:mm:ss")
           : undefined,
         to: dateRange ? dateRange[1].format("YYYY-MM-DDTHH:mm:ss") : undefined,
-        skip: (pagination.current - 1) * pagination.pageSize,
-        take: pagination.pageSize,
       };
 
       const res = await api.get("/Reports", { params });
@@ -69,7 +69,7 @@ const ReportManagement = () => {
     } finally {
       setLoading(false);
     }
-  }, [companyId, filters, pagination.current, pagination.pageSize]);
+  }, [companyId, filters]);
 
   // Fetch Warehouses (for dropdowns)
   const fetchWarehouses = useCallback(async () => {
@@ -92,37 +92,6 @@ const ReportManagement = () => {
     fetchWarehouses();
     fetchReports();
   }, [fetchReports, fetchWarehouses]);
-
-  // Handlers
-  const handleGenerateReport = async (values) => {
-    setLoading(true);
-    try {
-      const payload = {
-        reportType: values.reportType,
-        warehouseId: values.warehouseId,
-        timeFrom: values.dateRange[0].format("YYYY-MM-DDTHH:mm:ss"),
-        timeTo: values.dateRange[1].format("YYYY-MM-DDTHH:mm:ss"),
-        companyId: parseInt(companyId),
-      };
-
-      await api.post("/Reports", payload);
-      message.success("Report generation started successfully!");
-      setIsGeneratorOpen(false);
-      fetchReports();
-    } catch (err) {
-      console.error("Generate Report Error:", err);
-      if (err.response?.status === 404) {
-        message.success("Mock: Report generation queued (Demo Mode)");
-        setIsGeneratorOpen(false);
-      } else {
-        message.error(
-          err.response?.data?.message || "Failed to start report generation",
-        );
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
     <div className="bg-slate-50 min-h-screen text-slate-900">
@@ -150,7 +119,7 @@ const ReportManagement = () => {
             <Button
               type="primary"
               icon={<PlusCircle size={18} />}
-              onClick={() => setIsGeneratorOpen(true)}
+              onClick={() => navigate("create")}
               className="!h-12 !px-8 !bg-[#39C6C6] !border-none !rounded-2xl !font-bold hover:!bg-[#2eb1b1] !shadow-lg !shadow-[#39C6C6]/20 !flex !items-center"
             >
               Generate New Report
@@ -179,15 +148,6 @@ const ReportManagement = () => {
             warehouses={warehouses}
           />
         </motion.div>
-
-        {/* Modals */}
-        <ReportGeneratorModal
-          visible={isGeneratorOpen}
-          onCancel={() => setIsGeneratorOpen(false)}
-          onGenerate={handleGenerateReport}
-          loading={loading}
-          warehouses={warehouses}
-        />
       </section>
     </div>
   );

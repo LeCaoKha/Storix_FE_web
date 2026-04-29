@@ -45,6 +45,9 @@ import InventoryCountDetails from "../pages/CompanyAdmin/components/InventoryCou
 import WarehouseTransferCreate from "../pages/Manager/components/WarehouseTransferManagement/components/WarehouseTransferCreate/WarehouseTransferCreate";
 import WarehouseTransferDetails from "../pages/Manager/components/WarehouseTransferManagement/components/WarehouseTransferDetails/WarehouseTransferDetails";
 import ReportDetail from "../pages/CompanyAdmin/components/ReportManagement/components/ReportDetail";
+import CreateReport from "../pages/CompanyAdmin/components/ReportManagement/components/CreateReport";
+import CreateSupplier from "../pages/CompanyAdmin/components/SupplierManagement/components/CreateSupplier";
+import SupplierDetails from "../pages/CompanyAdmin/components/SupplierManagement/components/SupplierDetails";
 
 /**
  * 1. SHARED ADMIN ROUTES (Quyền hạn đầy đủ cho Admin & Manager)
@@ -83,6 +86,7 @@ const sharedAdminRoutes = [
   // REPORT MANAGEMENT
   { path: "report-management", element: <ReportManagement /> },
   { path: "report-management/details/:id", element: <ReportDetail /> },
+  { path: "report-management/create", element: <CreateReport /> },
 
   // ACCOUNT MANAGEMENT
   { path: "account-management", element: <AccountManagement /> },
@@ -113,6 +117,8 @@ const sharedAdminRoutes = [
 
   // SUPPLIER MANAGEMENT
   { path: "supplier-management", element: <SupplierManagement /> },
+  { path: "supplier-management/create", element: <CreateSupplier /> },
+  { path: "supplier-management/details/:id", element: <SupplierDetails /> },
 
   // WAREHOUSE MANAGEMENT
   { path: "warehouse-management", element: <WarehouseManagement /> },

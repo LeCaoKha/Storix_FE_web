@@ -19,8 +19,12 @@ import {
   Trash2,
   RefreshCw,
   PackageSearch,
+  Download, // ===== ADDED: Icon Download =====
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+// ===== ADDED CODE START =====
+import * as XLSX from "xlsx"; // Import thư viện xlsx
+// ===== ADDED CODE END =====
 
 const { Title } = Typography;
 
@@ -80,6 +84,64 @@ const ProductManagement = () => {
       );
     }
   };
+
+  // Frontend search filter
+  const filteredData = products.filter(
+    (p) =>
+      p.name?.toLowerCase().includes(searchText.toLowerCase()) ||
+      p.sku?.toLowerCase().includes(searchText.toLowerCase()),
+  );
+
+  // ===== ADDED CODE START =====
+  // --- EXPORT EXCEL LOGIC ---
+  const handleExportExcel = () => {
+    if (filteredData.length === 0) {
+      message.warning("No products to export!");
+      return;
+    }
+
+    try {
+      // 1. Chuẩn bị dữ liệu để xuất (Mapping lại các trường cho đẹp)
+      const exportData = filteredData.map((item, index) => ({
+        "No.": index + 1,
+        "Product Name": item.name,
+        "SKU Code": item.sku,
+        Type: item.type?.name || "Unclassified",
+        Category: item.category?.name || "Uncategorized",
+        Unit: item.unit,
+        "Last Update": item.createdAt
+          ? new Date(item.createdAt).toLocaleDateString("en-GB")
+          : "N/A",
+      }));
+
+      // 2. Tạo WorkSheet và WorkBook
+      const worksheet = XLSX.utils.json_to_sheet(exportData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Products");
+
+      // 3. Tự động điều chỉnh độ rộng cột (Auto-fit width) cho dễ nhìn
+      const wscols = [
+        { wch: 5 }, // No.
+        { wch: 40 }, // Product Name
+        { wch: 20 }, // SKU
+        { wch: 15 }, // Type
+        { wch: 20 }, // Category
+        { wch: 10 }, // Unit
+        { wch: 15 }, // Last Update
+      ];
+      worksheet["!cols"] = wscols;
+
+      // 4. Lưu file và tải xuống
+      const fileName = `Products_List_${new Date().toISOString().slice(0, 10)}.xlsx`;
+      XLSX.writeFile(workbook, fileName);
+
+      message.success("Exported to Excel successfully!");
+    } catch (error) {
+      console.error("Export Error:", error);
+      message.error("Failed to export Excel file");
+    }
+  };
+  // ===== ADDED CODE END =====
 
   // --- ANTD TABLE COLUMNS ---
   const columns = [
@@ -142,7 +204,7 @@ const ProductManagement = () => {
     },
     {
       title: "Type",
-      dataIndex: "type", // Đã sửa: lấy nguyên object
+      dataIndex: "type",
       key: "type",
       render: (typeObj) => (
         <Tag
@@ -155,11 +217,10 @@ const ProductManagement = () => {
     },
     {
       title: "Category",
-      dataIndex: "category", // Lấy nguyên object category
+      dataIndex: "category",
       key: "category",
       render: (cat) => (
         <span className="text-slate-500 font-medium">
-          {/* Đã sửa: Truy xuất tên danh mục hoặc trả về mặc định */}
           {cat?.name || "Uncategorized"}
         </span>
       ),
@@ -223,13 +284,6 @@ const ProductManagement = () => {
     },
   ];
 
-  // Frontend search filter
-  const filteredData = products.filter(
-    (p) =>
-      p.name?.toLowerCase().includes(searchText.toLowerCase()) ||
-      p.sku?.toLowerCase().includes(searchText.toLowerCase()),
-  );
-
   return (
     <div className="bg-slate-50 font-sans text-slate-900">
       <section className="md:px-16 lg:px-12 pt-7 pb-0">
@@ -243,6 +297,16 @@ const ProductManagement = () => {
           </div>
 
           <Space size="middle" className="w-full md:w-auto">
+            {/* ===== ADDED CODE START: NÚT EXPORT EXCEL ===== */}
+            <Button
+              icon={<Download size={16} />}
+              onClick={handleExportExcel}
+              className="!h-12 !px-6 !rounded-2xl !border-slate-200 !font-bold !text-slate-600 !hover:!text-[#39C6C6] hover:!border-[#39C6C6] !flex !items-center"
+            >
+              Export Excel
+            </Button>
+            {/* ===== ADDED CODE END ===== */}
+
             <Button
               icon={
                 <RefreshCw
@@ -251,12 +315,12 @@ const ProductManagement = () => {
                 />
               }
               onClick={fetchProducts}
-              className="!h-12 !px-6 !rounded-2xl !border-slate-200 !font-bold !text-slate-600 !hover:!text-[#39C6C6] hover:!border-[#39C6C6]"
+              className="!h-12 !px-6 !rounded-2xl !border-slate-200 !font-bold !text-slate-600 !hover:!text-[#39C6C6] hover:!border-[#39C6C6] !flex !items-center"
             >
               Sync Data
             </Button>
 
-            {/* --- ĐÃ CẬP NHẬT: CHỈ HIỂN THỊ NÚT ADD NEW SKU NẾU ROLE ID LÀ 2 --- */}
+            {/* CHỈ HIỂN THỊ NÚT ADD NEW SKU NẾU ROLE ID LÀ 2 */}
             {roleId === 2 && (
               <Button
                 type="primary"

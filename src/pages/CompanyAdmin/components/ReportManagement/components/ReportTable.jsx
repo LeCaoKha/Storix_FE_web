@@ -37,11 +37,17 @@ const ReportTable = ({
           text: "text-purple-600",
           icon: "text-purple-500",
         };
-      case "InboundKpiBasic":
+      case "InventorySnapshot":
         return {
           bg: "bg-emerald-50",
           text: "text-emerald-600",
           icon: "text-emerald-500",
+        };
+      case "InventoryLedger":
+        return {
+          bg: "bg-amber-50",
+          text: "text-amber-600",
+          icon: "text-amber-500",
         };
       default:
         return {
@@ -130,13 +136,11 @@ const ReportTable = ({
         dataSource={reports}
         rowKey="id"
         loading={loading}
-        // ===== ADDED CODE START =====
         // Cấu hình lại pagination để ép buộc hiển thị 5 dòng 1 trang
         pagination={{
           ...pagination,
           pageSize: 5,
         }}
-        // ===== ADDED CODE END =====
         onChange={onTableChange}
         onRow={(record) => ({
           onClick: () => {

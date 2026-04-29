@@ -11,6 +11,7 @@ import {
   message,
   Divider,
   Empty,
+  Avatar,
 } from "antd";
 import {
   ArrowLeft,
@@ -18,9 +19,9 @@ import {
   User,
   FileText,
   ClipboardCheck,
-  AlertCircle,
   CheckCircle2,
   PackageSearch,
+  Package,
 } from "lucide-react";
 import api from "../../../../../../api/axios";
 
@@ -54,7 +55,7 @@ const InventoryCountDetails = () => {
 
   const formatDate = (dateString) => {
     if (!dateString) return "---";
-    return new Date(dateString).toLocaleString("vi-VN", {
+    return new Date(dateString).toLocaleString("en-GB", {
       year: "numeric",
       month: "2-digit",
       day: "2-digit",
@@ -63,13 +64,46 @@ const InventoryCountDetails = () => {
     });
   };
 
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "Pending":
+        return "gold";
+      case "Counting":
+        return "blue";
+      case "Completed":
+        return "green";
+      default:
+        return "default";
+    }
+  };
+
+  // Cấu hình cột hiển thị thông tin sản phẩm
   const columns = [
     {
-      title: "Product Name",
-      dataIndex: "productName",
-      key: "productName",
-      render: (text) => (
-        <Text className="!font-bold !text-slate-700">{text}</Text>
+      title: "Product Info",
+      dataIndex: "product",
+      key: "productInfo",
+      render: (product) => (
+        <div className="flex items-center gap-4">
+          <Avatar
+            shape="square"
+            size={48}
+            src={product?.image}
+            icon={<Package size={20} />}
+            className="!bg-slate-100 !border !border-slate-200 !text-slate-300"
+          />
+          <div className="flex flex-col max-w-[200px] lg:max-w-[300px]">
+            <Text
+              className="!font-bold !text-slate-800 truncate"
+              title={product?.name}
+            >
+              {product?.name || "Unknown Product"}
+            </Text>
+            <Text className="!text-[10px] !text-slate-400 !font-mono">
+              SKU: {product?.sku || "N/A"}
+            </Text>
+          </div>
+        </div>
       ),
     },
     {
@@ -78,7 +112,9 @@ const InventoryCountDetails = () => {
       key: "systemQuantity",
       align: "center",
       render: (val) => (
-        <span className="font-mono font-bold text-slate-500">{val}</span>
+        <span className="font-mono font-bold text-slate-500 text-base">
+          {val}
+        </span>
       ),
     },
     {
@@ -88,9 +124,11 @@ const InventoryCountDetails = () => {
       align: "center",
       render: (val) => (
         <span
-          className={`font-mono font-bold ${val === null ? "text-slate-300 italic" : "text-[#39c6c6]"}`}
+          className={`font-mono font-bold text-base ${
+            val === null ? "text-slate-300 italic text-sm" : "text-[#39c6c6]"
+          }`}
         >
-          {val !== null ? val : "Not counted"}
+          {val !== null ? val : "Pending"}
         </span>
       ),
     },
@@ -98,14 +136,22 @@ const InventoryCountDetails = () => {
       title: "Discrepancy",
       dataIndex: "discrepancy",
       key: "discrepancy",
-      align: "right",
+      align: "center",
       render: (val) => {
-        if (val === null) return <span className="text-slate-300">---</span>;
-        const color = val === 0 ? "text-emerald-500" : "text-rose-500";
+        if (val === null)
+          return <span className="text-slate-300 font-mono">---</span>;
+
+        let colorClass = "text-slate-500";
+        if (val > 0) colorClass = "text-emerald-500";
+        if (val < 0) colorClass = "text-rose-500";
+
         return (
-          <span className={`font-mono font-black ${color}`}>
+          <Tag
+            color={val === 0 ? "default" : val > 0 ? "success" : "error"}
+            className="!rounded-lg !px-3 !py-1 !font-mono !font-bold !m-0 !border-none"
+          >
             {val > 0 ? `+${val}` : val}
-          </span>
+          </Tag>
         );
       },
     },
@@ -113,42 +159,51 @@ const InventoryCountDetails = () => {
 
   if (loading)
     return (
-      <div className="p-12">
+      <div className="p-12 h-screen bg-[#F8FAFC]">
         <Skeleton active avatar paragraph={{ rows: 10 }} />
       </div>
     );
 
   if (!ticketData)
-    return <Empty className="mt-20" description="Ticket not found" />;
+    return (
+      <div className="h-screen bg-[#F8FAFC] flex justify-center items-start pt-20">
+        <Empty description="Inventory count ticket not found" />
+      </div>
+    );
 
-  const isCompleted = !!ticketData.executedDay;
+  const isCompleted = ticketData.status === "Completed";
+  const items = ticketData.inventoryCountItems || [];
 
   return (
-    <div className="!bg-slate-50 !min-h-screen !pb-20">
+    <div className="!bg-[#F8FAFC] !min-h-screen !pb-20">
       {/* HEADER */}
-      <div className="!bg-slate-50 !px-12 !py-6 !sticky !top-0 !z-10">
+      <div className="!bg-[#F8FAFC] !px-12 !py-6 !sticky !top-0 !z-10 shadow-sm border-b border-slate-200/50">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Button
               type="text"
               icon={<ArrowLeft size={20} />}
               onClick={() => navigate(-1)}
-              className="hover:!bg-slate-100 !rounded-full !w-10 !h-10 !flex !items-center !justify-center"
+              className="hover:!bg-white !rounded-full !w-10 !h-10 !flex !items-center !justify-center !text-slate-600 shadow-sm"
             />
             <div>
               <div className="flex items-center gap-3">
-                <Title level={3} className="!m-0 !font-black !tracking-tight">
+                <Title
+                  level={3}
+                  className="!m-0 !font-black !tracking-tight text-slate-800"
+                >
                   Count Ticket #{String(ticketData.id).padStart(3, "0")}
                 </Title>
                 <Tag
-                  color={isCompleted ? "green" : "gold"}
-                  className="!rounded-full !px-4 !py-0.5 !font-bold !border-none"
+                  color={getStatusColor(ticketData.status)}
+                  className="!rounded-full !px-3 !py-0.5 !font-bold !uppercase !border-none tracking-widest text-[10px]"
                 >
-                  {isCompleted ? "COMPLETED" : "PENDING"}
+                  {ticketData.status}
                 </Tag>
               </div>
-              <Text className="!text-slate-400 !text-sm">
-                Created on {formatDate(ticketData.createdAt)}
+              <Text className="!text-slate-400 !text-sm font-medium">
+                {ticketData.name} • Created on{" "}
+                {formatDate(ticketData.createdAt)}
               </Text>
             </div>
           </div>
@@ -156,7 +211,7 @@ const InventoryCountDetails = () => {
           <Space>
             <Button
               icon={<Calendar size={16} />}
-              className="!h-10 !rounded-xl !font-bold"
+              className="!h-10 !rounded-xl !font-bold border-slate-200 text-slate-600"
               disabled={!isCompleted}
             >
               Export Report
@@ -164,7 +219,7 @@ const InventoryCountDetails = () => {
             {!isCompleted && (
               <Button
                 type="primary"
-                className="!h-10 !bg-[#39c6c6] !border-none !rounded-xl !font-bold !px-6"
+                className="!h-10 !bg-[#39c6c6] !border-none !rounded-xl !font-bold !px-6 shadow-lg shadow-[#39c6c6]/20 hover:!bg-[#2eb1b1]"
                 onClick={() =>
                   message.info("Counting process feature coming soon")
                 }
@@ -176,22 +231,31 @@ const InventoryCountDetails = () => {
         </div>
       </div>
 
-      <div className="!px-12 !mt-8 flex gap-6">
+      <div className="!px-12 !mt-8 flex flex-col lg:flex-row gap-6">
         {/* LEFT COLUMN: ITEMS TABLE */}
         <div className="flex-[2] space-y-6">
-          <Card className="!rounded-3xl !shadow-sm !border-none">
-            <div className="flex items-center gap-2 mb-6">
+          <Card className="!rounded-2xl !shadow-sm !border-slate-100">
+            <div className="flex items-center gap-2 mb-6 pb-4 border-b border-slate-50">
               <PackageSearch className="text-[#39c6c6]" size={20} />
-              <h3 className="!text-lg !font-bold !text-slate-800 !m-0">
+              <h3 className="!text-lg !font-extrabold !text-slate-800 !m-0">
                 Products List
               </h3>
             </div>
+
             <Table
               columns={columns}
-              dataSource={ticketData.items}
-              rowKey="productId"
+              dataSource={items}
+              rowKey="id" // Dùng ID của inventoryCountItems thay vì productId
               pagination={false}
-              className="storix-table"
+              className="storix-table custom-count-table"
+              locale={{
+                emptyText: (
+                  <div className="py-10 text-slate-400">
+                    <Package size={32} className="mx-auto mb-2 opacity-20" />
+                    <p>No products mapped to this count.</p>
+                  </div>
+                ),
+              }}
             />
           </Card>
         </div>
@@ -202,39 +266,62 @@ const InventoryCountDetails = () => {
           <div>
             <Card
               title="Session Details"
-              className="!rounded-3xl !shadow-sm !border-none custom-card-header"
+              className="!rounded-2xl !shadow-sm !border-slate-100 custom-card-header"
             >
               <div className="space-y-4">
-                <div className="flex justify-between">
-                  <Text className="text-slate-400">Scope Type</Text>
-                  <Tag color="blue" className="!m-0 !font-bold">
-                    {ticketData.scopeType}
+                <div className="flex justify-between items-center pb-3 border-b border-slate-50">
+                  <Text className="text-slate-400 font-medium">Scope Type</Text>
+                  <Tag color="geekblue" className="!m-0 !font-bold !rounded-md">
+                    {ticketData.scopeType || "N/A"}
                   </Tag>
                 </div>
-                <div className="flex justify-between">
-                  <Text className="text-slate-400">Staff Assigned</Text>
+
+                <div className="flex justify-between items-center pb-3 border-b border-slate-50">
+                  <Text className="text-slate-400 font-medium">
+                    Planned Execution
+                  </Text>
+                  <Text className="font-bold text-slate-700">
+                    {formatDate(ticketData.plannedAt)}
+                  </Text>
+                </div>
+
+                <div className="flex justify-between items-center pb-3 border-b border-slate-50">
+                  <Text className="text-slate-400 font-medium">
+                    Assigned Staff
+                  </Text>
                   <div className="flex items-center gap-2">
-                    <User size={14} className="text-slate-400" />
-                    <Text className="font-bold">
-                      ID: {ticketData.assignedTo}
+                    <Avatar
+                      size="small"
+                      className="bg-slate-100 text-slate-400"
+                    >
+                      <User size={14} />
+                    </Avatar>
+                    <Text className="font-bold text-slate-700">
+                      {ticketData.assignedToNavigation?.fullName ||
+                        `ID: ${ticketData.assignedTo}`}
                     </Text>
                   </div>
                 </div>
-                <div className="flex justify-between">
-                  <Text className="text-slate-400">Warehouse ID</Text>
-                  <Text className="font-bold">{ticketData.warehouseId}</Text>
+
+                <div className="flex justify-between items-center pb-3 border-b border-slate-50">
+                  <Text className="text-slate-400 font-medium">Warehouse</Text>
+                  <Text className="font-bold text-slate-700">
+                    {ticketData.warehouse?.name ||
+                      `ID: ${ticketData.warehouseId}`}
+                  </Text>
                 </div>
-                <Divider className="!my-2" />
-                <div>
+
+                <div className="pt-2">
                   <div className="flex items-center gap-2 mb-2 text-slate-400">
                     <FileText size={14} />
-                    <Text className="!text-xs !font-bold !uppercase !tracking-widest">
-                      Description
+                    <Text className="!text-[10px] !font-bold !uppercase !tracking-widest text-slate-400">
+                      Internal Notes
                     </Text>
                   </div>
-                  <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                    <Text className="text-slate-600 italic">
-                      {ticketData.description || "No description provided."}
+                  <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                    <Text className="text-slate-600 italic text-sm">
+                      {ticketData.description ||
+                        "No description provided for this session."}
                     </Text>
                   </div>
                 </div>
@@ -242,18 +329,18 @@ const InventoryCountDetails = () => {
             </Card>
           </div>
 
-          {/* Statistics Card (Optional but cool) */}
+          {/* Statistics Card */}
           <div>
-            <Card className="!rounded-3xl !shadow-sm !border-none !bg-[#39c6c6]">
-              <div className="flex flex-col items-center py-2">
+            <Card className="!rounded-2xl !shadow-sm !border-none !bg-gradient-to-br from-[#39c6c6] to-[#2ba4a4]">
+              <div className="flex flex-col items-center py-4">
                 <ClipboardCheck
-                  size={32}
-                  className="text-white opacity-80 mb-2"
+                  size={36}
+                  className="text-white opacity-80 mb-3"
                 />
-                <Title level={2} className="!text-white !m-0">
-                  {ticketData.items?.length || 0}
+                <Title level={1} className="!text-white !m-0 !font-black">
+                  {items.length}
                 </Title>
-                <Text className="text-white/80 font-medium uppercase tracking-widest text-[10px]">
+                <Text className="text-white/80 font-bold uppercase tracking-widest text-[10px] mt-1">
                   Total SKUs to Count
                 </Text>
               </div>
@@ -262,14 +349,14 @@ const InventoryCountDetails = () => {
 
           {isCompleted && (
             <div>
-              <Card className="!rounded-3xl !shadow-sm !border-none !bg-emerald-50 !border-emerald-100">
+              <Card className="!rounded-2xl !shadow-sm !border-emerald-100 !bg-emerald-50">
                 <div className="flex items-center gap-3">
-                  <CheckCircle2 className="text-emerald-500" size={24} />
+                  <CheckCircle2 className="text-emerald-500" size={28} />
                   <div>
-                    <div className="text-emerald-700 font-bold">
+                    <div className="text-emerald-700 font-extrabold uppercase tracking-wide text-xs mb-1">
                       Execution Finished
                     </div>
-                    <div className="text-emerald-600 text-xs">
+                    <div className="text-emerald-600 font-medium text-sm">
                       {formatDate(ticketData.executedDay)}
                     </div>
                   </div>
@@ -280,7 +367,7 @@ const InventoryCountDetails = () => {
         </div>
       </div>
 
-      <style jsx="true">{`
+      <style jsx global>{`
         .custom-card-header .ant-card-head {
           border-bottom: none !important;
           padding-top: 24px;
@@ -291,6 +378,16 @@ const InventoryCountDetails = () => {
           text-transform: uppercase;
           letter-spacing: 1px;
           font-size: 12px;
+        }
+
+        /* Chỉnh style Thead của bảng cho gọn gàng */
+        .custom-count-table .ant-table-thead > tr > th {
+          background-color: #f8fafc !important;
+          color: #64748b !important;
+          font-size: 10px !important;
+          text-transform: uppercase !important;
+          letter-spacing: 0.05em !important;
+          border-bottom: 1px solid #f1f5f9 !important;
         }
       `}</style>
     </div>

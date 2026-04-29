@@ -65,20 +65,6 @@ const SupplierManagement = () => {
     fetchSuppliers();
   }, []);
 
-  const handleToggleStatus = async (record) => {
-    const newStatus = record.status === "Active" ? "Inactive" : "Active";
-    try {
-      // Giả định API cập nhật status cho Supplier tương tự User
-      await api.put(`/Suppliers/${record.id}`, { status: newStatus });
-      message.success(
-        `Supplier ${newStatus === "Active" ? "activated" : "deactivated"} successfully`,
-      );
-      fetchSuppliers();
-    } catch (error) {
-      message.error(error.response?.data?.message || "Operation failed");
-    }
-  };
-
   const columns = [
     {
       title: "#",
