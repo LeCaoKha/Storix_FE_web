@@ -17,7 +17,6 @@ const DetailsProductList = ({ items }) => {
       <div className="mt-2">
         {items && items.length > 0 ? (
           <div>
-            {/* Header của danh sách */}
             <div className="flex items-center px-4 text-[10px] !uppercase !font-bold text-slate-400 !tracking-widest mb-3">
               <span className="flex-1">Product</span>
               <div className="flex items-center text-right">
@@ -27,7 +26,6 @@ const DetailsProductList = ({ items }) => {
               </div>
             </div>
 
-            {/* Vùng danh sách */}
             <div className="space-y-3 max-h-[280px] overflow-y-auto overflow-x-hidden">
               {items.map((item) => {
                 const totalPrice = (item.price || 0) * (item.quantity || 1);
@@ -37,12 +35,11 @@ const DetailsProductList = ({ items }) => {
                     key={item.id}
                     className="flex items-center justify-between p-4 bg-white border border-slate-100 rounded-2xl transition-all hover:border-[#38c6c6]/20 mr-1"
                   >
-                    {/* Thông tin sản phẩm & Avatar */}
                     <div className="flex items-center gap-4 flex-1">
                       <Avatar
                         shape="square"
                         size={48}
-                        src={item.productImageUrl || null} // Thêm hình ảnh nếu API có
+                        src={item.productImage || null} // Đã fix đúng key JSON
                         icon={<Package />}
                         className="!bg-slate-50 !text-slate-300 !shrink-0"
                       />
@@ -61,7 +58,6 @@ const DetailsProductList = ({ items }) => {
                     </div>
 
                     <div className="flex items-center">
-                      {/* Số lượng */}
                       <div className="w-24 flex justify-center">
                         <div className="h-10 px-4 flex flex-col items-center justify-center rounded-lg bg-slate-50 text-slate-700 min-w-[40px]">
                           <span className="font-bold text-sm leading-tight">
@@ -73,14 +69,12 @@ const DetailsProductList = ({ items }) => {
                         </div>
                       </div>
 
-                      {/* Đơn giá */}
                       <div className="w-32 text-right pr-4">
                         <Text className="!font-bold !text-[#38c6c6] !block">
                           {(item.price || 0).toLocaleString()} ₫
                         </Text>
                       </div>
 
-                      {/* Thành tiền */}
                       <Text className="!w-32 !text-right !pr-4 !font-black !text-slate-700">
                         {Math.floor(totalPrice).toLocaleString()} ₫
                       </Text>

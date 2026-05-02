@@ -11,14 +11,14 @@ import {
   Row,
   Col,
   Table,
+  Modal,
+  InputNumber,
 } from "antd";
 import {
   ArrowLeft,
   Download,
   Calendar,
   Package,
-  TrendingUp,
-  TrendingDown,
   Activity,
   Box,
   Clock,
@@ -26,6 +26,7 @@ import {
   List,
   Scale,
   Camera,
+  Sparkles, // Đổi từ Lightbulb sang Sparkles để chuẩn giao diện AI
 } from "lucide-react";
 import dayjs from "dayjs";
 import api from "../../../../../api/axios";
@@ -40,6 +41,11 @@ const ReportDetail = () => {
   const [loading, setLoading] = useState(true);
   const [reportData, setReportData] = useState(null);
   const [exporting, setExporting] = useState(false);
+
+  // States for Storage Forecast
+  const [isForecastModalVisible, setIsForecastModalVisible] = useState(false);
+  const [forecastDays, setForecastDays] = useState(7);
+  const [isForecasting, setIsForecasting] = useState(false);
 
   // ==========================================
   // 1. FETCH DATA
@@ -89,7 +95,44 @@ const ReportDetail = () => {
   };
 
   // ==========================================
-  // 3. RENDER HELPERS
+  // 3. STORAGE FORECAST
+  // ==========================================
+  const handleStorageForecast = async () => {
+    if (!forecastDays || forecastDays <= 0) {
+      message.warning("Please enter a valid number of forecast days");
+      return;
+    }
+
+    setIsForecasting(true);
+
+    try {
+      const productIds =
+        reportData.result?.data?.items?.map((item) => item.productId) || [];
+
+      const payload = {
+        productIds: productIds.map(Number),
+        dateFrom: reportData.timeFrom,
+        dateTo: reportData.timeTo,
+        warehouseId: Number(reportData.warehouseId),
+        forecastDays: Number(forecastDays),
+        reportId: Number(reportData.id),
+        companyId: Number(companyId),
+      };
+
+      await api.post("http://localhost:5678/webhook/storage-forecast", payload);
+
+      message.success("Forecast request sent successfully!");
+      setIsForecastModalVisible(false);
+    } catch (error) {
+      console.error("Forecast Error:", error);
+      message.error("Failed to send forecast request. Please try again later.");
+    } finally {
+      setIsForecasting(false);
+    }
+  };
+
+  // ==========================================
+  // 4. RENDER HELPERS
   // ==========================================
   const getStatusColor = (status) => {
     switch (status) {
@@ -136,7 +179,7 @@ const ReportDetail = () => {
   const isSucceeded = reportData.status === "Succeeded";
 
   // ==========================================
-  // 4. DYNAMIC TABLES CONFIGURATION (Cập nhật cho 4 loại)
+  // 5. DYNAMIC TABLES CONFIGURATION
   // ==========================================
   const getTableColumns = () => {
     const baseProductCols = [
@@ -389,7 +432,7 @@ const ReportDetail = () => {
   };
 
   // ==========================================
-  // 5. DYNAMIC SUMMARY CARDS (Cập nhật cho 4 loại)
+  // 6. DYNAMIC SUMMARY CARDS
   // ==========================================
   const renderSummaryCards = () => {
     const summary = result?.summary || {};
@@ -459,7 +502,7 @@ const ReportDetail = () => {
                   Total Inbound (+)
                 </Text>
                 <Text className="font-black text-2xl text-emerald-600">
-                  +{summary.totalInboundQty || 0}
+                  {summary.totalInboundQty || 0}
                 </Text>
               </div>
             </Card>
@@ -471,7 +514,7 @@ const ReportDetail = () => {
                   Total Outbound (-)
                 </Text>
                 <Text className="font-black text-2xl text-rose-500">
-                  -{summary.totalOutboundQty || 0}
+                  {summary.totalOutboundQty || 0}
                 </Text>
               </div>
             </Card>
@@ -638,6 +681,17 @@ const ReportDetail = () => {
         </div>
 
         <Space size="middle">
+          {/* Nút Storage Forecast - Cập nhật giao diện tím chuẩn AI */}
+          {isSucceeded && reportType === "InventorySnapshot" && (
+            <Button
+              icon={<Sparkles size={18} />}
+              onClick={() => setIsForecastModalVisible(true)}
+              className="!flex !items-center !gap-2 !h-11 !px-6 !font-bold !text-[#7C3AED] !bg-[#7C3AED]/5 !border-[#7C3AED]/20 !rounded-xl shadow-sm hover:!border-[#7C3AED] hover:!text-[#7C3AED] hover:!bg-[#7C3AED]/10 transition-all"
+            >
+              Storage Forecast
+            </Button>
+          )}
+
           <Button
             type="primary"
             icon={<Download size={18} />}
@@ -752,6 +806,57 @@ const ReportDetail = () => {
           </Card>
         )}
       </div>
+
+      {/* STORAGE FORECAST MODAL - Dịch sang tiếng Anh & đổi Icon Modal */}
+      <Modal
+        title={
+          <div className="flex items-center gap-2 text-slate-800">
+            <Sparkles className="text-[#7C3AED]" size={20} />
+            <span className="font-bold">Storage Forecast</span>
+          </div>
+        }
+        open={isForecastModalVisible}
+        onOk={handleStorageForecast}
+        onCancel={() => setIsForecastModalVisible(false)}
+        confirmLoading={isForecasting}
+        okText="Start Forecast"
+        cancelText="Cancel"
+        okButtonProps={{
+          className: "!bg-[#7C3AED] hover:!bg-[#6D28D9] !border-none",
+        }}
+        centered
+      >
+        <div className="space-y-4 py-4">
+          <p className="text-slate-600">
+            This function will analyze inventory data to:
+          </p>
+          <ul className="list-disc pl-5 text-slate-600 space-y-1">
+            <li>Suggest the quantity to restock for the upcoming period.</li>
+            <li>Alert on slow-moving or obsolete inventory.</li>
+            <li>Detect low-stock items and request replenishment.</li>
+          </ul>
+
+          <div className="bg-purple-50 border border-purple-200 p-3 rounded-lg mt-4">
+            <Text className="text-[#7C3AED] text-sm font-medium">
+              ⚠️ Note: The analysis process may take some time to complete.
+            </Text>
+          </div>
+
+          <div className="mt-4 flex flex-col gap-2">
+            <Text className="font-medium text-slate-700">
+              Enter the number of days to forecast (e.g., 7 days):
+            </Text>
+            <InputNumber
+              min={1}
+              value={forecastDays}
+              onChange={(value) => setForecastDays(value)}
+              className="w-full"
+              size="large"
+              placeholder="Enter number of days..."
+            />
+          </div>
+        </div>
+      </Modal>
 
       <style jsx global>{`
         .custom-details-table .ant-table-thead > tr > th {

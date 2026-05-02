@@ -68,7 +68,11 @@ const DetailsHeader = ({
           {isDetailsPage && data?.status && (
             <div>
               <Tag
-                color={data.status === "Approved" ? "green" : "orange"}
+                color={
+                  data.status === "Approved" || data.status === "Completed"
+                    ? "green"
+                    : "orange"
+                }
                 className="!rounded-md !px-3 !py-1 !border-none !font-bold !m-0 !text-xs uppercase tracking-wider"
               >
                 {data.status}
@@ -99,17 +103,19 @@ const DetailsHeader = ({
           </div>
         )}
 
-        {/* NÚT TẠO GỢI Ý KHO (AI RECOMMENDATION): Chỉ hiển thị ở Ticket Details */}
-        {isTicketManagement && isDetailsPage && (
-          <Button
-            icon={<Sparkles size={18} />}
-            onClick={onCreateRecommendation}
-            loading={isCreatingRec}
-            className="!flex !items-center !gap-2 !h-11 !px-6 !font-bold !text-[#7C3AED] !bg-[#7C3AED]/5 !border-[#7C3AED]/20 !rounded-xl shadow-sm hover:!border-[#7C3AED] hover:!text-[#7C3AED] hover:!bg-[#7C3AED]/10 transition-all"
-          >
-            Create Recommendation
-          </Button>
-        )}
+        {/* NÚT TẠO GỢI Ý KHO (AI RECOMMENDATION): Chỉ hiển thị ở Ticket Details VÀ khác Completed */}
+        {isTicketManagement &&
+          isDetailsPage &&
+          data?.status !== "Completed" && (
+            <Button
+              icon={<Sparkles size={18} />}
+              onClick={onCreateRecommendation}
+              loading={isCreatingRec}
+              className="!flex !items-center !gap-2 !h-11 !px-6 !font-bold !text-[#7C3AED] !bg-[#7C3AED]/5 !border-[#7C3AED]/20 !rounded-xl shadow-sm hover:!border-[#7C3AED] hover:!text-[#7C3AED] hover:!bg-[#7C3AED]/10 transition-all"
+            >
+              Create Recommendation
+            </Button>
+          )}
 
         {/* NÚT EXPORT PDF: Chỉ hiển thị khi ở trang Details */}
         {isDetailsPage && (
@@ -122,8 +128,9 @@ const DetailsHeader = ({
           </Button>
         )}
 
-        {/* Nút Create Ticket: Giữ nguyên logic cho trang Create hoặc khi đã Approved */}
-        {(isCreatePage || data?.status === "Approved") && (
+        {/* Nút Receive Goods / Create Ticket: Ẩn nếu trạng thái đã là Completed */}
+        {(isCreatePage ||
+          (data?.status === "Approved" && data?.status !== "Completed")) && (
           <Button
             type="primary"
             icon={<PlusCircle size={18} />}

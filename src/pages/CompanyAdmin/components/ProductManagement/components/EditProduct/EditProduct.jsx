@@ -57,6 +57,9 @@ const EditProduct = () => {
   const [childCategories, setChildCategories] = useState([]);
   const [selectedParentId, setSelectedParentId] = useState(null);
 
+  // State lưu danh sách Suppliers
+  const [suppliers, setSuppliers] = useState([]);
+
   const normFile = (e) => {
     if (Array.isArray(e)) return e;
     return e?.fileList;
@@ -78,8 +81,10 @@ const EditProduct = () => {
 
     try {
       setFetchingData(true);
-      const [catRes, productRes] = await Promise.all([
+      // Gọi đồng thời 3 API: Lấy Danh mục, Sản phẩm, và Nhà cung cấp
+      const [catRes, supRes, productRes] = await Promise.all([
         api.get(`/Products/categories/company/${userId}`),
+        api.get(`/Suppliers/get-all/${userId}`),
         api.get(`/Products/get-by-id/${userId}/${id}`),
       ]);
 
@@ -87,6 +92,9 @@ const EditProduct = () => {
       const allCats = catRes.data;
       const parents = allCats.filter((cat) => !cat.parentCategoryId);
       setParentCategories(parents);
+
+      // Lưu danh sách Suppliers
+      setSuppliers(supRes.data || []);
 
       const product = productRes.data;
 
@@ -115,12 +123,15 @@ const EditProduct = () => {
         : [];
       setFileList(initialImage);
 
-      // Đổ dữ liệu vào Form
+      // Đổ dữ liệu vào Form (Cập nhật thêm các trường mới)
       form.setFieldsValue({
         name: product.name,
-        sku: product.sku,
         unit: product.unit,
         category: product.categoryId,
+        material: product.material,
+        packageType: product.packageType,
+        sizeStandard: product.sizeStandard,
+        defaultSupplierId: product.defaultSupplierId,
         description: product.description,
         isEsd: product.isEsd || false,
         isMsd: product.isMsd || false,
@@ -235,32 +246,48 @@ const EditProduct = () => {
       const companyId = localStorage.getItem("companyId") || "0";
       const formData = new FormData();
 
-      formData.append("name", values.name);
-      formData.append("sku", values.sku);
-      formData.append("companyId", companyId);
+      // Ép kiểu chuẩn PascalCase API mới
+      formData.append("Id", parseInt(id)); // Đề phòng BE cần truyền ID vào body
+      formData.append("CompanyId", parseInt(companyId));
+      formData.append("Name", values.name);
 
-      formData.append("weight", values.weight || "0");
-      formData.append("width", values.width || "0");
-      formData.append("length", values.length || "0");
-      formData.append("height", values.height || "0");
+      if (values.category)
+        formData.append("CategoryId", parseInt(values.category));
+      if (values.unit) formData.append("Unit", values.unit);
+      if (values.material) formData.append("Material", values.material);
+      if (values.packageType)
+        formData.append("PackageType", values.packageType);
+      if (values.sizeStandard)
+        formData.append("SizeStandard", values.sizeStandard);
+      if (values.defaultSupplierId)
+        formData.append(
+          "DefaultSupplierId",
+          parseInt(values.defaultSupplierId),
+        );
 
-      if (values.unit) formData.append("unit", values.unit);
-      if (values.category) formData.append("categoryId", values.category);
+      // Kích thước & Trọng lượng
+      formData.append("Weight", parseFloat(values.weight || 0));
+      formData.append("Width", parseFloat(values.width || 0));
+      formData.append("Length", parseFloat(values.length || 0));
+      formData.append("Height", parseFloat(values.height || 0));
+
       if (values.description)
-        formData.append("description", values.description);
+        formData.append("Description", values.description);
 
-      formData.append("isEsd", values.isEsd ? "true" : "false");
-      formData.append("isMsd", values.isMsd ? "true" : "false");
-      formData.append("isCold", values.isCold ? "true" : "false");
-      formData.append("isVulnerable", values.isVulnerable ? "true" : "false");
-      formData.append("isHighValue", values.isHighValue ? "true" : "false");
+      // Cờ logic kho bãi
+      formData.append("IsEsd", !!values.isEsd);
+      formData.append("IsMsd", !!values.isMsd);
+      formData.append("IsCold", !!values.isCold);
+      formData.append("IsVulnerable", !!values.isVulnerable);
+      formData.append("IsHighValue", !!values.isHighValue);
 
+      // Xử lý hình ảnh (chỉ append khi user chọn ảnh mới)
       if (fileList[0]?.originFileObj) {
-        formData.append("image", fileList[0].originFileObj);
+        formData.append("Image", fileList[0].originFileObj);
       }
 
-      // Sửa lỗi đường dẫn API bị thiếu dấu "/"
-      const res = await api.put(`/Products/update${id}`, formData, {
+      // Đảm bảo URL có đủ dấu gạch chéo
+      const res = await api.put(`/Products/update/${id}`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
@@ -398,23 +425,6 @@ const EditProduct = () => {
               </Row>
 
               <Row gutter={16}>
-                <Col span={12}>
-                  <Form.Item
-                    label="SKU"
-                    name="sku"
-                    rules={[{ required: true, message: "Please input SKU!" }]}
-                  >
-                    <Input placeholder="Enter SKU" size="large" />
-                  </Form.Item>
-                </Col>
-                <Col span={12}>
-                  <Form.Item label="Unit" name="unit">
-                    <Input placeholder="e.g., kg, pcs" size="large" />
-                  </Form.Item>
-                </Col>
-              </Row>
-
-              <Row gutter={16}>
                 <Col span={24}>
                   <Form.Item
                     label={
@@ -460,6 +470,54 @@ const EditProduct = () => {
                       options={childCategories.map((c) => ({
                         value: c.id,
                         label: c.name,
+                      }))}
+                    />
+                  </Form.Item>
+                </Col>
+              </Row>
+
+              {/* CÁC TRƯỜNG MỚI: Material, Package Type, Unit, Size Standard, Default Supplier */}
+              <Row gutter={16}>
+                <Col span={12}>
+                  <Form.Item label="Material" name="material">
+                    <Input
+                      placeholder="e.g., Plastic, Aluminum..."
+                      size="large"
+                    />
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                  <Form.Item label="Package Type" name="packageType">
+                    <Input
+                      placeholder="e.g., Box, Reel, Tray..."
+                      size="large"
+                    />
+                  </Form.Item>
+                </Col>
+              </Row>
+
+              <Row gutter={16}>
+                <Col span={8}>
+                  <Form.Item label="Unit" name="unit">
+                    <Input placeholder="e.g., kg, pcs" size="large" />
+                  </Form.Item>
+                </Col>
+                <Col span={8}>
+                  <Form.Item label="Size Standard" name="sizeStandard">
+                    <Input placeholder="e.g., 0805, 1206..." size="large" />
+                  </Form.Item>
+                </Col>
+                <Col span={8}>
+                  <Form.Item label="Default Supplier" name="defaultSupplierId">
+                    <Select
+                      showSearch
+                      allowClear
+                      placeholder="Select default supplier"
+                      size="large"
+                      optionFilterProp="label"
+                      options={suppliers.map((s) => ({
+                        value: s.id,
+                        label: s.name,
                       }))}
                     />
                   </Form.Item>
