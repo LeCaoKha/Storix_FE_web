@@ -105,6 +105,7 @@ const OutboundTicketDetails = () => {
   const handleCreatePath = async () => {
     const warehouseId =
       data?.warehouseId || localStorage.getItem("warehouseId");
+    const token = localStorage.getItem("token");
 
     if (!userId || !companyId || !warehouseId) {
       message.error("Missing context data (User/Company/Warehouse ID).");
@@ -120,7 +121,11 @@ const OutboundTicketDetails = () => {
         warehouseId: Number(warehouseId),
       };
 
-      await api.post(`${VITE_N8N_API_URL}/webhook/path-optimization`, payload);
+      await api.post(`${VITE_N8N_API_URL}/webhook/path-optimization`, payload, {
+        headers: {
+          "x-api-token": `Bearer ${token}`,
+        },
+      });
       message.success("Path optimization process started successfully!");
     } catch (error) {
       console.error("Webhook trigger error:", error);

@@ -33,6 +33,8 @@ import api from "../../../../../api/axios";
 
 const { Title, Text } = Typography;
 
+const VITE_N8N_API_URL = import.meta.env.VITE_N8N_API_URL;
+
 const ReportDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -106,6 +108,8 @@ const ReportDetail = () => {
     setIsForecasting(true);
 
     try {
+      const token = localStorage.getItem("token");
+
       const productIds =
         reportData.result?.data?.items?.map((item) => item.productId) || [];
 
@@ -119,7 +123,11 @@ const ReportDetail = () => {
         companyId: Number(companyId),
       };
 
-      await api.post("http://localhost:5678/webhook/storage-forecast", payload);
+      await api.post(`${VITE_N8N_API_URL}/webhook/storage-forecast`, payload, {
+        headers: {
+          "x-api-token": `Bearer ${token}`,
+        },
+      });
 
       message.success("Forecast request sent successfully!");
       setIsForecastModalVisible(false);
