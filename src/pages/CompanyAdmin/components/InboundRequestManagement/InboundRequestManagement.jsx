@@ -24,19 +24,29 @@ const InboundManagement = () => {
 
   const navigate = useNavigate();
 
-  // Lấy companyId từ localStorage
+  // Lấy thông tin từ localStorage
   const companyId = localStorage.getItem("companyId");
+  const warehouseId = localStorage.getItem("warehouseId"); // Lấy thêm warehouseId
+  const roleId = localStorage.getItem("roleId");
 
   const fetchInboundRequests = async () => {
-    if (!companyId) {
-      message.error("Company ID not found in storage");
+    // Kiểm tra cả 2 ID bắt buộc cho API mới
+    if (!companyId || !warehouseId) {
+      message.error(
+        "Company ID or Warehouse ID not found. Please select a warehouse first.",
+      );
       return;
     }
+
     setLoading(true);
     try {
-      const response = await api.get(`/InventoryInbound/requests/${companyId}`);
+      // SỬ DỤNG API MỚI THEO YÊU CẦU
+      const response = await api.get(
+        `/InventoryInbound/get-all-inbound-requests/${companyId}/warehouse/${warehouseId}`,
+      );
       setInboundRequests(response.data);
     } catch (error) {
+      console.error("Fetch API Error:", error);
       message.error("Failed to fetch inbound requests");
     } finally {
       setLoading(false);
@@ -45,7 +55,7 @@ const InboundManagement = () => {
 
   useEffect(() => {
     fetchInboundRequests();
-  }, []);
+  }, [warehouseId]); // Chạy lại nếu warehouseId thay đổi
 
   // Format tiền tệ VND
   const formatCurrency = (amount) => {
@@ -70,11 +80,11 @@ const InboundManagement = () => {
       key: "createdAt",
       render: (date) => {
         const d = new Date(date);
-        const datePart = d.toLocaleDateString("vi-VN"); // Lấy 05/02/2026
+        const datePart = d.toLocaleDateString("vi-VN");
         const timePart = d.toLocaleTimeString("vi-VN", {
           hour: "2-digit",
           minute: "2-digit",
-        }); // Lấy 11:56
+        });
 
         return (
           <div className="flex items-center gap-2 text-slate-600">
@@ -135,7 +145,6 @@ const InboundManagement = () => {
       title: "Amount",
       key: "amount",
       render: (_, record) => {
-        // Cộng tất cả expectedQuantity lại
         const totalAmount = record.inboundOrderItems?.reduce(
           (sum, item) => sum + (item.expectedQuantity || 0),
           0,
@@ -165,7 +174,8 @@ const InboundManagement = () => {
       item.supplier?.name?.toLowerCase().includes(searchText.toLowerCase()) ||
       item.requestedByUser?.fullName
         ?.toLowerCase()
-        .includes(searchText.toLowerCase());
+        .includes(searchText.toLowerCase()) ||
+      item.code?.toLowerCase().includes(searchText.toLowerCase()); // Tìm thêm theo Code
 
     const matchesStatus =
       filterStatus === "All" || item.status === filterStatus;
@@ -182,6 +192,9 @@ const InboundManagement = () => {
               Inbound Management{" "}
               <ArrowDownCircle className="inline-block ml-2 text-[#39C6C6]" />
             </Title>
+            <Text className="text-slate-400">
+              Viewing requests for current warehouse
+            </Text>
           </div>
 
           <Space size="middle" className="w-full md:w-auto">
@@ -197,14 +210,16 @@ const InboundManagement = () => {
             >
               Sync Data
             </Button>
-            <Button
-              type="primary"
-              onClick={() => navigate("create")}
-              icon={<Plus size={20} />}
-              className="!h-12 !px-8 !bg-[#39C6C6] !border-none !rounded-2xl !font-bold hover:!bg-[#2eb1b1] !shadow-lg !shadow-[#39C6C6]/20 !flex !items-center"
-            >
-              Create Request
-            </Button>
+            {roleId === "4" && (
+              <Button
+                type="primary"
+                onClick={() => navigate("create")}
+                icon={<Plus size={20} />}
+                className="!h-12 !px-8 !bg-[#39C6C6] !border-none !rounded-2xl !font-bold hover:!bg-[#2eb1b1] !shadow-lg !shadow-[#39C6C6]/20 !flex !items-center"
+              >
+                Create Request
+              </Button>
+            )}
           </Space>
         </div>
 
@@ -212,7 +227,7 @@ const InboundManagement = () => {
         <div className="flex flex-col md:flex-row gap-4 mb-6">
           <div className="flex-1">
             <Input
-              placeholder="Search by warehouse, supplier or requester..."
+              placeholder="Search by code, supplier or requester..."
               prefix={<Search size={20} className="text-slate-300 mr-3" />}
               className="!h-12 !bg-white !rounded-full !text-base !transition-all !border-slate-300 hover:!border-[#39C6C6] focus-within:!border-[#39C6C6]"
               onChange={(e) => setSearchText(e.target.value)}
@@ -240,14 +255,15 @@ const InboundManagement = () => {
             dataSource={filteredData}
             loading={loading}
             rowKey="id"
-            pagination={{ pageSize: 4, className: "px-6" }}
+            pagination={{ pageSize: 8, className: "px-6" }} // Tăng pageSize lên 8 cho dễ nhìn
             scroll={{ x: 1100 }}
             className="storix-table"
             onRow={(record) => ({
               onClick: (event) => {
                 if (
                   event.target.closest("button") ||
-                  event.target.closest(".ant-popover")
+                  event.target.closest(".ant-popover") ||
+                  event.target.closest(".ant-tag")
                 )
                   return;
                 navigate(`details/${record.id}`);

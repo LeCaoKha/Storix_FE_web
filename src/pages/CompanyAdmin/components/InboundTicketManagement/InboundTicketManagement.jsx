@@ -23,19 +23,30 @@ const InboundTicketManagement = () => {
   const [filterStatus, setFilterStatus] = useState("All");
 
   const navigate = useNavigate();
+
+  // Lấy thông tin từ localStorage
   const companyId = localStorage.getItem("companyId");
+  const warehouseId = localStorage.getItem("warehouseId"); // Lấy thêm warehouseId
 
   const fetchInboundTickets = async () => {
-    if (!companyId) {
-      message.error("Company ID not found in storage");
+    // Kiểm tra cả 2 ID bắt buộc cho API mới
+    if (!companyId || !warehouseId) {
+      message.error(
+        "Company ID or Warehouse ID not found. Please select a warehouse first.",
+      );
       return;
     }
+
     setLoading(true);
     try {
-      const response = await api.get(`/InventoryInbound/tickets/${companyId}`);
+      // ĐỔI SANG API MỚI THEO YÊU CẦU
+      const response = await api.get(
+        `/InventoryInbound/get-all-inbound-tickets/${companyId}/warehouse/${warehouseId}`,
+      );
       setInboundTickets(response.data);
     } catch (error) {
-      message.error("Failed to fetch inbound tickets", error);
+      console.error("Fetch Tickets Error:", error);
+      message.error("Failed to fetch inbound tickets");
     } finally {
       setLoading(false);
     }
@@ -43,7 +54,7 @@ const InboundTicketManagement = () => {
 
   useEffect(() => {
     fetchInboundTickets();
-  }, []);
+  }, [warehouseId]); // Chạy lại khi warehouseId thay đổi
 
   const formatCurrency = (amount) => {
     if (amount === null || amount === undefined) return "---";
@@ -59,7 +70,6 @@ const InboundTicketManagement = () => {
       dataIndex: "referenceCode",
       key: "referenceCode",
       fixed: "left",
-      // whitespace-nowrap giúp cột này tự giãn theo mã code mà không bị xuống dòng
       className: "whitespace-nowrap font-bold text-[#39C6C6]",
       render: (text) => text || "N/A",
     },
@@ -95,11 +105,12 @@ const InboundTicketManagement = () => {
       dataIndex: "status",
       key: "status",
       align: "center",
-      className: "whitespace-nowrap", // Đảm bảo cột Status không bị bóp méo
+      className: "whitespace-nowrap",
       render: (status) => {
         let color = "blue";
         if (status === "Created") color = "cyan";
         if (status === "Completed") color = "green";
+        if (status === "Approved") color = "gold"; // Bổ sung thêm status Approved nếu có
         return (
           <Tag
             color={color}
@@ -175,6 +186,9 @@ const InboundTicketManagement = () => {
               Inbound Ticket Management{" "}
               <FileText className="inline-block ml-2 text-[#39C6C6]" />
             </Title>
+            <Text className="text-slate-400">
+              Viewing tickets for the current warehouse
+            </Text>
           </div>
 
           <Space size="middle">
@@ -186,7 +200,7 @@ const InboundTicketManagement = () => {
                 />
               }
               onClick={fetchInboundTickets}
-              className="!h-12 !px-6 !rounded-2xl !font-bold !text-slate-600 hover:!text-[#39C6C6]"
+              className="!h-12 !px-6 !rounded-2xl !font-bold !text-slate-600 hover:!text-[#39C6C6] hover:!border-[#39C6C6]"
             >
               Sync Data
             </Button>
@@ -197,17 +211,18 @@ const InboundTicketManagement = () => {
           <Input
             placeholder="Search by code, warehouse, supplier..."
             prefix={<Search size={20} className="text-slate-300 mr-3" />}
-            className="!h-12 !bg-white !rounded-full !border-slate-300 hover:!border-[#39C6C6]"
+            className="!h-12 !bg-white !rounded-full !border-slate-300 hover:!border-[#39C6C6] focus-within:!border-[#39C6C6]"
             onChange={(e) => setSearchText(e.target.value)}
           />
           <Select
             defaultValue="All"
             className="!w-48 !h-12 !pl-5 !rounded-full !border !border-slate-300 hover:!border-[#39C6C6] focus-within:!border-[#39C6C6] overflow-hidden transition-all"
             onChange={(value) => setFilterStatus(value)}
-            suffixIcon={<Filter size={16} />}
+            suffixIcon={<Filter size={16} className="text-slate-400" />}
           >
             <Option value="All">All Status</Option>
             <Option value="Created">Created</Option>
+            <Option value="Approved">Approved</Option>
             <Option value="Completed">Completed</Option>
           </Select>
         </div>
@@ -218,12 +233,15 @@ const InboundTicketManagement = () => {
             dataSource={filteredData}
             loading={loading}
             rowKey="id"
-            pagination={{ pageSize: 4 }}
-            // Giải pháp cốt lõi: dùng max-content để các cột tự giãn theo nội dung
+            pagination={{ pageSize: 8 }}
             scroll={{ x: "max-content" }}
             className="storix-table"
             onRow={(record) => ({
-              onClick: () => navigate(`details/${record.id}`),
+              onClick: (event) => {
+                // Tránh trigger sự kiện click khi nhấn vào tag hoặc các thành phần khác
+                if (event.target.closest(".ant-tag")) return;
+                navigate(`details/${record.id}`);
+              },
             })}
           />
         </div>

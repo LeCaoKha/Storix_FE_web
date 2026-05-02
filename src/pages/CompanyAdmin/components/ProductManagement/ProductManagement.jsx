@@ -328,7 +328,7 @@ const ProductManagement = () => {
                 icon={<Plus size={20} />}
                 className="!h-12 !px-8 !bg-[#39C6C6] !border-none !rounded-2xl !font-bold hover:!bg-[#2eb1b1] !shadow-lg !shadow-[#39C6C6]/20 !flex !items-center"
               >
-                Add New SKU
+                Add New Product
               </Button>
             )}
           </Space>
