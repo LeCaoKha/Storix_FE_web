@@ -26,7 +26,7 @@ import {
   List,
   Scale,
   Camera,
-  Sparkles, // Đổi từ Lightbulb sang Sparkles để chuẩn giao diện AI
+  Sparkles,
 } from "lucide-react";
 import dayjs from "dayjs";
 import api from "../../../../../api/axios";
@@ -604,6 +604,11 @@ const ReportDetail = () => {
     }
 
     // Snapshot Report Summary
+    const totalSkus = summary.totalSkus ?? result.data?.totalSkus ?? 0;
+    const totalQuantity =
+      summary.totalQuantity ?? result.data?.totalQuantity ?? 0;
+    const totalValue = summary.totalValue ?? result.data?.totalValue ?? 0;
+
     return (
       <Row gutter={24}>
         <Col span={8}>
@@ -613,7 +618,7 @@ const ReportDetail = () => {
                 Total Unique Products (SKUs)
               </Text>
               <Text className="font-black text-2xl text-slate-800">
-                {summary.totalSkus || 0}
+                {totalSkus}
               </Text>
             </div>
           </Card>
@@ -625,7 +630,7 @@ const ReportDetail = () => {
                 Total Stock Quantity
               </Text>
               <Text className="font-black text-2xl text-[#38c6c6]">
-                {summary.totalQuantity || 0}
+                {totalQuantity}
               </Text>
             </div>
           </Card>
@@ -637,9 +642,119 @@ const ReportDetail = () => {
                 Total Inventory Value
               </Text>
               <Text className="font-black text-2xl text-slate-800 truncate">
-                {formatCurrency(summary.totalValue)}
+                {formatCurrency(totalValue)}
               </Text>
             </div>
+          </Card>
+        </Col>
+      </Row>
+    );
+  };
+
+  // ==========================================
+  // 7. AI RECOMMENDATIONS TABLE
+  // ==========================================
+  const renderAiRecommendations = () => {
+    const aiData = result?.data?.aiRecommendation;
+    if (!aiData || !aiData.items || aiData.items.length === 0) return null;
+
+    const aiColumns = [
+      {
+        title: "Product",
+        dataIndex: "productName",
+        key: "productName",
+        render: (text) => (
+          <Text className="font-bold text-slate-800">{text}</Text>
+        ),
+      },
+      {
+        title: "Forecasted Outflow",
+        dataIndex: "forecastedQuantity",
+        key: "forecastedQuantity",
+        align: "right",
+        render: (val) => (
+          <Text className="font-bold text-slate-600">{val || 0}</Text>
+        ),
+      },
+      {
+        title: "Suggested Restock",
+        dataIndex: "suggestedRestockQuantity",
+        key: "suggestedRestockQuantity",
+        align: "right",
+        render: (val, record) => (
+          <Text
+            className={`font-bold ${record.needsRestock ? "text-[#7C3AED]" : "text-slate-500"}`}
+          >
+            {val > 0 ? `+${val}` : val}
+          </Text>
+        ),
+      },
+      {
+        title: "Needs Restock?",
+        dataIndex: "needsRestock",
+        key: "needsRestock",
+        align: "center",
+        render: (val) => (
+          <Tag color={val ? "purple" : "default"} className="!m-0 !font-bold">
+            {val ? "YES" : "NO"}
+          </Tag>
+        ),
+      },
+      {
+        title: "Slow Moving?",
+        dataIndex: "isSlowMoving",
+        key: "isSlowMoving",
+        align: "center",
+        render: (val) => (
+          <Tag color={val ? "orange" : "default"} className="!m-0 !font-bold">
+            {val ? "YES" : "NO"}
+          </Tag>
+        ),
+      },
+      {
+        title: "Warning",
+        dataIndex: "slowMovingWarning",
+        key: "slowMovingWarning",
+        render: (text) => (
+          <Text
+            className={
+              text ? "text-orange-500 font-medium" : "text-slate-400 italic"
+            }
+          >
+            {text || "None"}
+          </Text>
+        ),
+      },
+      {
+        title: "AI Analysis",
+        dataIndex: "reason",
+        key: "reason",
+        render: (text) => (
+          <Text className="text-sm text-slate-500 italic leading-tight block">
+            {text}
+          </Text>
+        ),
+      },
+    ];
+
+    return (
+      <Row gutter={24} className="mt-6">
+        <Col span={24}>
+          <Card
+            title={
+              <Space className="!text-[#7C3AED] !uppercase !text-xs !tracking-wider !font-bold !py-2">
+                <Sparkles size={16} /> AI Storage Forecast & Actionable Insights
+              </Space>
+            }
+            className="!rounded-2xl !shadow-sm !border-purple-100 !bg-purple-50/30"
+          >
+            <Table
+              columns={aiColumns}
+              dataSource={aiData.items}
+              rowKey="productId"
+              pagination={false}
+              className="custom-details-table"
+            />
           </Card>
         </Col>
       </Row>
@@ -789,6 +904,9 @@ const ReportDetail = () => {
                 </Card>
               </Col>
             </Row>
+
+            {/* AI RECOMMENDATIONS TABLE */}
+            {renderAiRecommendations()}
           </>
         ) : (
           <Card className="!rounded-2xl !shadow-sm !border-slate-100">
@@ -807,7 +925,7 @@ const ReportDetail = () => {
         )}
       </div>
 
-      {/* STORAGE FORECAST MODAL - Dịch sang tiếng Anh & đổi Icon Modal */}
+      {/* STORAGE FORECAST MODAL */}
       <Modal
         title={
           <div className="flex items-center gap-2 text-slate-800">
@@ -860,12 +978,13 @@ const ReportDetail = () => {
 
       <style jsx global>{`
         .custom-details-table .ant-table-thead > tr > th {
-          background-color: #f8fafc !important;
+          background-color: transparent !important;
           color: #94a3b8 !important;
           font-size: 10px !important;
           text-transform: uppercase !important;
           letter-spacing: 0.05em !important;
           padding: 12px 16px !important;
+          border-bottom: 1px solid #f1f5f9;
         }
       `}</style>
     </div>

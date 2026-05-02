@@ -3,7 +3,6 @@ import api from "../../../../../../api/axios";
 import { message } from "antd";
 import InboundHeader from "./components/InboundHeader/InboundHeader";
 import ProductSearchSection from "./components/ProductSearchSection/ProductSearchSection";
-import QuickCreateProductModal from "./components/QuickCreateProductModal/QuickCreateProductModal";
 import InboundSidebar from "./components/InboundSidebar/InboundSidebar";
 import { useNavigate } from "react-router-dom";
 
@@ -12,9 +11,6 @@ const InboundRequestCreate = () => {
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [productTypes, setProductTypes] = useState([]);
   const searchRef = useRef(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
@@ -30,7 +26,7 @@ const InboundRequestCreate = () => {
 
   const [selectedProducts, setSelectedProducts] = useState([]);
   const userId = localStorage.getItem("userId");
-  const companyId = localStorage.getItem("companyId"); // Lấy companyId từ localStorage
+  const companyId = localStorage.getItem("companyId");
 
   // ==========================================
   // 1. LOGIC TÍNH TOÁN THANH TOÁN (DERIVED STATE)
@@ -117,7 +113,6 @@ const InboundRequestCreate = () => {
           ? {
               ...p,
               price: newPrice,
-              // Nếu truyền originalPriceInput thì update, không thì giữ nguyên
               originalPrice:
                 originalPriceInput !== undefined
                   ? originalPriceInput
@@ -146,18 +141,16 @@ const InboundRequestCreate = () => {
     if (!userId) return;
     setLoadingProducts(true);
     try {
-      const [typeRes, prodRes, warehouseRes] = await Promise.all([
-        api.get(`/Products/get-all-product-types/${userId}`),
+      const [prodRes, warehouseRes] = await Promise.all([
         api.get(`/Products/get-all/${userId}`),
         // Gọi API lấy danh sách kho của công ty
         api.get(`/company-warehouses/${companyId}/warehouses`),
       ]);
 
-      setProductTypes(typeRes.data);
       setProducts(prodRes.data);
       setFilteredProducts(prodRes.data);
 
-      // 3. Tự động chọn kho đầu tiên nếu có dữ liệu trả về
+      // Tự động chọn kho đầu tiên nếu có dữ liệu trả về
       if (warehouseRes.data && warehouseRes.data.length > 0) {
         const firstWarehouseId = warehouseRes.data[0].id;
         setInboundData((prev) => ({
@@ -195,24 +188,7 @@ const InboundRequestCreate = () => {
     setIsSearching(true);
   };
 
-  const handleCreateProduct = async (formData) => {
-    setSubmitting(true);
-    try {
-      const res = await api.post("/Products/create", formData);
-      if (res.status === 200 || res.status === 201) {
-        message.success("Product created successfully!");
-        setIsModalOpen(false);
-        await fetchData();
-      }
-    } catch (error) {
-      message.error(error.response?.data?.message || "Creation failed");
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
   const handleCreateInboundRequest = async (shouldApprove = false) => {
-    // 1. Kiểm tra các trường bắt buộc
     const supplierId = inboundData.supplierId;
     const warehouseId = inboundData.warehouseId;
     const reqBy = Number(userId);
@@ -229,7 +205,6 @@ const InboundRequestCreate = () => {
 
     setIsSubmitting(true);
     try {
-      // 2. Payload để tạo mới PO
       const createPayload = {
         warehouseId: warehouseId,
         supplierId: supplierId,
@@ -240,21 +215,18 @@ const InboundRequestCreate = () => {
         orderDiscount: orderDiscount || 0,
       };
 
-      // Bước 1: Gọi API tạo Request
       const res = await api.post(
         "/InventoryInbound/create-inbound-request",
         createPayload,
       );
 
       if (res.status === 200 || res.status === 201) {
-        // Lấy ID từ response (thường là res.data.id hoặc res.data tùy backend)
         const newId = res.data?.id || res.data;
 
-        // Bước 2: Nếu người dùng chọn "Create & Approve"
         if (shouldApprove && newId) {
           try {
             const approvePayload = {
-              approverId: reqBy, // Lấy từ userId trong localStorage đã convert ở trên
+              approverId: reqBy,
               status: "Approved",
             };
 
@@ -276,7 +248,6 @@ const InboundRequestCreate = () => {
           message.success("Inbound request created successfully!");
         }
 
-        // Cuối cùng: Chuyển hướng về trang danh sách
         navigate(-1);
       }
     } catch (error) {
@@ -305,13 +276,11 @@ const InboundRequestCreate = () => {
             handleSearch={handleSearch}
             loadingProducts={loadingProducts}
             filteredProducts={filteredProducts}
-            onOpenCreateModal={() => setIsModalOpen(true)}
             selectedProducts={selectedProducts}
             onSelectProduct={handleSelectProduct}
             onRemoveProduct={handleRemoveProduct}
             onUpdateQuantity={handleUpdateQuantity}
             onUpdatePrice={handleUpdatePrice}
-            // Truyền summary để hiển thị card thanh toán bên dưới danh sách SP
             onDiscountChange={(value) =>
               handleSidebarChange("orderDiscount", value)
             }
@@ -328,15 +297,6 @@ const InboundRequestCreate = () => {
           />
         </div>
       </div>
-
-      <QuickCreateProductModal
-        isOpen={isModalOpen}
-        onCancel={() => setIsModalOpen(false)}
-        onFinish={handleCreateProduct}
-        submitting={submitting}
-        productTypes={productTypes}
-        refreshTypes={fetchData}
-      />
     </div>
   );
 };
