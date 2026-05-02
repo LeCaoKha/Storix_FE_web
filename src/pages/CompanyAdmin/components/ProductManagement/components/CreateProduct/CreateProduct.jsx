@@ -51,17 +51,31 @@ const CreateProduct = () => {
   const [childCategories, setChildCategories] = useState([]);
   const [selectedParentId, setSelectedParentId] = useState(null);
 
-  // 1. Fetch Categories
+  // State lưu danh sách Suppliers
+  const [suppliers, setSuppliers] = useState([]);
+
+  // ==========================================
+  // 1. FETCH DATA (Categories & Suppliers)
+  // ==========================================
   const fetchData = async () => {
     const userId = localStorage.getItem("userId");
     if (!userId) return;
     try {
-      const catRes = await api.get(`/Products/categories/company/${userId}`);
-      // Chỉ lấy những category không có parent (null)
+      // Gọi đồng thời 2 API để lấy danh mục và nhà cung cấp
+      const [catRes, supRes] = await Promise.all([
+        api.get(`/Products/categories/company/${userId}`),
+        api.get(`/Suppliers/get-all/${userId}`),
+      ]);
+
+      // Lọc ra các Master Category (không có parent)
       const parents = catRes.data.filter((cat) => !cat.parentCategoryId);
       setParentCategories(parents);
+
+      // Lưu danh sách Suppliers
+      setSuppliers(supRes.data || []);
     } catch (error) {
-      console.error("Error fetching data:", error);
+      console.error("Error fetching initial data:", error);
+      message.error("Failed to load initial data.");
     }
   };
 
@@ -79,6 +93,9 @@ const CreateProduct = () => {
     }
   };
 
+  // ==========================================
+  // 2. XỬ LÝ CHUYỂN BƯỚC & CATEGORY LOGIC
+  // ==========================================
   const handleNextStep = () => {
     if (!selectedParentId) {
       message.warning("Please select a Master Category first!");
@@ -159,36 +176,48 @@ const CreateProduct = () => {
     }
   };
 
-  // SUBMIT TẠO SẢN PHẨM MỚI
+  // ==========================================
+  // 3. SUBMIT TẠO SẢN PHẨM (PAYLOAD MỚI)
+  // ==========================================
   const onFinish = async (values) => {
     setLoading(true);
     try {
       const companyId = localStorage.getItem("companyId") || "0";
       const formData = new FormData();
 
-      formData.append("name", values.name);
-      formData.append("sku", values.sku);
-      formData.append("companyId", companyId);
+      // Cấu trúc API mới nhất yêu cầu PascalCase (chữ cái đầu viết hoa)
+      formData.append("CompanyId", companyId);
+      formData.append("Name", values.name);
 
-      formData.append("weight", values.weight || "0");
-      formData.append("width", values.width || "0");
-      formData.append("length", values.length || "0");
-      formData.append("height", values.height || "0");
+      if (values.category) formData.append("CategoryId", values.category);
+      if (values.unit) formData.append("Unit", values.unit);
+      if (values.material) formData.append("Material", values.material);
+      if (values.packageType)
+        formData.append("PackageType", values.packageType);
+      if (values.sizeStandard)
+        formData.append("SizeStandard", values.sizeStandard);
+      if (values.defaultSupplierId)
+        formData.append("DefaultSupplierId", values.defaultSupplierId);
 
-      if (values.unit) formData.append("unit", values.unit);
-      if (values.category) formData.append("categoryId", values.category);
+      // Kích thước & Trọng lượng (đảm bảo truyền số)
+      formData.append("Weight", parseFloat(values.weight || 0));
+      formData.append("Width", parseFloat(values.width || 0));
+      formData.append("Length", parseFloat(values.length || 0));
+      formData.append("Height", parseFloat(values.height || 0));
+
       if (values.description)
-        formData.append("description", values.description);
+        formData.append("Description", values.description);
 
-      // CẬP NHẬT: Map toàn bộ cờ logic mới
-      formData.append("isEsd", values.isEsd ? "true" : "false");
-      formData.append("isMsd", values.isMsd ? "true" : "false");
-      formData.append("isCold", values.isCold ? "true" : "false");
-      formData.append("isVulnerable", values.isVulnerable ? "true" : "false");
-      formData.append("isHighValue", values.isHighValue ? "true" : "false");
+      // Cờ logic kho bãi (chuẩn hóa kiểu boolean cho C#)
+      formData.append("IsEsd", values.isEsd ? "true" : "false");
+      formData.append("IsMsd", values.isMsd ? "true" : "false");
+      formData.append("IsCold", values.isCold ? "true" : "false");
+      formData.append("IsVulnerable", values.isVulnerable ? "true" : "false");
+      formData.append("IsHighValue", values.isHighValue ? "true" : "false");
 
+      // Xử lý hình ảnh (file nhị phân)
       if (values.image && values.image.fileList && values.image.fileList[0]) {
-        formData.append("image", values.image.fileList[0].originFileObj);
+        formData.append("Image", values.image.fileList[0].originFileObj);
       }
 
       const res = await api.post("/Products/create", formData, {
@@ -233,6 +262,7 @@ const CreateProduct = () => {
         bordered={false}
         className="!shadow-xl !rounded-2xl"
       >
+        {/* ================= STEP 1 ================= */}
         {step === 1 && (
           <div className="!py-10 !flex !flex-col !items-center !justify-center animate-fade-in">
             <div className="!bg-[#39c6c6]/10 !p-6 !rounded-full !mb-6">
@@ -285,6 +315,7 @@ const CreateProduct = () => {
           </div>
         )}
 
+        {/* ================= STEP 2 ================= */}
         {step === 2 && (
           <div className="animate-fade-in">
             <div className="!bg-slate-50 !border !border-slate-200 !rounded-xl !p-4 !mb-6 !flex !justify-between !items-center">
@@ -322,23 +353,6 @@ const CreateProduct = () => {
                     ]}
                   >
                     <Input placeholder="Enter product name" size="large" />
-                  </Form.Item>
-                </Col>
-              </Row>
-
-              <Row gutter={16}>
-                <Col span={12}>
-                  <Form.Item
-                    label="SKU"
-                    name="sku"
-                    rules={[{ required: true, message: "Please input SKU!" }]}
-                  >
-                    <Input placeholder="Enter SKU" size="large" />
-                  </Form.Item>
-                </Col>
-                <Col span={12}>
-                  <Form.Item label="Unit" name="unit">
-                    <Input placeholder="e.g., kg, pcs" size="large" />
                   </Form.Item>
                 </Col>
               </Row>
@@ -401,6 +415,55 @@ const CreateProduct = () => {
                 </Col>
               </Row>
 
+              {/* Các trường Material, Package Type, Unit, Size Standard, Default Supplier */}
+              <Row gutter={16}>
+                <Col span={12}>
+                  <Form.Item label="Material" name="material">
+                    <Input
+                      placeholder="e.g., Plastic, Aluminum..."
+                      size="large"
+                    />
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                  <Form.Item label="Package Type" name="packageType">
+                    <Input
+                      placeholder="e.g., Box, Reel, Tray..."
+                      size="large"
+                    />
+                  </Form.Item>
+                </Col>
+              </Row>
+
+              <Row gutter={16}>
+                <Col span={8}>
+                  <Form.Item label="Unit" name="unit">
+                    <Input placeholder="e.g., kg, pcs" size="large" />
+                  </Form.Item>
+                </Col>
+                <Col span={8}>
+                  <Form.Item label="Size Standard" name="sizeStandard">
+                    <Input placeholder="e.g., 0805, 1206..." size="large" />
+                  </Form.Item>
+                </Col>
+                <Col span={8}>
+                  <Form.Item label="Default Supplier" name="defaultSupplierId">
+                    <Select
+                      showSearch
+                      allowClear
+                      placeholder="Select default supplier"
+                      size="large"
+                      optionFilterProp="label"
+                      options={suppliers.map((s) => ({
+                        value: s.id,
+                        label: s.name,
+                      }))}
+                    />
+                  </Form.Item>
+                </Col>
+              </Row>
+
+              {/* Kích thước & Trọng lượng */}
               <Row gutter={16}>
                 <Col span={12}>
                   <Form.Item label="Weight (kg)" name="weight">
@@ -432,7 +495,7 @@ const CreateProduct = () => {
                 </Col>
               </Row>
 
-              {/* KHU VỰC THUỘC TÍNH ĐIỀU KIỆN KHO LƯU TRỮ */}
+              {/* Cờ điều kiện bảo quản */}
               <div className="!mt-2 !mb-6 !p-4 !bg-slate-50 !rounded-xl !border !border-slate-100">
                 <Text className="!block !font-bold !text-slate-700 !mb-4 !text-xs !uppercase !tracking-wider">
                   Storage Conditions & Attributes
@@ -501,6 +564,7 @@ const CreateProduct = () => {
                 </Row>
               </div>
 
+              {/* Hình ảnh & Mô tả */}
               <Row gutter={16}>
                 <Col span={24}>
                   <Form.Item
@@ -547,7 +611,7 @@ const CreateProduct = () => {
         )}
       </Card>
 
-      {/* MODAL TẠO MASTER CATEGORY (STEP 1) */}
+      {/* MODAL TẠO MASTER CATEGORY */}
       <Modal
         title="Add New Master Category"
         open={isMasterCategoryModalOpen}
@@ -566,7 +630,7 @@ const CreateProduct = () => {
             rules={[{ required: true, message: "Please enter category name!" }]}
           >
             <Input
-              placeholder="e.g. Passive Components, Semiconductors..."
+              placeholder="e.g. Passive Components..."
               size="large"
               onPressEnter={handleCreateMasterCategory}
             />
@@ -574,7 +638,7 @@ const CreateProduct = () => {
         </Form>
       </Modal>
 
-      {/* MODAL TẠO CHILD CATEGORY (STEP 2) */}
+      {/* MODAL TẠO CHILD CATEGORY */}
       <Modal
         title="Add New Child Category"
         open={isCategoryModalOpen}

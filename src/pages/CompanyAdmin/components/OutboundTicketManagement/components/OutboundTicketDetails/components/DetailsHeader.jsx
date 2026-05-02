@@ -1,6 +1,6 @@
 import React from "react";
 import { Button, Space, Typography, Tag } from "antd";
-import { ArrowLeft, CheckCircle2, FileText, Map } from "lucide-react"; // Thêm icon Map cho tính năng tìm đường
+import { ArrowLeft, CheckCircle2, FileText, Map } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 
 const { Title } = Typography;
@@ -16,15 +16,11 @@ const DetailsHeader = ({
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Kiểm tra trạng thái trang từ URL
   const isTicketManagement = location.pathname.includes(
     "outbound-ticket-management",
   );
-
-  // Xác định xem có đang ở trang details không
   const isDetailsPage = location.pathname.includes("/details/");
 
-  // Logic xác định tiêu đề hiển thị
   const getHeaderTitle = () => {
     if (isTicketManagement) {
       return `Outbound Ticket: ${data?.code || "N/A"}`;
@@ -35,7 +31,6 @@ const DetailsHeader = ({
   return (
     <div className="flex justify-between items-center mb-10">
       <div className="flex items-center gap-4">
-        {/* Back Button */}
         <Button
           type="text"
           icon={<ArrowLeft size={24} />}
@@ -50,8 +45,6 @@ const DetailsHeader = ({
             >
               {getHeaderTitle()}
             </Title>
-
-            {/* Hiển thị Tag trạng thái */}
             {data?.status && (
               <Tag
                 color={
@@ -71,19 +64,20 @@ const DetailsHeader = ({
       </div>
 
       <Space size="middle">
-        {/* NÚT CREATE PATH: Chỉ hiển thị ở Ticket Details */}
-        {isTicketManagement && isDetailsPage && (
-          <Button
-            icon={<Map size={18} />}
-            onClick={onCreatePath}
-            loading={isCreatingPath}
-            className="!flex !items-center !gap-2 !h-11 !px-6 !font-bold !text-[#EC4899] !bg-[#EC4899]/5 !border-[#EC4899]/20 !rounded-xl shadow-sm hover:!border-[#EC4899] hover:!text-[#EC4899] hover:!bg-[#EC4899]/10 transition-all"
-          >
-            Create Path
-          </Button>
-        )}
+        {/* NÚT CREATE PATH: Ẩn nếu trạng thái đã Completed */}
+        {isTicketManagement &&
+          isDetailsPage &&
+          data?.status !== "Completed" && (
+            <Button
+              icon={<Map size={18} />}
+              onClick={onCreatePath}
+              loading={isCreatingPath}
+              className="!flex !items-center !gap-2 !h-11 !px-6 !font-bold !text-[#EC4899] !bg-[#EC4899]/5 !border-[#EC4899]/20 !rounded-xl shadow-sm hover:!border-[#EC4899] hover:!text-[#EC4899] hover:!bg-[#EC4899]/10 transition-all"
+            >
+              Create Path
+            </Button>
+          )}
 
-        {/* NÚT EXPORT PDF */}
         <Button
           icon={<FileText size={18} />}
           onClick={onExportPDF}

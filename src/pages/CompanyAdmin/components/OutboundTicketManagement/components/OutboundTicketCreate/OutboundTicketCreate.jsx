@@ -12,6 +12,8 @@ import DetailsPayment from "./components/DetailsPayment";
 const { Text, Title } = Typography;
 const { TextArea } = Input;
 
+const VITE_N8N_API_URL = import.meta.env.VITE_N8N_API_URL;
+
 const OutboundTicketCreate = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -116,7 +118,7 @@ const OutboundTicketCreate = () => {
         // 2. NẾU USER CÓ BẬT TOGGLE -> GỌI API PATH OPTIMIZATION (n8n)
         if (usePathOptimization) {
           try {
-            await api.post(`http://localhost:5678/webhook/path-optimization`, {
+            await api.post(`${VITE_N8N_API_URL}/webhook/path-optimization`, {
               outboundTicketId: Number(ticketId),
               userId: Number(userId),
               companyId: Number(companyId),

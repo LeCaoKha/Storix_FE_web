@@ -12,6 +12,8 @@ import DetailsPayment from "../InboundTicketCreate/components/DetailsPayment/Det
 import DetailsNotes from "../InboundTicketCreate/components/DetailsNotes/DetailsNotes";
 import InboundPrintTemplate from "./components/InboundPrintTemplate/InboundPrintTemplate";
 
+const VITE_N8N_API_URL = import.meta.env.VITE_N8N_API_URL;
+
 const InboundTicketDetails = () => {
   const { id } = useParams();
   const [data, setData] = useState(null);
@@ -118,7 +120,7 @@ const InboundTicketDetails = () => {
 
       // Gọi thẳng URL của webhook
       await api.post(
-        "http://localhost:5678/webhook/storage-recommendation",
+        `${VITE_N8N_API_URL}/webhook/storage-recommendation`,
         payload,
       );
 

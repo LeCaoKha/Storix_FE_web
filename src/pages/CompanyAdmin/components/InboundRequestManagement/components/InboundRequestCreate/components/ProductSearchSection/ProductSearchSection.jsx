@@ -16,7 +16,7 @@ import {
   Col,
   Tooltip,
 } from "antd";
-import { Search, Plus, Package, Trash2 } from "lucide-react";
+import { Search, Package, Trash2 } from "lucide-react";
 
 const { Text } = Typography;
 
@@ -27,7 +27,6 @@ const ProductSearchSection = ({
   handleSearch,
   loadingProducts,
   filteredProducts,
-  onOpenCreateModal,
   selectedProducts,
   onSelectProduct,
   onRemoveProduct,
@@ -39,12 +38,12 @@ const ProductSearchSection = ({
   const [editingProduct, setEditingProduct] = useState(null);
   const [priceForm] = Form.useForm();
 
-  // --- NEW: ORDER DISCOUNT STATES ---
+  // --- ORDER DISCOUNT STATES ---
   const [isOrderDiscountModalOpen, setIsOrderDiscountModalOpen] =
     useState(false);
   const [orderDiscountPercent, setOrderDiscountPercent] = useState(0);
 
-  // Watchers to monitor Input values (string format) and calculate in real-time
+  // Watchers to monitor Input values
   const originalPriceRaw = Form.useWatch("price", priceForm) || "0";
   const lineDiscountValueRaw = Form.useWatch("discountValue", priceForm) || "0";
 
@@ -52,8 +51,6 @@ const ProductSearchSection = ({
   const calculateFinalPrice = () => {
     const price = Number(originalPriceRaw);
     const discount = Number(lineDiscountValueRaw);
-
-    // Calculate based on percentage
     const finalPrice = price - (price * discount) / 100;
     return Math.max(0, Math.floor(finalPrice));
   };
@@ -86,7 +83,6 @@ const ProductSearchSection = ({
   );
   const totalLineItems = selectedProducts.length;
 
-  // Calculate order discount amount based on percentage
   const orderDiscountAmount = (totalAmount * orderDiscountPercent) / 100;
   const finalPayable = totalAmount - orderDiscountAmount;
 
@@ -125,21 +121,6 @@ const ProductSearchSection = ({
           {/* 2. SEARCH RESULTS DROPDOWN */}
           {isSearching && (
             <div className="!absolute !top-14 !left-0 !w-full !bg-white !z-[100] !rounded-2xl !shadow-2xl !border !border-slate-100 !max-h-[305px] !overflow-y-auto !p-2 !transition-all">
-              <div
-                onClick={() => {
-                  setIsSearching(false);
-                  onOpenCreateModal();
-                }}
-                className="!flex !items-center !gap-2 !p-3 !mb-2 !bg-[#38c6c6]/5 hover:!bg-[#38c6c6]/10 !text-[#38c6c6] !rounded-xl !cursor-pointer !transition-all !border !border-dashed !border-[#38c6c6]/30 !shrink-0"
-              >
-                <div className="!p-1 !bg-[#38c6c6] !text-white !rounded-full">
-                  <Plus size={13} />
-                </div>
-                <Text className="!font-bold !text-[#38c6c6]">
-                  Create New Product
-                </Text>
-              </div>
-
               <Skeleton loading={loadingProducts} active className="!p-4">
                 {filteredProducts.length > 0 ? (
                   <List
@@ -466,7 +447,6 @@ const ProductSearchSection = ({
             key="submit"
             type="primary"
             onClick={() => {
-              // Gửi giá trị về component cha (InboundRequestCreate)
               if (onDiscountChange) {
                 onDiscountChange(orderDiscountPercent);
               }
