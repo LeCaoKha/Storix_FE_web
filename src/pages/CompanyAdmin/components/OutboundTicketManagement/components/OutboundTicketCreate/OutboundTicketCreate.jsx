@@ -118,12 +118,22 @@ const OutboundTicketCreate = () => {
         // 2. NẾU USER CÓ BẬT TOGGLE -> GỌI API PATH OPTIMIZATION (n8n)
         if (usePathOptimization) {
           try {
-            await api.post(`${VITE_N8N_API_URL}/webhook/path-optimization`, {
-              outboundTicketId: Number(ticketId),
-              userId: Number(userId),
-              companyId: Number(companyId),
-              warehouseId: Number(warehouseId),
-            });
+            const token = localStorage.getItem("token");
+            await api.post(
+              `${VITE_N8N_API_URL}/webhook/path-optimization`,
+              {
+                outboundTicketId: Number(ticketId),
+                userId: Number(userId),
+                companyId: Number(companyId),
+                warehouseId: Number(warehouseId),
+              },
+              {
+                // THÊM MỚI: Truyền custom header để n8n Cloud không bị redact (che dấu)
+                headers: {
+                  "x-api-token": `Bearer ${token}`,
+                },
+              },
+            );
             message.success(
               "Outbound Ticket created & Path optimized successfully!",
             );

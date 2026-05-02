@@ -100,6 +100,7 @@ const InboundTicketDetails = () => {
     const userId = localStorage.getItem("userId");
     const warehouseId =
       localStorage.getItem("warehouseId") || data?.warehouseId;
+    const token = localStorage.getItem("token"); // Lấy token để gửi custom header
 
     if (!userId || !companyId || !warehouseId) {
       message.error(
@@ -122,6 +123,11 @@ const InboundTicketDetails = () => {
       await api.post(
         `${VITE_N8N_API_URL}/webhook/storage-recommendation`,
         payload,
+        {
+          headers: {
+            "x-api-token": `Bearer ${token}`,
+          },
+        },
       );
 
       message.success("AI Recommendation process started successfully!");

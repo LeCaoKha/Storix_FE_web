@@ -119,12 +119,23 @@ const InboundTicketCreate = () => {
         // 2. NẾU USER BẬT AI -> GỌI N8N WEBHOOK
         if (useAiRecommendation) {
           try {
-            await api.post(`${VITE_N8N_API_URL}/storage-recommendation`, {
-              inboundTicketId: ticketData.id,
-              userId: Number(userId),
-              companyId: Number(companyId),
-              warehouseId: ticketData.warehouseId,
-            });
+            const token = localStorage.getItem("token");
+
+            await api.post(
+              `${VITE_N8N_API_URL}/storage-recommendation`,
+              {
+                inboundTicketId: ticketData.id,
+                userId: Number(userId),
+                companyId: Number(companyId),
+                warehouseId: ticketData.warehouseId,
+              },
+              {
+                // THÊM MỚI: Truyền custom header để n8n Cloud không bị redact (che dấu)
+                headers: {
+                  "x-api-token": `Bearer ${token}`,
+                },
+              },
+            );
             console.log("Đã trigger webhook n8n thành công!");
             message.success(
               "Inbound Ticket created & AI recommendation successfully generated!",
