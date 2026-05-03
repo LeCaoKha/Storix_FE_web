@@ -133,7 +133,7 @@ const OutboundTicketCreate = () => {
               {
                 // Truyền header Authorization chứa token
                 headers: {
-                  Authorization: `Bearer ${token}`,
+                  "x-api-token": `Bearer ${token}`,
                 },
               },
             );

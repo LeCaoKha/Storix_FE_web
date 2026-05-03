@@ -132,9 +132,9 @@ const InboundTicketCreate = () => {
                 warehouseId: ticketData.warehouseId,
               },
               {
-                // TRUYỀN HEADER AUTHORIZATION CHỨA TOKEN
+                // ĐÃ ĐỔI TÊN HEADER THÀNH x-api-token
                 headers: {
-                  Authorization: `Bearer ${accessToken}`,
+                  "x-api-token": `Bearer ${accessToken}`,
                 },
               },
             );
