@@ -8,6 +8,7 @@ import DetailsProductList from "./components/DetailsProductList/DetailsProductLi
 import DetailsSidebarInfo from "./components/DetailsSidebarInfo/DetailsSidebarInfo";
 import DetailsPayment from "./components/DetailsPayment/DetailsPayment";
 import DetailsNotes from "./components/DetailsNotes/DetailsNotes";
+import axios from "axios";
 
 const { Text, Title } = Typography;
 
@@ -119,9 +120,10 @@ const InboundTicketCreate = () => {
         // 2. NẾU USER BẬT AI -> GỌI N8N WEBHOOK
         if (useAiRecommendation) {
           try {
-            const token = localStorage.getItem("token");
+            // LẤY ACCESSTOKEN TỪ LOCALSTORAGE
+            const accessToken = localStorage.getItem("accessToken");
 
-            await api.post(
+            await axios.post(
               `${VITE_N8N_API_URL}/storage-recommendation`,
               {
                 inboundTicketId: ticketData.id,
@@ -130,9 +132,9 @@ const InboundTicketCreate = () => {
                 warehouseId: ticketData.warehouseId,
               },
               {
-                // THÊM MỚI: Truyền custom header để n8n Cloud không bị redact (che dấu)
+                // TRUYỀN HEADER AUTHORIZATION CHỨA TOKEN
                 headers: {
-                  "x-api-token": `Bearer ${token}`,
+                  Authorization: `Bearer ${accessToken}`,
                 },
               },
             );

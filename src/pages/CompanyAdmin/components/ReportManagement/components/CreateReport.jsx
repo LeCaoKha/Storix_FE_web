@@ -9,6 +9,10 @@ import {
   Card,
   Space,
   Avatar,
+  // ===== ADDED CODE START =====
+  InputNumber,
+  Switch,
+  // ===== ADDED CODE END =====
 } from "antd";
 import {
   FileText,
@@ -20,11 +24,11 @@ import {
   ArrowLeft,
   Info,
   Settings2,
-  X, // Bổ sung import X
-  Save, // Bổ sung import Save
+  X,
+  Save,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion"; // Bổ sung import motion
+import { motion } from "framer-motion";
 import { REPORT_TYPES } from "./ReportUtils";
 import api from "../../../../../api/axios";
 
@@ -132,24 +136,45 @@ const CreateReport = () => {
     form.setFieldsValue({
       productId: null,
       inventoryCountTicketId: null,
+      // ===== ADDED CODE START =====
+      forecastHorizonDays: null,
+      defaultLeadTimeDays: null,
+      serviceLevel: null,
+      useAiExplanation: false,
+      // ===== ADDED CODE END =====
     });
   };
 
   const handleGenerate = async (values) => {
     setIsSubmitting(true);
+
     try {
+      // ===== ADDED CODE START =====
+      // DYNAMIC PAYLOAD CONSTRUCTION
       const payload = {
         reportType: values.reportType,
+        companyId: parseInt(companyId),
         warehouseId: values.warehouseId || null,
-        productId: values.productId || null,
-        inventoryCountTicketId: values.inventoryCountTicketId || null,
         timeFrom: values.dateRange[0].format("YYYY-MM-DDTHH:mm:ss"),
         timeTo: values.dateRange[1].format("YYYY-MM-DDTHH:mm:ss"),
-        companyId: parseInt(companyId),
       };
+
+      if (values.reportType === "InventoryLedger") {
+        payload.productId = values.productId;
+      } else if (values.reportType === "InventoryTracking") {
+        payload.inventoryCountTicketId = values.inventoryCountTicketId;
+      } else if (values.reportType === "ReplenishmentRecommendation") {
+        payload.forecastHorizonDays = values.forecastHorizonDays || 30;
+        payload.defaultLeadTimeDays = values.defaultLeadTimeDays || 7;
+        payload.serviceLevel = values.serviceLevel || 95;
+        payload.useAiExplanation = values.useAiExplanation || false;
+      }
+      // ===== ADDED CODE END =====
 
       await api.post("/Reports", payload);
       message.success("Report generation started successfully!");
+
+      // Trở về trang trước đó như luồng cũ
       navigate(-1);
     } catch (err) {
       console.error("Generate Report Error:", err);
@@ -378,6 +403,80 @@ const CreateReport = () => {
                     </Form.Item>
                   </motion.div>
                 )}
+
+                {/* ===== ADDED CODE START ===== */}
+                {/* 5. CONDITIONAL: REPLENISHMENT RECOMMENDATION */}
+                {selectedReportType === "ReplenishmentRecommendation" && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    className="grid grid-cols-2 gap-4"
+                  >
+                    <Form.Item
+                      name="forecastHorizonDays"
+                      label={
+                        <span className="!text-slate-500 !font-bold !uppercase !text-[10px] !tracking-widest">
+                          Forecast Horizon (Days)
+                        </span>
+                      }
+                      initialValue={30}
+                    >
+                      <InputNumber
+                        className="w-full custom-report-range"
+                        min={1}
+                        max={365}
+                        placeholder="e.g., 30"
+                      />
+                    </Form.Item>
+
+                    <Form.Item
+                      name="defaultLeadTimeDays"
+                      label={
+                        <span className="!text-slate-500 !font-bold !uppercase !text-[10px] !tracking-widest">
+                          Default Lead Time (Days)
+                        </span>
+                      }
+                      initialValue={7}
+                    >
+                      <InputNumber
+                        className="w-full custom-report-range"
+                        min={1}
+                        max={100}
+                        placeholder="e.g., 7"
+                      />
+                    </Form.Item>
+
+                    <Form.Item
+                      name="serviceLevel"
+                      label={
+                        <span className="!text-slate-500 !font-bold !uppercase !text-[10px] !tracking-widest">
+                          Service Level (%)
+                        </span>
+                      }
+                      initialValue={95}
+                    >
+                      <InputNumber
+                        className="w-full custom-report-range"
+                        min={1}
+                        max={100}
+                        placeholder="e.g., 95"
+                      />
+                    </Form.Item>
+
+                    <Form.Item
+                      name="useAiExplanation"
+                      valuePropName="checked"
+                      label={
+                        <span className="!text-slate-500 !font-bold !uppercase !text-[10px] !tracking-widest">
+                          Include AI Explanation
+                        </span>
+                      }
+                    >
+                      <Switch className="mt-2" />
+                    </Form.Item>
+                  </motion.div>
+                )}
+                {/* ===== ADDED CODE END ===== */}
               </div>
             </Card>
           </div>

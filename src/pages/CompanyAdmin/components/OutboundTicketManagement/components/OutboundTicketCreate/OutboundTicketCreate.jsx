@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Spin, message, Card, Typography, Input, Modal } from "antd"; // Thêm Modal
-import { Route, Loader2 } from "lucide-react"; // Thêm icon cho Modal
+import { Spin, message, Card, Typography, Input, Modal } from "antd";
+import { Route, Loader2 } from "lucide-react";
 import api from "../../../../../../api/axios";
+import axios from "axios"; // Đảm bảo import axios
 
 import DetailsHeader from "./components/DetailsHeader";
 import DetailsProductList from "./components/DetailsProductList";
@@ -118,9 +119,11 @@ const OutboundTicketCreate = () => {
         // 2. NẾU USER CÓ BẬT TOGGLE -> GỌI API PATH OPTIMIZATION (n8n)
         if (usePathOptimization) {
           try {
-            const token = localStorage.getItem("token");
-            await api.post(
-              `${VITE_N8N_API_URL}/webhook/path-optimization`,
+            // Lấy accessToken từ localStorage
+            const token = localStorage.getItem("accessToken");
+
+            await axios.post(
+              `${VITE_N8N_API_URL}/path-optimization`,
               {
                 outboundTicketId: Number(ticketId),
                 userId: Number(userId),
@@ -128,9 +131,9 @@ const OutboundTicketCreate = () => {
                 warehouseId: Number(warehouseId),
               },
               {
-                // THÊM MỚI: Truyền custom header để n8n Cloud không bị redact (che dấu)
+                // Truyền header Authorization chứa token
                 headers: {
-                  "x-api-token": `Bearer ${token}`,
+                  Authorization: `Bearer ${token}`,
                 },
               },
             );
