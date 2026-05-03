@@ -1,8 +1,17 @@
 export const REPORT_TYPES = [
   { value: "InventorySnapshot", label: "Inventory Snapshot" },
   { value: "InventoryLedger", label: "Inventory Ledger" },
+  // ===== ADDED CODE START =====
+  { value: "InventoryOverallLedger", label: "Inventory Overall Ledger" },
+  // ===== ADDED CODE END =====
   { value: "InventoryInOutBalance", label: "Inventory In/Out Balance" },
   { value: "InventoryTracking", label: "Inventory Tracking (Stocktake)" },
+  // ===== ADDED CODE START =====
+  {
+    value: "ReplenishmentRecommendation",
+    label: "Replenishment Recommendation",
+  },
+  // ===== ADDED CODE END =====
 ];
 
 export const REPORT_STATUS = {

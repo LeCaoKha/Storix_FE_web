@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/api/ai-forecast/:path*",
+      "destination": "https://storix-ai.app.n8n.cloud/:path*"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

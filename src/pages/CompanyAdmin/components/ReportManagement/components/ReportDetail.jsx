@@ -30,6 +30,7 @@ import {
 } from "lucide-react";
 import dayjs from "dayjs";
 import api from "../../../../../api/axios";
+import axios from "axios";
 
 const { Title, Text } = Typography;
 
@@ -105,11 +106,16 @@ const ReportDetail = () => {
       return;
     }
 
+    const accessToken = localStorage.getItem("accessToken");
+
+    if (!accessToken) {
+      message.error("Missing Token. Please login again.");
+      return;
+    }
+
     setIsForecasting(true);
 
     try {
-      const token = localStorage.getItem("token");
-
       const productIds =
         reportData.result?.data?.items?.map((item) => item.productId) || [];
 
@@ -123,9 +129,9 @@ const ReportDetail = () => {
         companyId: Number(companyId),
       };
 
-      await api.post(`${VITE_N8N_API_URL}/webhook/storage-forecast`, payload, {
+      await axios.post(`${VITE_N8N_API_URL}/storage-forecast`, payload, {
         headers: {
-          "x-api-token": `Bearer ${token}`,
+          Authorization: `Bearer ${accessToken}`,
         },
       });
 
@@ -162,6 +168,7 @@ const ReportDetail = () => {
     const types = {
       InventorySnapshot: "Inventory Snapshot",
       InventoryLedger: "Inventory Ledger",
+      InventoryOverallLedger: "Inventory Overall Ledger",
       InventoryInOutBalance: "Inventory In/Out Balance",
       InventoryTracking: "Inventory Tracking (Stocktake)",
     };
@@ -267,7 +274,7 @@ const ReportDetail = () => {
           },
         ];
 
-      case "InventoryInOutBalance":
+      case "InventoryOverallLedger":
         return [
           ...baseProductCols,
           {
@@ -280,7 +287,7 @@ const ReportDetail = () => {
             ),
           },
           {
-            title: "Inbound",
+            title: "Inbound (+)",
             dataIndex: "inboundQty",
             key: "inboundQty",
             align: "right",
@@ -289,7 +296,7 @@ const ReportDetail = () => {
             ),
           },
           {
-            title: "Outbound",
+            title: "Outbound (-)",
             dataIndex: "outboundQty",
             key: "outboundQty",
             align: "right",
@@ -308,7 +315,96 @@ const ReportDetail = () => {
           },
         ];
 
+      case "InventoryInOutBalance":
+        return [
+          {
+            title: "Transaction ID",
+            dataIndex: "transactionId",
+            key: "transactionId",
+            render: (val) => (
+              <span className="font-bold text-slate-700">#{val}</span>
+            ),
+          },
+          {
+            title: "Date",
+            dataIndex: "date",
+            key: "date",
+            render: (val) => (
+              <span className="font-medium text-slate-600">
+                {dayjs(val).format("DD/MM/YYYY HH:mm")}
+              </span>
+            ),
+          },
+          {
+            title: "Type",
+            dataIndex: "transactionType",
+            key: "transactionType",
+            render: (val) => (
+              <Tag
+                color={val === "Inbound" ? "success" : "error"}
+                className="!m-0 !font-bold uppercase"
+              >
+                {val}
+              </Tag>
+            ),
+          },
+          {
+            title: "Created By",
+            dataIndex: "nguoiTao",
+            key: "nguoiTao",
+          },
+          {
+            title: "Handled By",
+            dataIndex: "nhanVien",
+            key: "nhanVien",
+          },
+        ];
+
+      // ===== FIX LẠI BẢNG TRACKING (GROUPED HOẶC PHẲNG) =====
       case "InventoryTracking":
+        // 1. Dành cho Grouped Rows
+        if (result?.data?.rows && result.data.rows.length > 0) {
+          return [
+            {
+              title: "Ticket Name",
+              dataIndex: "ticketName",
+              key: "ticketName",
+              render: (val) => (
+                <span className="font-bold text-slate-700">{val || "N/A"}</span>
+              ),
+            },
+            {
+              title: "Ticket ID",
+              dataIndex: "ticketId",
+              key: "ticketId",
+              render: (val) => (
+                <span className="font-bold text-slate-500">#{val}</span>
+              ),
+            },
+            {
+              title: "Date",
+              dataIndex: "date",
+              key: "date",
+              render: (val) => (
+                <span className="font-medium text-slate-600">
+                  {dayjs(val).format("DD/MM/YYYY HH:mm")}
+                </span>
+              ),
+            },
+            {
+              title: "Created By",
+              dataIndex: "createdBy",
+              key: "createdBy",
+            },
+            {
+              title: "Assigned Staff",
+              dataIndex: "assignedStaff",
+              key: "assignedStaff",
+            },
+          ];
+        }
+
+        // 2. Fallback: Flat Items
         return [
           ...baseProductCols,
           {
@@ -405,9 +501,142 @@ const ReportDetail = () => {
 
   const getTableData = () => {
     if (!result || !result.data) return [];
-    if (reportType === "InventoryLedger") return result.data.rows || [];
-    return result.data.items || result.data.byProduct || result.data || [];
+
+    if (reportType === "InventoryLedger")
+      return Array.isArray(result.data.rows) ? result.data.rows : [];
+    if (reportType === "InventoryOverallLedger")
+      return Array.isArray(result.data.byProduct) ? result.data.byProduct : [];
+
+    if (reportType === "InventoryInOutBalance")
+      return Array.isArray(result.data.rows) ? result.data.rows : [];
+
+    // ===== CẬP NHẬT: FALLBACK CHO INVENTORY TRACKING =====
+    if (reportType === "InventoryTracking") {
+      return Array.isArray(result.data.rows) && result.data.rows.length > 0
+        ? result.data.rows
+        : Array.isArray(result.data.items)
+          ? result.data.items
+          : [];
+    }
+
+    return Array.isArray(result.data.items)
+      ? result.data.items
+      : Array.isArray(result.data)
+        ? result.data
+        : [];
   };
+
+  // ===== CẬP NHẬT TẠO EXPANDABLE ĐỘNG =====
+  let expandableConfig = undefined;
+
+  if (
+    reportType === "InventoryInOutBalance" &&
+    result?.data?.rows?.length > 0
+  ) {
+    expandableConfig = {
+      expandedRowRender: (record) => {
+        const childColumns = [
+          {
+            title: "SKU",
+            dataIndex: "skuId", // Schema in/out balance dùng skuId
+            key: "skuId",
+            render: (val) => <Text className="font-mono text-xs">{val}</Text>,
+          },
+          {
+            title: "Product Name",
+            dataIndex: "productName",
+            key: "productName",
+            render: (val) => <Text className="font-bold">{val}</Text>,
+          },
+          {
+            title: "Quantity",
+            dataIndex: "quantity",
+            key: "quantity",
+            render: (val) => (
+              <span className="font-bold text-[#38c6c6]">{val}</span>
+            ),
+          },
+        ];
+        return (
+          <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+            <Table
+              columns={childColumns}
+              dataSource={record.items || []}
+              pagination={false}
+              rowKey={(item, index) => item.skuId || index}
+              size="small"
+            />
+          </div>
+        );
+      },
+      rowExpandable: (record) => record.items && record.items.length > 0,
+    };
+  } else if (
+    reportType === "InventoryTracking" &&
+    result?.data?.rows?.length > 0
+  ) {
+    expandableConfig = {
+      expandedRowRender: (record) => {
+        const childCols = [
+          {
+            title: "SKU",
+            dataIndex: "sku",
+            key: "sku",
+            render: (val) => <Text className="font-mono text-xs">{val}</Text>,
+          },
+          {
+            title: "Product Name",
+            dataIndex: "productName",
+            key: "productName",
+            render: (val) => (
+              <Text className="font-bold text-slate-700">{val}</Text>
+            ),
+          },
+          {
+            title: "System Qty",
+            dataIndex: "systemQty",
+            key: "systemQty",
+            render: (val) => (
+              <span className="font-bold text-slate-500">{val || 0}</span>
+            ),
+          },
+          {
+            title: "Counted Qty",
+            dataIndex: "countedQty",
+            key: "countedQty",
+            render: (val) => (
+              <span className="font-bold text-[#38c6c6]">{val ?? "-"}</span>
+            ),
+          },
+          {
+            title: "Variance",
+            dataIndex: "varianceQty",
+            key: "varianceQty",
+            render: (val) => (
+              <Tag
+                color={val > 0 ? "success" : val < 0 ? "error" : "default"}
+                className="!m-0 !font-bold"
+              >
+                {val > 0 ? `+${val}` : val || 0}
+              </Tag>
+            ),
+          },
+        ];
+        return (
+          <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+            <Table
+              columns={childCols}
+              dataSource={record.items || []}
+              pagination={false}
+              rowKey={(item, index) => item.sku || index}
+              size="small"
+            />
+          </div>
+        );
+      },
+      rowExpandable: (record) => record.items && record.items.length > 0,
+    };
+  }
 
   const getTableIconAndTitle = () => {
     switch (reportType) {
@@ -415,6 +644,11 @@ const ReportDetail = () => {
         return {
           icon: <List size={18} className="text-[#38c6c6]" />,
           title: "Transaction History (Ledger)",
+        };
+      case "InventoryOverallLedger":
+        return {
+          icon: <Scale size={18} className="text-[#38c6c6]" />,
+          title: "Overall Ledger By Product",
         };
       case "InventoryInOutBalance":
         return {
@@ -488,6 +722,105 @@ const ReportDetail = () => {
       );
     }
 
+    if (reportType === "InventoryOverallLedger") {
+      const byDay = result?.data?.byDay || [];
+      return (
+        <div className="space-y-6">
+          <Row gutter={24}>
+            <Col span={6}>
+              <Card className="!rounded-2xl !shadow-sm !border-slate-100">
+                <div className="flex flex-col">
+                  <Text className="text-slate-400 text-[10px] uppercase font-bold tracking-widest">
+                    Total Opening
+                  </Text>
+                  <Text className="font-black text-2xl text-slate-800">
+                    {summary.totalOpeningQty || 0}
+                  </Text>
+                </div>
+              </Card>
+            </Col>
+            <Col span={6}>
+              <Card className="!rounded-2xl !shadow-sm !border-emerald-100 !bg-emerald-50/30">
+                <div className="flex flex-col">
+                  <Text className="text-slate-400 text-[10px] uppercase font-bold tracking-widest">
+                    Total Inbound (+)
+                  </Text>
+                  <Text className="font-black text-2xl text-emerald-600">
+                    {summary.totalInboundQty || 0}
+                  </Text>
+                </div>
+              </Card>
+            </Col>
+            <Col span={6}>
+              <Card className="!rounded-2xl !shadow-sm !border-rose-100 !bg-rose-50/30">
+                <div className="flex flex-col">
+                  <Text className="text-slate-400 text-[10px] uppercase font-bold tracking-widest">
+                    Total Outbound (-)
+                  </Text>
+                  <Text className="font-black text-2xl text-rose-500">
+                    {summary.totalOutboundQty || 0}
+                  </Text>
+                </div>
+              </Card>
+            </Col>
+            <Col span={6}>
+              <Card className="!rounded-2xl !shadow-sm !border-[#38c6c6]/20 !bg-cyan-50/30">
+                <div className="flex flex-col">
+                  <Text className="text-slate-400 text-[10px] uppercase font-bold tracking-widest">
+                    Total Closing
+                  </Text>
+                  <Text className="font-black text-2xl text-[#38c6c6]">
+                    {summary.totalClosingQty || 0}
+                  </Text>
+                </div>
+              </Card>
+            </Col>
+          </Row>
+
+          {byDay.length > 0 && (
+            <Row gutter={24}>
+              <Col span={24}>
+                <Card
+                  title={
+                    <Space className="!text-slate-700 !uppercase !text-xs !tracking-wider !font-bold !py-2">
+                      <Calendar size={18} className="text-[#38c6c6]" /> Activity
+                      By Day
+                    </Space>
+                  }
+                  className="!rounded-2xl !shadow-sm !border-slate-100"
+                >
+                  <div className="flex gap-4 overflow-x-auto pb-2 custom-scrollbar">
+                    {byDay.map((day, idx) => (
+                      <div
+                        key={idx}
+                        className="flex flex-col items-center min-w-[100px] p-3 bg-slate-50 border border-slate-100 rounded-xl"
+                      >
+                        <Text className="text-xs font-bold text-slate-500 mb-2">
+                          {dayjs(day.day).format("DD/MM")}
+                        </Text>
+                        <Tag
+                          color="success"
+                          className="!m-0 !mb-1 w-full text-center font-bold"
+                        >
+                          +{day.inboundQty || 0}
+                        </Tag>
+                        <Tag
+                          color="error"
+                          className="!m-0 w-full text-center font-bold"
+                        >
+                          -{day.outboundQty || 0}
+                        </Tag>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+              </Col>
+            </Row>
+          )}
+        </div>
+      );
+    }
+
     if (reportType === "InventoryInOutBalance") {
       return (
         <Row gutter={24}>
@@ -495,10 +828,10 @@ const ReportDetail = () => {
             <Card className="!rounded-2xl !shadow-sm !border-slate-100">
               <div className="flex flex-col">
                 <Text className="text-slate-400 text-[10px] uppercase font-bold tracking-widest">
-                  Opening Qty
+                  Total Transactions
                 </Text>
                 <Text className="font-black text-2xl text-slate-800">
-                  {summary.totalOpeningQty || 0}
+                  {summary.totalTransactions || 0}
                 </Text>
               </div>
             </Card>
@@ -507,10 +840,10 @@ const ReportDetail = () => {
             <Card className="!rounded-2xl !shadow-sm !border-emerald-100 !bg-emerald-50/30">
               <div className="flex flex-col">
                 <Text className="text-slate-400 text-[10px] uppercase font-bold tracking-widest">
-                  Total Inbound (+)
+                  Inbound Transactions
                 </Text>
                 <Text className="font-black text-2xl text-emerald-600">
-                  {summary.totalInboundQty || 0}
+                  {summary.totalInboundTransactions || 0}
                 </Text>
               </div>
             </Card>
@@ -519,10 +852,10 @@ const ReportDetail = () => {
             <Card className="!rounded-2xl !shadow-sm !border-rose-100 !bg-rose-50/30">
               <div className="flex flex-col">
                 <Text className="text-slate-400 text-[10px] uppercase font-bold tracking-widest">
-                  Total Outbound (-)
+                  Outbound Transactions
                 </Text>
                 <Text className="font-black text-2xl text-rose-500">
-                  {summary.totalOutboundQty || 0}
+                  {summary.totalOutboundTransactions || 0}
                 </Text>
               </div>
             </Card>
@@ -531,10 +864,10 @@ const ReportDetail = () => {
             <Card className="!rounded-2xl !shadow-sm !border-[#38c6c6]/20 !bg-cyan-50/30">
               <div className="flex flex-col">
                 <Text className="text-slate-400 text-[10px] uppercase font-bold tracking-widest">
-                  Closing Qty
+                  Total Item Lines
                 </Text>
                 <Text className="font-black text-2xl text-[#38c6c6]">
-                  {summary.totalClosingQty || 0}
+                  {summary.totalItemLines || 0}
                 </Text>
               </div>
             </Card>
@@ -804,7 +1137,7 @@ const ReportDetail = () => {
         </div>
 
         <Space size="middle">
-          {/* Nút Storage Forecast - Cập nhật giao diện tím chuẩn AI */}
+          {/* Nút Storage Forecast */}
           {isSucceeded && reportType === "InventorySnapshot" && (
             <Button
               icon={<Sparkles size={18} />}
@@ -878,7 +1211,7 @@ const ReportDetail = () => {
 
         {isSucceeded && result ? (
           <>
-            {/* RENDER DYNAMIC SUMMARY CARDS */}
+            {/* RENDER DYNAMIC SUMMARY CARDS VÀ ACTIVITY BY DAY */}
             {renderSummaryCards()}
 
             {/* MAIN DATA TABLE */}
@@ -896,8 +1229,13 @@ const ReportDetail = () => {
                     columns={getTableColumns()}
                     dataSource={getTableData()}
                     rowKey={(record, index) =>
-                      record.productId || record.sku || index
+                      record.productId ||
+                      record.transactionId ||
+                      record.ticketId ||
+                      record.sku ||
+                      index
                     }
+                    expandable={expandableConfig}
                     pagination={{ pageSize: 10 }}
                     className="custom-details-table"
                     locale={{
@@ -993,6 +1331,21 @@ const ReportDetail = () => {
           letter-spacing: 0.05em !important;
           padding: 12px 16px !important;
           border-bottom: 1px solid #f1f5f9;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+          height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: #f1f5f9;
+          border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: #cbd5e1;
+          border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: #94a3b8;
         }
       `}</style>
     </div>

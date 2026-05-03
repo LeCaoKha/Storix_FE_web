@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import { Spin, message, Card, Typography, Input } from "antd";
 import { useReactToPrint } from "react-to-print";
 import api from "../../../../../../api/axios";
+import axios from "axios";
 
 import DetailsHeader from "./components/DetailsHeader";
 import DetailsProductList from "./components/DetailsProductList";
@@ -105,10 +106,14 @@ const OutboundTicketDetails = () => {
   const handleCreatePath = async () => {
     const warehouseId =
       data?.warehouseId || localStorage.getItem("warehouseId");
-    const token = localStorage.getItem("token");
 
-    if (!userId || !companyId || !warehouseId) {
-      message.error("Missing context data (User/Company/Warehouse ID).");
+    // LẤY TOKEN TỪ LOCAL STORAGE
+    const accessToken = localStorage.getItem("accessToken");
+
+    if (!userId || !companyId || !warehouseId || !accessToken) {
+      message.error(
+        "Missing context data (User/Company/Warehouse ID or Token).",
+      );
       return;
     }
 
@@ -121,11 +126,13 @@ const OutboundTicketDetails = () => {
         warehouseId: Number(warehouseId),
       };
 
-      await api.post(`${VITE_N8N_API_URL}/webhook/path-optimization`, payload, {
+      // TRUYỀN LẠI HEADER AUTHORIZATION VÀ SỬ DỤNG BIẾN MÔI TRƯỜNG
+      await axios.post(`${VITE_N8N_API_URL}/path-optimization`, payload, {
         headers: {
-          "x-api-token": `Bearer ${token}`,
+          Authorization: `Bearer ${accessToken}`,
         },
       });
+
       message.success("Path optimization process started successfully!");
     } catch (error) {
       console.error("Webhook trigger error:", error);

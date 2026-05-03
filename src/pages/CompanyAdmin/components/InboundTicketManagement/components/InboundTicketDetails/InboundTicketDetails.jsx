@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { Spin, message } from "antd";
 import { useReactToPrint } from "react-to-print";
+import axios from "axios"; // Import thêm axios thuần
 import api from "../../../../../../api/axios";
 
 // Components
@@ -100,11 +101,13 @@ const InboundTicketDetails = () => {
     const userId = localStorage.getItem("userId");
     const warehouseId =
       localStorage.getItem("warehouseId") || data?.warehouseId;
-    const token = localStorage.getItem("token"); // Lấy token để gửi custom header
 
-    if (!userId || !companyId || !warehouseId) {
+    // LẤY ACCESSTOKEN TỪ LOCALSTORAGE
+    const accessToken = localStorage.getItem("accessToken");
+
+    if (!userId || !companyId || !warehouseId || !accessToken) {
       message.error(
-        "Missing necessary context data (User/Company/Warehouse ID).",
+        "Missing necessary context data (User/Company/Warehouse ID or Token).",
       );
       return;
     }
@@ -119,16 +122,12 @@ const InboundTicketDetails = () => {
         warehouseId: Number(warehouseId),
       };
 
-      // Gọi thẳng URL của webhook
-      await api.post(
-        `${VITE_N8N_API_URL}/webhook/storage-recommendation`,
-        payload,
-        {
-          headers: {
-            "x-api-token": `Bearer ${token}`,
-          },
+      // TRUYỀN THÊM HEADER AUTHORIZATION
+      await axios.post(`${VITE_N8N_API_URL}/storage-recommendation`, payload, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
         },
-      );
+      });
 
       message.success("AI Recommendation process started successfully!");
     } catch (error) {
