@@ -131,7 +131,7 @@ const ReportDetail = () => {
 
       await axios.post(`${VITE_N8N_API_URL}/storage-forecast`, payload, {
         headers: {
-          Authorization: `Bearer ${accessToken}`,
+          "x-api-token": `Bearer ${accessToken}`,
         },
       });
 

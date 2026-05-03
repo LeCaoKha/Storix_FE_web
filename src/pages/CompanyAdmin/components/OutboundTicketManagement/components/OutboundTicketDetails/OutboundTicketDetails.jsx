@@ -126,10 +126,10 @@ const OutboundTicketDetails = () => {
         warehouseId: Number(warehouseId),
       };
 
-      // TRUYỀN LẠI HEADER AUTHORIZATION VÀ SỬ DỤNG BIẾN MÔI TRƯỜNG
+      // ĐÃ SỬA URL DÙNG BIẾN MÔI TRƯỜNG VÀ ĐỔI TÊN HEADER THÀNH x-api-token
       await axios.post(`${VITE_N8N_API_URL}/path-optimization`, payload, {
         headers: {
-          Authorization: `Bearer ${accessToken}`,
+          "x-api-token": `Bearer ${accessToken}`,
         },
       });
 

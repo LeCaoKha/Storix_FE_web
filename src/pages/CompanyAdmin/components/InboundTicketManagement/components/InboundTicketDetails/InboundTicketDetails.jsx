@@ -125,7 +125,7 @@ const InboundTicketDetails = () => {
       // TRUYỀN THÊM HEADER AUTHORIZATION
       await axios.post(`${VITE_N8N_API_URL}/storage-recommendation`, payload, {
         headers: {
-          Authorization: `Bearer ${accessToken}`,
+          "x-api-token": `Bearer ${accessToken}`,
         },
       });
 
