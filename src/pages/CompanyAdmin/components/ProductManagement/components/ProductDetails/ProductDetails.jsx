@@ -330,33 +330,8 @@ const ProductDetails = () => {
                   </div>
                 </div>
 
-                {/* Dòng 3: Default Supplier (2) + Unit (1) */}
-                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 hover:border-[#39C6C6]/30 hover:shadow-sm transition-all duration-300 md:col-span-2">
-                  <div className="flex items-center gap-2 text-slate-400 mb-2">
-                    <Building2 size={14} />
-                    <span className="text-[10px] font-black uppercase tracking-widest">
-                      Default Supplier
-                    </span>
-                  </div>
-                  <div className="text-base font-bold text-slate-800">
-                    {supplierName || "N/A"}
-                  </div>
-                </div>
-
+                {/* Dòng 3: Dimensions, Weight, Unit */}
                 <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 hover:border-[#39C6C6]/30 hover:shadow-sm transition-all duration-300">
-                  <div className="flex items-center gap-2 text-slate-400 mb-2">
-                    <Package size={14} />
-                    <span className="text-[10px] font-black uppercase tracking-widest">
-                      Unit
-                    </span>
-                  </div>
-                  <div className="text-base font-bold text-slate-800 uppercase">
-                    {product?.unit || "N/A"}
-                  </div>
-                </div>
-
-                {/* Dòng 4: Dimensions (2) + Weight (1) */}
-                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 hover:border-[#39C6C6]/30 hover:shadow-sm transition-all duration-300 md:col-span-2">
                   <div className="flex items-center gap-2 text-slate-400 mb-2">
                     <Ruler size={14} />
                     <span className="text-[10px] font-black uppercase tracking-widest">
@@ -373,7 +348,7 @@ const ProductDetails = () => {
                       x
                     </span>
                     <span>{product?.height || 0}</span>
-                    <span className="text-slate-400 text-xs ml-1">cm</span>
+                    <span className="text-slate-400 text-xs ml-1">mm</span>
                   </div>
                 </div>
 
@@ -385,12 +360,36 @@ const ProductDetails = () => {
                     </span>
                   </div>
                   <div className="text-base font-bold text-slate-800">
-                    {product?.weight != null ? `${product.weight} kg` : "N/A"}
+                    {product?.weight != null ? `${product.weight} g` : "N/A"}
                   </div>
                 </div>
 
-                {/* Dòng 5: Registration Date (Full width) */}
-                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 hover:border-[#39C6C6]/30 hover:shadow-sm transition-all duration-300 md:col-span-3">
+                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 hover:border-[#39C6C6]/30 hover:shadow-sm transition-all duration-300">
+                  <div className="flex items-center gap-2 text-slate-400 mb-2">
+                    <Package size={14} />
+                    <span className="text-[10px] font-black uppercase tracking-widest">
+                      Unit
+                    </span>
+                  </div>
+                  <div className="text-base font-bold text-slate-800 uppercase">
+                    {product?.unit || "N/A"}
+                  </div>
+                </div>
+
+                {/* Dòng 4: Default Supplier + Registration Date */}
+                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 hover:border-[#39C6C6]/30 hover:shadow-sm transition-all duration-300">
+                  <div className="flex items-center gap-2 text-slate-400 mb-2">
+                    <Building2 size={14} />
+                    <span className="text-[10px] font-black uppercase tracking-widest">
+                      Default Supplier
+                    </span>
+                  </div>
+                  <div className="text-base font-bold text-slate-800">
+                    {supplierName || "N/A"}
+                  </div>
+                </div>
+
+                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 hover:border-[#39C6C6]/30 hover:shadow-sm transition-all duration-300 md:col-span-2">
                   <div className="flex items-center gap-2 text-slate-400 mb-2">
                     <Calendar size={14} />
                     <span className="text-[10px] font-black uppercase tracking-widest">
