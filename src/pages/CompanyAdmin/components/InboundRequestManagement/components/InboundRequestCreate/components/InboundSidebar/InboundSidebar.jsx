@@ -42,6 +42,8 @@ const InboundSidebar = ({ onDataChange, summary, inboundData }) => {
   const [searchValue, setSearchValue] = useState("");
   const searchContainerRef = useRef(null);
 
+  console.log("inbound data ne: ", inboundData);
+
   // Modal State
   const [isSupplierModalOpen, setIsSupplierModalOpen] = useState(false);
   const [supplierSubmitting, setSupplierSubmitting] = useState(false);
