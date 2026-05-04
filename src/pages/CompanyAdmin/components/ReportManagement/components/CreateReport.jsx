@@ -9,10 +9,8 @@ import {
   Card,
   Space,
   Avatar,
-  // ===== ADDED CODE START =====
   InputNumber,
   Switch,
-  // ===== ADDED CODE END =====
 } from "antd";
 import {
   FileText,
@@ -20,7 +18,6 @@ import {
   Box,
   Loader2,
   Package,
-  Ticket,
   ArrowLeft,
   Info,
   Settings2,
@@ -54,9 +51,6 @@ const CreateReport = () => {
 
   const [products, setProducts] = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(false);
-
-  const [tickets, setTickets] = useState([]);
-  const [loadingTickets, setLoadingTickets] = useState(false);
 
   // Theo dõi loại báo cáo đang chọn
   const selectedReportType = Form.useWatch("reportType", form);
@@ -106,27 +100,6 @@ const CreateReport = () => {
     }
   }, [selectedReportType, userId]);
 
-  // Gọi API lấy danh sách phiếu kiểm kê khi chọn InventoryTracking
-  useEffect(() => {
-    const fetchTickets = async () => {
-      if (!companyId) return;
-      setLoadingTickets(true);
-      try {
-        const res = await api.get(`/InventoryCount/tickets/${companyId}`);
-        setTickets(res.data || []);
-      } catch (error) {
-        console.error("Fetch tickets error:", error);
-        message.error("Failed to load inventory count tickets");
-      } finally {
-        setLoadingTickets(false);
-      }
-    };
-
-    if (selectedReportType === "InventoryTracking") {
-      fetchTickets();
-    }
-  }, [selectedReportType, companyId]);
-
   // ==========================================
   // 3. HANDLERS
   // ==========================================
@@ -135,13 +108,10 @@ const CreateReport = () => {
     // Reset lại các trường đặc thù khi đổi loại báo cáo
     form.setFieldsValue({
       productId: null,
-      inventoryCountTicketId: null,
-      // ===== ADDED CODE START =====
       forecastHorizonDays: null,
       defaultLeadTimeDays: null,
       serviceLevel: null,
       useAiExplanation: false,
-      // ===== ADDED CODE END =====
     });
   };
 
@@ -149,7 +119,6 @@ const CreateReport = () => {
     setIsSubmitting(true);
 
     try {
-      // ===== ADDED CODE START =====
       // DYNAMIC PAYLOAD CONSTRUCTION
       const payload = {
         reportType: values.reportType,
@@ -161,15 +130,12 @@ const CreateReport = () => {
 
       if (values.reportType === "InventoryLedger") {
         payload.productId = values.productId;
-      } else if (values.reportType === "InventoryTracking") {
-        payload.inventoryCountTicketId = values.inventoryCountTicketId;
       } else if (values.reportType === "ReplenishmentRecommendation") {
         payload.forecastHorizonDays = values.forecastHorizonDays || 30;
         payload.defaultLeadTimeDays = values.defaultLeadTimeDays || 7;
         payload.serviceLevel = values.serviceLevel || 95;
         payload.useAiExplanation = values.useAiExplanation || false;
       }
-      // ===== ADDED CODE END =====
 
       await api.post("/Reports", payload);
       message.success("Report generation started successfully!");
@@ -353,59 +319,7 @@ const CreateReport = () => {
                   </motion.div>
                 )}
 
-                {/* 4. CONDITIONAL: TICKET ID */}
-                {selectedReportType === "InventoryTracking" && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                  >
-                    <Form.Item
-                      name="inventoryCountTicketId"
-                      label={
-                        <span className="!text-slate-500 !font-bold !uppercase !text-[10px] !tracking-widest">
-                          Stocktake Ticket (Required)
-                        </span>
-                      }
-                      rules={[
-                        {
-                          required: true,
-                          message: "Please select a ticket",
-                        },
-                      ]}
-                    >
-                      <Select
-                        showSearch
-                        placeholder="Search and select a ticket..."
-                        loading={loadingTickets}
-                        optionFilterProp="children"
-                        filterOption={(input, option) =>
-                          (option?.label ?? "")
-                            .toLowerCase()
-                            .includes(input.toLowerCase())
-                        }
-                        options={tickets.map((t) => {
-                          const dateStr = new Date(
-                            t.createdAt,
-                          ).toLocaleDateString("en-GB");
-                          const displayDesc = t.description
-                            ? ` - ${t.description}`
-                            : "";
-                          return {
-                            value: t.id,
-                            label: `Ticket #${String(t.id).padStart(3, "0")} (${dateStr})${displayDesc}`,
-                          };
-                        })}
-                        suffixIcon={
-                          <Ticket size={18} className="text-slate-400" />
-                        }
-                        className="w-full custom-report-select"
-                      />
-                    </Form.Item>
-                  </motion.div>
-                )}
-
-                {/* ===== ADDED CODE START ===== */}
-                {/* 5. CONDITIONAL: REPLENISHMENT RECOMMENDATION */}
+                {/* 4. CONDITIONAL: REPLENISHMENT RECOMMENDATION */}
                 {selectedReportType === "ReplenishmentRecommendation" && (
                   <motion.div
                     initial={{ opacity: 0, height: 0 }}
@@ -476,7 +390,6 @@ const CreateReport = () => {
                     </Form.Item>
                   </motion.div>
                 )}
-                {/* ===== ADDED CODE END ===== */}
               </div>
             </Card>
           </div>
