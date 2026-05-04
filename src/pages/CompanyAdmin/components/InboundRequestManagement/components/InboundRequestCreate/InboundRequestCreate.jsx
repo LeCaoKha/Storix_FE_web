@@ -150,12 +150,25 @@ const InboundRequestCreate = () => {
       setProducts(prodRes.data);
       setFilteredProducts(prodRes.data);
 
+      console.log("warehouseRes ne: ", warehouseRes.data);
+
       // Tự động chọn kho đầu tiên nếu có dữ liệu trả về
       if (warehouseRes.data && warehouseRes.data.length > 0) {
-        const firstWarehouseId = warehouseRes.data[0].id;
+        const localWarehouseId = localStorage.getItem("warehouseId");
+
+        // Tìm kho khớp với local storage
+        const matchedWarehouse = warehouseRes.data.find(
+          (w) => String(w.id) === String(localWarehouseId),
+        );
+
+        // Nếu tìm thấy thì ưu tiên lấy nó, không thì mới lấy kho đầu tiên
+        const targetWarehouseId = matchedWarehouse
+          ? matchedWarehouse.id
+          : warehouseRes.data[0].id;
+
         setInboundData((prev) => ({
           ...prev,
-          warehouseId: firstWarehouseId,
+          warehouseId: targetWarehouseId,
         }));
       }
     } catch (error) {
