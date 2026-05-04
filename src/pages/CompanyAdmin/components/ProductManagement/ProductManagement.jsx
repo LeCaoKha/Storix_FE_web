@@ -106,7 +106,6 @@ const ProductManagement = () => {
         "No.": index + 1,
         "Product Name": item.name,
         "SKU Code": item.sku,
-        Type: item.type?.name || "Unclassified",
         Category: item.category?.name || "Uncategorized",
         Unit: item.unit,
         "Last Update": item.createdAt
@@ -124,7 +123,6 @@ const ProductManagement = () => {
         { wch: 5 }, // No.
         { wch: 40 }, // Product Name
         { wch: 20 }, // SKU
-        { wch: 15 }, // Type
         { wch: 20 }, // Category
         { wch: 10 }, // Unit
         { wch: 15 }, // Last Update
@@ -199,19 +197,6 @@ const ProductManagement = () => {
       render: (sku) => (
         <Tag className="bg-slate-100 border-none font-mono text-slate-600 px-3 py-1 rounded-lg">
           {sku}
-        </Tag>
-      ),
-    },
-    {
-      title: "Type",
-      dataIndex: "type",
-      key: "type",
-      render: (typeObj) => (
-        <Tag
-          color="cyan"
-          className="rounded-full px-4 border-none font-bold uppercase text-[10px]"
-        >
-          {typeObj?.name || "Unclassified"}
         </Tag>
       ),
     },
