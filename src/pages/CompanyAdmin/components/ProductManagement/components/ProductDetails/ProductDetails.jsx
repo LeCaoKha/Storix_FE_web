@@ -30,6 +30,10 @@ import {
   Snowflake,
   AlertTriangle,
   Gem,
+  Component,
+  Boxes,
+  Building2,
+  Maximize,
 } from "lucide-react";
 
 const { Title, Text } = Typography;
@@ -39,6 +43,7 @@ const ProductDetails = () => {
   const navigate = useNavigate();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [supplierName, setSupplierName] = useState("");
 
   // --- ĐÃ THÊM: Lấy roleId từ localStorage ---
   const roleId = Number(localStorage.getItem("roleId"));
@@ -54,7 +59,21 @@ const ProductDetails = () => {
     try {
       setLoading(true);
       const response = await api.get(`/Products/get-by-id/${userId}/${id}`);
-      setProduct(response.data);
+      const productData = response.data;
+      setProduct(productData);
+
+      // Fetch supplier name if defaultSupplierId exists
+      if (productData.defaultSupplierId) {
+        try {
+          const supplierRes = await api.get(
+            `/Suppliers/get-by-id/${userId}/${productData.defaultSupplierId}`,
+          );
+          setSupplierName(supplierRes.data?.name || "N/A");
+        } catch (supError) {
+          console.error("Failed to fetch supplier details:", supError);
+          setSupplierName("N/A");
+        }
+      }
     } catch (error) {
       message.error("Failed to load product details");
       navigate(-1); // Quay lại trang trước nếu lỗi
@@ -231,7 +250,7 @@ const ProductDetails = () => {
 
               {/* ===== LƯỚI THÔNG TIN CHI TIẾT ===== */}
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {/* Khối 1: SKU */}
+                {/* Dòng 1: SKU, Category, Popularity */}
                 <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 hover:border-[#39C6C6]/30 hover:shadow-sm transition-all duration-300">
                   <div className="flex items-center gap-2 text-slate-400 mb-2">
                     <Hash size={14} />
@@ -244,7 +263,6 @@ const ProductDetails = () => {
                   </div>
                 </div>
 
-                {/* Khối 2: Category */}
                 <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 hover:border-[#39C6C6]/30 hover:shadow-sm transition-all duration-300">
                   <div className="flex items-center gap-2 text-slate-400 mb-2">
                     <Layers size={14} />
@@ -257,7 +275,6 @@ const ProductDetails = () => {
                   </div>
                 </div>
 
-                {/* Khối 3: Popularity Score */}
                 <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 hover:border-[#39C6C6]/30 hover:shadow-sm transition-all duration-300">
                   <div className="flex items-center gap-2 text-slate-400 mb-2">
                     <TrendingUp size={14} />
@@ -276,8 +293,45 @@ const ProductDetails = () => {
                   </div>
                 </div>
 
-                {/* Khối 4: Dimensions */}
-                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 hover:border-[#39C6C6]/30 hover:shadow-sm transition-all duration-300 md:col-span-2">
+                {/* Dòng 2: Material, Package Type, Size Standard */}
+                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 hover:border-[#39C6C6]/30 hover:shadow-sm transition-all duration-300">
+                  <div className="flex items-center gap-2 text-slate-400 mb-2">
+                    <Component size={14} />
+                    <span className="text-[10px] font-black uppercase tracking-widest">
+                      Material
+                    </span>
+                  </div>
+                  <div className="text-base font-bold text-slate-800 truncate">
+                    {product?.material || "N/A"}
+                  </div>
+                </div>
+
+                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 hover:border-[#39C6C6]/30 hover:shadow-sm transition-all duration-300">
+                  <div className="flex items-center gap-2 text-slate-400 mb-2">
+                    <Boxes size={14} />
+                    <span className="text-[10px] font-black uppercase tracking-widest">
+                      Package Type
+                    </span>
+                  </div>
+                  <div className="text-base font-bold text-slate-800 truncate">
+                    {product?.packageType || "N/A"}
+                  </div>
+                </div>
+
+                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 hover:border-[#39C6C6]/30 hover:shadow-sm transition-all duration-300">
+                  <div className="flex items-center gap-2 text-slate-400 mb-2">
+                    <Maximize size={14} />
+                    <span className="text-[10px] font-black uppercase tracking-widest">
+                      Size Standard
+                    </span>
+                  </div>
+                  <div className="text-base font-bold text-slate-800 truncate">
+                    {product?.sizeStandard || "N/A"}
+                  </div>
+                </div>
+
+                {/* Dòng 3: Dimensions, Weight, Unit */}
+                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 hover:border-[#39C6C6]/30 hover:shadow-sm transition-all duration-300">
                   <div className="flex items-center gap-2 text-slate-400 mb-2">
                     <Ruler size={14} />
                     <span className="text-[10px] font-black uppercase tracking-widest">
@@ -294,11 +348,10 @@ const ProductDetails = () => {
                       x
                     </span>
                     <span>{product?.height || 0}</span>
-                    <span className="text-slate-400 text-xs ml-1">cm</span>
+                    <span className="text-slate-400 text-xs ml-1">mm</span>
                   </div>
                 </div>
 
-                {/* Khối 5: Weight */}
                 <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 hover:border-[#39C6C6]/30 hover:shadow-sm transition-all duration-300">
                   <div className="flex items-center gap-2 text-slate-400 mb-2">
                     <Scale size={14} />
@@ -307,11 +360,10 @@ const ProductDetails = () => {
                     </span>
                   </div>
                   <div className="text-base font-bold text-slate-800">
-                    {product?.weight != null ? `${product.weight} kg` : "N/A"}
+                    {product?.weight != null ? `${product.weight} g` : "N/A"}
                   </div>
                 </div>
 
-                {/* Khối 6: Unit */}
                 <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 hover:border-[#39C6C6]/30 hover:shadow-sm transition-all duration-300">
                   <div className="flex items-center gap-2 text-slate-400 mb-2">
                     <Package size={14} />
@@ -324,7 +376,19 @@ const ProductDetails = () => {
                   </div>
                 </div>
 
-                {/* Khối 7: Registration Date */}
+                {/* Dòng 4: Default Supplier + Registration Date */}
+                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 hover:border-[#39C6C6]/30 hover:shadow-sm transition-all duration-300">
+                  <div className="flex items-center gap-2 text-slate-400 mb-2">
+                    <Building2 size={14} />
+                    <span className="text-[10px] font-black uppercase tracking-widest">
+                      Default Supplier
+                    </span>
+                  </div>
+                  <div className="text-base font-bold text-slate-800">
+                    {supplierName || "N/A"}
+                  </div>
+                </div>
+
                 <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 hover:border-[#39C6C6]/30 hover:shadow-sm transition-all duration-300 md:col-span-2">
                   <div className="flex items-center gap-2 text-slate-400 mb-2">
                     <Calendar size={14} />

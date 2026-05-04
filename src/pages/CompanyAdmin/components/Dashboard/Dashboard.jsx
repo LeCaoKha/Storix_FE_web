@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import api from "../../../../api/axios";
 import { Skeleton, Tooltip, message, Spin } from "antd";
-import { motion } from "framer-motion";
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip as ReTooltip, Legend, AreaChart, Area, PieChart, Pie, Cell,
@@ -37,12 +36,10 @@ const Dashboard = () => {
   const basePath = "/" + location.pathname.split("/").filter(Boolean)[0];
   const go = (path) => navigate(`${basePath}/${path}`);
 
-  const userId = localStorage.getItem("userId");
-  const companyId = localStorage.getItem("companyId");
   const fullName = localStorage.getItem("fullName") ?? "Admin";
 
   // State for session info (to ensure we have the latest from localStorage)
-  const [session, setSession] = useState({
+  const [session] = useState({
     userId: localStorage.getItem("userId"),
     companyId: localStorage.getItem("companyId"),
     fullName: localStorage.getItem("fullName")
@@ -86,7 +83,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchAll();
-  }, []); // Only once on mount or when session changes internally
+  }, [fetchAll]); // Only once on mount or when session changes internally
 
   // ── derived ─────────────────────────────────────────────────────────────
   const pendingInbound = inboundRequests.filter(r => r.status === "Pending").length;
@@ -157,8 +154,7 @@ const Dashboard = () => {
       <div className="md:px-16 lg:px-12 pt-7 pb-12 space-y-6">
 
         {/* ─── LEVEL 0: HEADER ─────────────────────────────────────────── */}
-        <motion.div initial="hidden" animate="visible" variants={fadeUp}
-          className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
             <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">{today}</p>
             <h1 className="text-2xl md:text-3xl font-black text-slate-800 tracking-tight">
@@ -182,12 +178,11 @@ const Dashboard = () => {
               <RefreshCw size={14} className={refreshing ? "animate-spin" : ""} />
             </button>
           </div>
-        </motion.div>
+        </div>
 
         {/* ─── LEVEL 1: CRITICAL ALERTS ────────────────────────────────── */}
         {(pendingInbound > 0 || pendingOutbound > 0) && (
-          <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0.3}
-            className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {pendingInbound > 0 && (
               <button onClick={() => go("inbound-request-management")}
                 className="flex items-center gap-4 p-4 rounded-2xl bg-white border border-rose-100 shadow-sm hover:shadow-md hover:border-rose-200 transition-all text-left w-full group">
@@ -210,7 +205,7 @@ const Dashboard = () => {
                 <ChevronRight size={20} className="text-slate-300 group-hover:translate-x-1 transition-transform" />
               </button>
             )}
-          </motion.div>
+          </div>
         )}
 
         {/* ─── LEVEL 2: KPI SUMMARY ───────────────── */}
@@ -428,7 +423,7 @@ const Dashboard = () => {
 
         {/* ─── LEVEL 6: SECONDARY — Team Overview ─────────────────────── */}
         {accounts.length > 0 && (
-          <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={13}>
+          <div>
             <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">Team</p>
             <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
               <div className="flex items-center justify-between mb-4">
@@ -476,7 +471,7 @@ const Dashboard = () => {
                 ))}
               </div>
             </div>
-          </motion.div>
+          </div>
         )}
 
       </div>
