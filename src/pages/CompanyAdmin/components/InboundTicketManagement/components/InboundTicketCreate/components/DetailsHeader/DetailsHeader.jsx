@@ -1,11 +1,12 @@
 import React from "react";
-import { Button, Space, Typography, Tag, Switch } from "antd"; // Import thêm Switch
+import { Button, Space, Typography, Tag, Switch } from "antd";
 import {
   ArrowLeft,
   PlusCircle,
   CheckCircle2,
   FileText,
   Sparkles,
+  UserCheck, // Import thêm icon UserCheck
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 
@@ -18,23 +19,21 @@ const DetailsHeader = ({
   onExportPDF,
   onCreateRecommendation,
   isCreatingRec,
-  // Nhận props quản lý AI từ component cha
   useAi,
   onToggleAi,
+  // Thêm 2 props này để điều khiển nút Assign
+  onAssign,
+  isAssigning,
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Kiểm tra trạng thái trang từ URL
   const isCreatePage = location.pathname.includes("/create");
   const isDetailsPage = location.pathname.includes("/details/");
-
-  // KIỂM TRA NẾU LÀ QUẢN LÝ TICKET
   const isTicketManagement = location.pathname.includes(
     "inbound-ticket-management",
   );
 
-  // Logic xác định tiêu đề hiển thị
   const getHeaderTitle = () => {
     if (isCreatePage) {
       return `Create Inbound Ticket From Request: ${data?.code || "N/A"}`;
@@ -71,7 +70,9 @@ const DetailsHeader = ({
                 color={
                   data.status === "Approved" || data.status === "Completed"
                     ? "green"
-                    : "orange"
+                    : data.status === "Waiting Assign Staff"
+                      ? "blue" // Thêm màu riêng cho Waiting
+                      : "orange"
                 }
                 className="!rounded-md !px-3 !py-1 !border-none !font-bold !m-0 !text-xs uppercase tracking-wider"
               >
@@ -83,7 +84,6 @@ const DetailsHeader = ({
       </div>
 
       <Space size="middle" className="mt-1">
-        {/* ===== THÊM MỚI: AI TOGGLE CHO TRANG CREATE ===== */}
         {isCreatePage && (
           <div className="flex items-center gap-2 mr-2 px-3 py-1.5 bg-white border border-slate-200 rounded-xl transition-all shadow-sm">
             <Sparkles
@@ -103,10 +103,26 @@ const DetailsHeader = ({
           </div>
         )}
 
-        {/* NÚT TẠO GỢI Ý KHO (AI RECOMMENDATION): Chỉ hiển thị ở Ticket Details VÀ khác Completed */}
+        {/* NÚT ASSIGN STAFF: Chỉ hiển thị khi status là "Waiting Assign Staff" */}
         {isTicketManagement &&
           isDetailsPage &&
-          data?.status !== "Completed" && (
+          data?.status === "Waiting Assign Staff" && (
+            <Button
+              type="primary"
+              icon={<UserCheck size={18} />}
+              onClick={onAssign}
+              loading={isAssigning}
+              className="!flex !items-center !gap-2 !h-11 !px-6 !font-bold !bg-indigo-500 hover:!bg-indigo-600 !border-none !rounded-xl shadow-lg shadow-indigo-500/20 transition-all"
+            >
+              Assign Staff
+            </Button>
+          )}
+
+        {/* NÚT TẠO GỢI Ý KHO (AI RECOMMENDATION): Hiện khi đang xử lý hàng (chưa Completed) */}
+        {isTicketManagement &&
+          isDetailsPage &&
+          data?.status !== "Completed" &&
+          data?.status !== "Waiting Assign Staff" && ( // Ẩn khi đang chờ Assign
             <Button
               icon={<Sparkles size={18} />}
               onClick={onCreateRecommendation}
@@ -117,7 +133,6 @@ const DetailsHeader = ({
             </Button>
           )}
 
-        {/* NÚT EXPORT PDF: Chỉ hiển thị khi ở trang Details */}
         {isDetailsPage && (
           <Button
             icon={<FileText size={18} />}
@@ -128,7 +143,6 @@ const DetailsHeader = ({
           </Button>
         )}
 
-        {/* Nút Receive Goods / Create Ticket: Ẩn nếu trạng thái đã là Completed */}
         {(isCreatePage ||
           (data?.status === "Approved" && data?.status !== "Completed")) && (
           <Button
@@ -142,7 +156,6 @@ const DetailsHeader = ({
           </Button>
         )}
 
-        {/* Nút Approve: Chỉ hiện ở trang Details nếu trạng thái là Pending */}
         {isDetailsPage && data?.status === "Pending" && (
           <Button
             type="primary"

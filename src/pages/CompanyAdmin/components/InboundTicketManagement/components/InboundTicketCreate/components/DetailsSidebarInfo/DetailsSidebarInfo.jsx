@@ -1,5 +1,5 @@
 import React from "react";
-import { useLocation } from "react-router-dom"; // Import useLocation
+import { useLocation } from "react-router-dom";
 import { Card, Avatar, Typography, Select } from "antd";
 import { Truck, Warehouse, Calendar, User, Users } from "lucide-react";
 
@@ -10,14 +10,16 @@ const DetailsSidebarInfo = ({
   users,
   selectedStaffId,
   onStaffChange,
+  ticketStatus, // Nhận thêm prop ticketStatus từ cha
 }) => {
   const location = useLocation();
 
   // CHỈ KHÓA (ReadOnly) khi đường dẫn chứa "management" VÀ đồng thời là trang "details"
-  // Nếu là trang "create" thì isReadOnly sẽ là false -> Vẫn cho phép chọn staff
+  // TUY NHIÊN: Sẽ mở khóa lại nếu trạng thái đang là "Waiting Assign Staff"
   const isReadOnly =
     location.pathname.includes("inbound-ticket-management") &&
-    location.pathname.includes("/details/");
+    location.pathname.includes("/details/") &&
+    ticketStatus !== "Waiting Assign Staff"; // Mở khóa khi chờ phân công
 
   return (
     <div className="space-y-6">
@@ -68,7 +70,6 @@ const DetailsSidebarInfo = ({
             value={selectedStaffId}
             onChange={onStaffChange}
             variant="borderless"
-            // VÔ HIỆU HÓA NẾU LÀ TRANG DETAILS, MỞ NẾU LÀ TRANG CREATE
             disabled={isReadOnly}
             style={{
               backgroundColor: isReadOnly ? "#f1f5f9" : "#f8fafc",

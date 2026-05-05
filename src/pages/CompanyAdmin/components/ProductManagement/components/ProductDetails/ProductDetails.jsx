@@ -30,6 +30,10 @@ import {
   Snowflake,
   AlertTriangle,
   Gem,
+  Brush,
+  PackageOpen,
+  Maximize,
+  Tags,
 } from "lucide-react";
 
 const { Title, Text } = Typography;
@@ -40,7 +44,6 @@ const ProductDetails = () => {
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // --- ĐÃ THÊM: Lấy roleId từ localStorage ---
   const roleId = Number(localStorage.getItem("roleId"));
 
   // Lấy dữ liệu sản phẩm từ API
@@ -57,7 +60,7 @@ const ProductDetails = () => {
       setProduct(response.data);
     } catch (error) {
       message.error("Failed to load product details");
-      navigate(-1); // Quay lại trang trước nếu lỗi
+      navigate(-1);
     } finally {
       setLoading(false);
     }
@@ -73,6 +76,18 @@ const ProductDetails = () => {
     if (score >= 80) return "text-emerald-500";
     if (score >= 50) return "text-amber-500";
     return "text-rose-500";
+  };
+
+  // Hàm phụ trợ lấy giá mới nhất từ mảng productPrices
+  const getLatestPrice = () => {
+    if (!product?.productPrices || product.productPrices.length === 0) {
+      return "N/A";
+    }
+    // Sắp xếp mảng giá theo ngày giảm dần và lấy cái đầu tiên
+    const sortedPrices = [...product.productPrices].sort(
+      (a, b) => new Date(b.date) - new Date(a.date),
+    );
+    return sortedPrices[0].price.toLocaleString("vi-VN") + " ₫";
   };
 
   if (loading) {
@@ -115,7 +130,7 @@ const ProductDetails = () => {
             </div>
           </div>
 
-          {/* --- ĐÃ CẬP NHẬT: Chỉ hiển thị nút Edit khi roleId là 2 --- */}
+          {/* Chỉ hiển thị nút Edit khi roleId là 2 */}
           {roleId === 2 && (
             <Button
               type="primary"
@@ -201,7 +216,6 @@ const ProductDetails = () => {
                     </Tag>
                   )}
 
-                  {/* Fallback nếu không có đặc tính nào đặc biệt */}
                   {!product?.isEsd &&
                     !product?.isMsd &&
                     !product?.isCold &&
@@ -229,9 +243,9 @@ const ProductDetails = () => {
 
               <Divider className="!my-6 border-slate-100" />
 
-              {/* ===== LƯỚI THÔNG TIN CHI TIẾT ===== */}
+              {/* ===== LƯỚI THÔNG TIN CHI TIẾT (CẬP NHẬT MỚI) ===== */}
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {/* Khối 1: SKU */}
+                {/* Hàng 1 */}
                 <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 hover:border-[#39C6C6]/30 hover:shadow-sm transition-all duration-300">
                   <div className="flex items-center gap-2 text-slate-400 mb-2">
                     <Hash size={14} />
@@ -239,12 +253,11 @@ const ProductDetails = () => {
                       SKU Code
                     </span>
                   </div>
-                  <div className="font-mono text-sm font-bold text-slate-700 bg-slate-200/60 inline-block px-2.5 py-1 rounded-lg">
+                  <div className="font-mono text-sm font-bold text-slate-700 bg-slate-200/60 inline-block px-2.5 py-1 rounded-lg truncate w-full">
                     {product?.sku}
                   </div>
                 </div>
 
-                {/* Khối 2: Category */}
                 <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 hover:border-[#39C6C6]/30 hover:shadow-sm transition-all duration-300">
                   <div className="flex items-center gap-2 text-slate-400 mb-2">
                     <Layers size={14} />
@@ -252,31 +265,24 @@ const ProductDetails = () => {
                       Category
                     </span>
                   </div>
-                  <div className="text-base font-bold text-slate-800 truncate">
+                  <div className="text-sm font-bold text-slate-800 truncate mt-1.5">
                     {product?.category?.name || "Uncategorized"}
                   </div>
                 </div>
 
-                {/* Khối 3: Popularity Score */}
                 <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 hover:border-[#39C6C6]/30 hover:shadow-sm transition-all duration-300">
                   <div className="flex items-center gap-2 text-slate-400 mb-2">
-                    <TrendingUp size={14} />
+                    <Tags size={14} />
                     <span className="text-[10px] font-black uppercase tracking-widest">
-                      Popularity
+                      Latest Price
                     </span>
                   </div>
-                  <div
-                    className={`text-xl font-black ${getPopularityColor(
-                      product?.popularityScore,
-                    )}`}
-                  >
-                    {product?.popularityScore !== null
-                      ? `${product.popularityScore} pts`
-                      : "N/A"}
+                  <div className="text-base font-black text-emerald-500 mt-1">
+                    {getLatestPrice()}
                   </div>
                 </div>
 
-                {/* Khối 4: Dimensions */}
+                {/* Hàng 2 */}
                 <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 hover:border-[#39C6C6]/30 hover:shadow-sm transition-all duration-300 md:col-span-2">
                   <div className="flex items-center gap-2 text-slate-400 mb-2">
                     <Ruler size={14} />
@@ -284,7 +290,7 @@ const ProductDetails = () => {
                       Dimensions (L x W x H)
                     </span>
                   </div>
-                  <div className="text-base font-bold text-slate-800 flex items-baseline gap-1.5">
+                  <div className="text-base font-bold text-slate-800 flex items-baseline gap-1.5 mt-1">
                     <span>{product?.length || 0}</span>
                     <span className="text-slate-400 text-xs font-normal px-1">
                       x
@@ -298,7 +304,6 @@ const ProductDetails = () => {
                   </div>
                 </div>
 
-                {/* Khối 5: Weight */}
                 <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 hover:border-[#39C6C6]/30 hover:shadow-sm transition-all duration-300">
                   <div className="flex items-center gap-2 text-slate-400 mb-2">
                     <Scale size={14} />
@@ -306,12 +311,49 @@ const ProductDetails = () => {
                       Weight
                     </span>
                   </div>
-                  <div className="text-base font-bold text-slate-800">
+                  <div className="text-base font-bold text-slate-800 mt-1">
                     {product?.weight != null ? `${product.weight} kg` : "N/A"}
                   </div>
                 </div>
 
-                {/* Khối 6: Unit */}
+                {/* Hàng 3: Bổ sung các trường mới */}
+                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 hover:border-[#39C6C6]/30 hover:shadow-sm transition-all duration-300">
+                  <div className="flex items-center gap-2 text-slate-400 mb-2">
+                    <Brush size={14} />
+                    <span className="text-[10px] font-black uppercase tracking-widest">
+                      Material
+                    </span>
+                  </div>
+                  <div className="text-sm font-bold text-slate-800 truncate mt-1">
+                    {product?.material || "N/A"}
+                  </div>
+                </div>
+
+                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 hover:border-[#39C6C6]/30 hover:shadow-sm transition-all duration-300">
+                  <div className="flex items-center gap-2 text-slate-400 mb-2">
+                    <Maximize size={14} />
+                    <span className="text-[10px] font-black uppercase tracking-widest">
+                      Size Std
+                    </span>
+                  </div>
+                  <div className="text-sm font-bold text-slate-800 truncate mt-1">
+                    {product?.sizeStandard || "N/A"}
+                  </div>
+                </div>
+
+                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 hover:border-[#39C6C6]/30 hover:shadow-sm transition-all duration-300">
+                  <div className="flex items-center gap-2 text-slate-400 mb-2">
+                    <PackageOpen size={14} />
+                    <span className="text-[10px] font-black uppercase tracking-widest">
+                      Package
+                    </span>
+                  </div>
+                  <div className="text-sm font-bold text-slate-800 truncate mt-1">
+                    {product?.packageType || "N/A"}
+                  </div>
+                </div>
+
+                {/* Hàng 4 */}
                 <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 hover:border-[#39C6C6]/30 hover:shadow-sm transition-all duration-300">
                   <div className="flex items-center gap-2 text-slate-400 mb-2">
                     <Package size={14} />
@@ -319,29 +361,40 @@ const ProductDetails = () => {
                       Unit
                     </span>
                   </div>
-                  <div className="text-base font-bold text-slate-800 uppercase">
+                  <div className="text-base font-bold text-slate-800 uppercase mt-1">
                     {product?.unit || "N/A"}
                   </div>
                 </div>
 
-                {/* Khối 7: Registration Date */}
-                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 hover:border-[#39C6C6]/30 hover:shadow-sm transition-all duration-300 md:col-span-2">
+                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 hover:border-[#39C6C6]/30 hover:shadow-sm transition-all duration-300">
+                  <div className="flex items-center gap-2 text-slate-400 mb-2">
+                    <TrendingUp size={14} />
+                    <span className="text-[10px] font-black uppercase tracking-widest">
+                      Popularity
+                    </span>
+                  </div>
+                  <div
+                    className={`text-lg font-black mt-1 ${getPopularityColor(
+                      product?.popularityScore,
+                    )}`}
+                  >
+                    {product?.popularityScore !== null
+                      ? `${product.popularityScore} pts`
+                      : "N/A"}
+                  </div>
+                </div>
+
+                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 hover:border-[#39C6C6]/30 hover:shadow-sm transition-all duration-300">
                   <div className="flex items-center gap-2 text-slate-400 mb-2">
                     <Calendar size={14} />
                     <span className="text-[10px] font-black uppercase tracking-widest">
-                      Registration Date
+                      Reg Date
                     </span>
                   </div>
-                  <div className="text-base font-bold text-slate-800">
+                  <div className="text-sm font-bold text-slate-800 mt-1 truncate">
                     {product?.createdAt
-                      ? new Date(product.createdAt).toLocaleString("en-GB", {
-                          day: "2-digit",
-                          month: "short",
-                          year: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })
-                      : "Not recorded"}
+                      ? new Date(product.createdAt).toLocaleDateString("en-GB")
+                      : "N/A"}
                   </div>
                 </div>
               </div>

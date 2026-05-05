@@ -314,61 +314,64 @@ const WarehouseTransferDetails = () => {
         {/* CỘT PHẢI (35%): THÔNG TIN VẬN CHUYỂN & SUMMARY */}
         <div className="flex-1 space-y-6">
           {/* ROUTE INFO */}
-          <Card className="!rounded-2xl !shadow-sm !border-slate-100">
-            <div className="space-y-5">
-              <div>
-                <Text className="block !font-bold !text-slate-700 mb-2 uppercase text-[10px] tracking-widest flex items-center gap-2">
-                  <MapPin size={14} className="text-[#38c6c6]" /> Transfer From
-                </Text>
-                <div className="w-full p-4 bg-slate-50 rounded-xl border border-slate-100 text-slate-700 font-bold">
-                  {details.sourceWarehouseName ||
-                    `Warehouse #${details.sourceWarehouseId}`}
-                </div>
-              </div>
-
-              <div className="flex justify-center -my-3 opacity-50">
-                <ArrowRight
-                  size={20}
-                  className="text-slate-400 rotate-90 lg:rotate-0"
-                />
-              </div>
-
-              <div>
-                <Text className="block !font-bold !text-slate-700 mb-2 uppercase text-[10px] tracking-widest flex items-center gap-2">
-                  <MapPin size={14} className="text-rose-400" /> Transfer To
-                </Text>
-                <div className="w-full p-4 bg-slate-50 rounded-xl border border-slate-100 text-slate-700 font-bold">
-                  {details.destinationWarehouseName ||
-                    `Warehouse #${details.destinationWarehouseId}`}
-                </div>
-              </div>
-
-              <Divider className="!my-2 !border-slate-100" />
-
-              <div>
-                <Text className="block !font-bold !text-slate-700 mb-2 uppercase text-[10px] tracking-widest flex items-center gap-2">
-                  <Truck size={14} className="text-slate-400" /> Assigned
-                  Carrier
-                </Text>
-                {details.carrierName ? (
-                  <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100">
-                    <Avatar
-                      size="small"
-                      icon={<User size={14} />}
-                      className="!bg-[#38c6c6] !text-white"
-                    />
-                    <Text className="font-bold text-slate-700">
-                      {details.carrierName}
-                    </Text>
-                  </div>
-                ) : (
-                  <Text className="italic text-slate-400 text-sm">
-                    No carrier assigned yet.
+          <div>
+            <Card className="!rounded-2xl !shadow-sm !border-slate-100">
+              <div className="space-y-5">
+                <div>
+                  <Text className="block !font-bold !text-slate-700 mb-2 uppercase text-[10px] tracking-widest flex items-center gap-2">
+                    <MapPin size={14} className="text-[#38c6c6]" /> Transfer
+                    From
                   </Text>
-                )}
+                  <div className="w-full p-4 bg-slate-50 rounded-xl border border-slate-100 text-slate-700 font-bold">
+                    {details.sourceWarehouseName ||
+                      `Warehouse #${details.sourceWarehouseId}`}
+                  </div>
+                </div>
+
+                <div className="flex justify-center -my-3 opacity-50">
+                  <ArrowRight
+                    size={20}
+                    className="text-slate-400 rotate-90 lg:rotate-0"
+                  />
+                </div>
+
+                <div>
+                  <Text className="block !font-bold !text-slate-700 mb-2 uppercase text-[10px] tracking-widest flex items-center gap-2">
+                    <MapPin size={14} className="text-rose-400" /> Transfer To
+                  </Text>
+                  <div className="w-full p-4 bg-slate-50 rounded-xl border border-slate-100 text-slate-700 font-bold">
+                    {details.destinationWarehouseName ||
+                      `Warehouse #${details.destinationWarehouseId}`}
+                  </div>
+                </div>
+
+                <Divider className="!my-2 !border-slate-100" />
+
+                <div>
+                  <Text className="block !font-bold !text-slate-700 mb-2 uppercase text-[10px] tracking-widest flex items-center gap-2">
+                    <Truck size={14} className="text-slate-400" /> Assigned
+                    Carrier
+                  </Text>
+                  {details.carrierName ? (
+                    <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100">
+                      <Avatar
+                        size="small"
+                        icon={<User size={14} />}
+                        className="!bg-[#38c6c6] !text-white"
+                      />
+                      <Text className="font-bold text-slate-700">
+                        {details.carrierName}
+                      </Text>
+                    </div>
+                  ) : (
+                    <Text className="italic text-slate-400 text-sm">
+                      No carrier assigned yet.
+                    </Text>
+                  )}
+                </div>
               </div>
-            </div>
-          </Card>
+            </Card>
+          </div>
 
           {/* SUMMARY */}
           <Card className="!rounded-2xl !shadow-sm !border-slate-100">

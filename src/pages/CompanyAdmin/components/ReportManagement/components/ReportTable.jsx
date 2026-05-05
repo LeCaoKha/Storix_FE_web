@@ -1,16 +1,8 @@
 import React from "react";
-// ===== ADDED CODE START =====
-// Đã xóa các component không còn dùng (Button, Tooltip, Space) vì đã bỏ cột Action
 import { Table, Tag } from "antd";
-import { FileText, Clock } from "lucide-react"; // Đã xóa Eye, Download, AlertCircle
-import { useNavigate } from "react-router-dom"; // Thêm useNavigate để chuyển trang
-// ===== ADDED CODE END =====
-import {
-  formatReportType,
-  getStatusColor,
-  fmtDate,
-  REPORT_STATUS,
-} from "./ReportUtils";
+import { FileText, Clock } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { formatReportType, getStatusColor, fmtDate } from "./ReportUtils";
 
 const ReportTable = ({
   reports,
@@ -19,7 +11,6 @@ const ReportTable = ({
   onTableChange,
   warehouses,
 }) => {
-  // ===== ADDED CODE START =====
   const navigate = useNavigate();
 
   // Hàm helper để lấy màu sắc theo từng loại Report
@@ -49,6 +40,18 @@ const ReportTable = ({
           text: "text-amber-600",
           icon: "text-amber-500",
         };
+      case "InventoryOverallLedger":
+        return {
+          bg: "bg-cyan-50",
+          text: "text-cyan-600",
+          icon: "text-cyan-500",
+        };
+      case "ReplenishmentRecommendation":
+        return {
+          bg: "bg-rose-50",
+          text: "text-rose-600",
+          icon: "text-rose-500",
+        };
       default:
         return {
           bg: "bg-slate-100",
@@ -57,7 +60,6 @@ const ReportTable = ({
         };
     }
   };
-  // ===== ADDED CODE END =====
 
   const columns = [
     {
@@ -72,7 +74,6 @@ const ReportTable = ({
       title: "Report Type",
       dataIndex: "reportType",
       render: (_, r) => {
-        // ===== ADDED CODE START =====
         // Lấy style tương ứng với loại report
         const style = getReportTypeStyle(r.reportType);
 
@@ -86,7 +87,6 @@ const ReportTable = ({
             </span>
           </div>
         );
-        // ===== ADDED CODE END =====
       },
     },
     {

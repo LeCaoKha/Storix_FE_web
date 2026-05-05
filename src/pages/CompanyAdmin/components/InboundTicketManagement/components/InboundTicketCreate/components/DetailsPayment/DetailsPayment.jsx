@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom"; // Import useLocation
+import { useLocation } from "react-router-dom";
 import { Card, Typography, Modal, Input, Button, message } from "antd";
 
 const { Text } = Typography;
@@ -17,7 +17,7 @@ const DetailsPayment = ({ data, onDiscountChange }) => {
 
   // Cập nhật giá trị local khi data thay đổi
   useEffect(() => {
-    if (data?.orderDiscount !== undefined) {
+    if (data?.orderDiscount !== undefined && data?.orderDiscount !== null) {
       setLocalDiscountPercent(data.orderDiscount);
     }
   }, [data?.orderDiscount]);
@@ -35,16 +35,30 @@ const DetailsPayment = ({ data, onDiscountChange }) => {
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isReadOnly]); // Thêm isReadOnly vào dependency
+  }, [isReadOnly]);
 
-  // Lấy dữ liệu từ API/Props
-  const totalLineItems = data?.inboundOrderItems?.length || 0;
-  const totalAmount = data?.totalPrice || 0;
+  // ==========================================
+  // LOGIC TÍNH TOÁN DỰ PHÒNG (FALLBACK)
+  // ==========================================
+  const items = data?.inboundOrderItems || [];
+  const totalLineItems = items.length;
+
+  // Nếu BE trả về null, tự động tính tổng tiền: sum(price * expectedQuantity)
+  const totalAmount =
+    data?.totalPrice ??
+    items.reduce((sum, item) => {
+      const qty = item.expectedQuantity ?? item.quantity ?? 0;
+      const price = item.price ?? 0;
+      return sum + price * qty;
+    }, 0);
+
   const orderDiscountPercent = data?.orderDiscount || 0;
 
   // Tính số tiền giảm giá hiển thị
   const orderDiscountAmount = (totalAmount * orderDiscountPercent) / 100;
-  const finalPayable = data?.finalPrice || 0;
+
+  // Nếu BE trả về null, tự động lấy Tổng tiền - Giảm giá
+  const finalPayable = data?.finalPrice ?? totalAmount - orderDiscountAmount;
 
   // Tính số tiền giảm giá trong Modal (Real-time)
   const previewDiscountAmount = (totalAmount * localDiscountPercent) / 100;

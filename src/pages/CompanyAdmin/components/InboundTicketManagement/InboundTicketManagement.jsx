@@ -238,7 +238,6 @@ const InboundTicketManagement = () => {
             className="storix-table"
             onRow={(record) => ({
               onClick: (event) => {
-                // Tránh trigger sự kiện click khi nhấn vào tag hoặc các thành phần khác
                 if (event.target.closest(".ant-tag")) return;
                 navigate(`details/${record.id}`);
               },
