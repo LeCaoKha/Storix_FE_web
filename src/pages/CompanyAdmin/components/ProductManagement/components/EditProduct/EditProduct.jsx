@@ -499,7 +499,7 @@ const EditProduct = () => {
               <Row gutter={16}>
                 <Col span={8}>
                   <Form.Item label="Unit" name="unit">
-                    <Input placeholder="e.g., kg, pcs" size="large" />
+                    <Input placeholder="e.g., g, pcs" size="large" />
                   </Form.Item>
                 </Col>
                 <Col span={8}>
@@ -526,7 +526,7 @@ const EditProduct = () => {
 
               <Row gutter={16}>
                 <Col span={12}>
-                  <Form.Item label="Weight (kg)" name="weight">
+                  <Form.Item label="Weight (g)" name="weight">
                     <Input
                       type="number"
                       placeholder="0.00"
@@ -536,7 +536,7 @@ const EditProduct = () => {
                   </Form.Item>
                 </Col>
                 <Col span={12}>
-                  <Form.Item label="Width (cm)" name="width">
+                  <Form.Item label="Width (mm)" name="width">
                     <Input type="number" placeholder="0" size="large" />
                   </Form.Item>
                 </Col>
@@ -544,12 +544,12 @@ const EditProduct = () => {
 
               <Row gutter={16}>
                 <Col span={12}>
-                  <Form.Item label="Length (cm)" name="length">
+                  <Form.Item label="Length (mm)" name="length">
                     <Input type="number" placeholder="0" size="large" />
                   </Form.Item>
                 </Col>
                 <Col span={12}>
-                  <Form.Item label="Height (cm)" name="height">
+                  <Form.Item label="Height (mm)" name="height">
                     <Input type="number" placeholder="0" size="large" />
                   </Form.Item>
                 </Col>
