@@ -494,42 +494,44 @@ const WarehouseTransferCreate = () => {
         {/* CỘT PHẢI (30%): ROUTE, STAFF & SUMMARY */}
         <div className="w-[30%] space-y-6">
           {/* ASSIGN STAFF CARD */}
-          <Card className="!rounded-2xl !shadow-sm !border-slate-100">
-            <Text className="block !font-bold !text-slate-700 mb-3 uppercase text-[10px] tracking-widest flex items-center gap-2">
-              <Users size={14} className="text-[#38c6c6]" /> Assign To (Staff)
-            </Text>
-            <Select
-              placeholder="Select staff member..."
-              className="w-full !h-12 custom-staff-select"
-              value={originWarehouseStaffId}
-              onChange={setOriginWarehouseStaffId}
-              loading={loadingStaff}
-              showSearch
-              filterOption={(input, option) =>
-                (option?.label ?? "")
-                  .toLowerCase()
-                  .includes(input.toLowerCase())
-              }
-            >
-              {sourceStaffList.map((user) => (
-                <Option key={user.id} value={user.id} label={user.fullName}>
-                  <div className="flex items-center justify-between w-full">
-                    <div className="flex items-center gap-2">
-                      <Avatar
-                        size="small"
-                        className="!bg-[#38c6c6]/10 !text-[#38c6c6]"
-                      >
-                        {user.fullName?.charAt(0).toUpperCase()}
-                      </Avatar>
-                      <span className="font-medium text-slate-700">
-                        {user.fullName}
-                      </span>
+          <div>
+            <Card className="!rounded-2xl !shadow-sm !border-slate-100">
+              <Text className="block !font-bold !text-slate-700 mb-3 uppercase text-[10px] tracking-widest flex items-center gap-2">
+                <Users size={14} className="text-[#38c6c6]" /> Assign To (Staff)
+              </Text>
+              <Select
+                placeholder="Select staff member..."
+                className="w-full !h-12 custom-staff-select"
+                value={originWarehouseStaffId}
+                onChange={setOriginWarehouseStaffId}
+                loading={loadingStaff}
+                showSearch
+                filterOption={(input, option) =>
+                  (option?.label ?? "")
+                    .toLowerCase()
+                    .includes(input.toLowerCase())
+                }
+              >
+                {sourceStaffList.map((user) => (
+                  <Option key={user.id} value={user.id} label={user.fullName}>
+                    <div className="flex items-center justify-between w-full">
+                      <div className="flex items-center gap-2">
+                        <Avatar
+                          size="small"
+                          className="!bg-[#38c6c6]/10 !text-[#38c6c6]"
+                        >
+                          {user.fullName?.charAt(0).toUpperCase()}
+                        </Avatar>
+                        <span className="font-medium text-slate-700">
+                          {user.fullName}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                </Option>
-              ))}
-            </Select>
-          </Card>
+                  </Option>
+                ))}
+              </Select>
+            </Card>
+          </div>
 
           {/* ROUTE INFO */}
           <div>

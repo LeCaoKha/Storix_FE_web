@@ -6,7 +6,6 @@ import {
   Space,
   Input,
   Button,
-  Card,
   message,
   Tooltip,
   Typography,
@@ -19,12 +18,10 @@ import {
   Trash2,
   RefreshCw,
   PackageSearch,
-  Download, // ===== ADDED: Icon Download =====
+  Download,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-// ===== ADDED CODE START =====
-import * as XLSX from "xlsx"; // Import thư viện xlsx
-// ===== ADDED CODE END =====
+import * as XLSX from "xlsx";
 
 const { Title } = Typography;
 
@@ -92,7 +89,6 @@ const ProductManagement = () => {
       p.sku?.toLowerCase().includes(searchText.toLowerCase()),
   );
 
-  // ===== ADDED CODE START =====
   // --- EXPORT EXCEL LOGIC ---
   const handleExportExcel = () => {
     if (filteredData.length === 0) {
@@ -139,7 +135,6 @@ const ProductManagement = () => {
       message.error("Failed to export Excel file");
     }
   };
-  // ===== ADDED CODE END =====
 
   // --- ANTD TABLE COLUMNS ---
   const columns = [
@@ -282,7 +277,6 @@ const ProductManagement = () => {
           </div>
 
           <Space size="middle" className="w-full md:w-auto">
-            {/* ===== ADDED CODE START: NÚT EXPORT EXCEL ===== */}
             <Button
               icon={<Download size={16} />}
               onClick={handleExportExcel}
@@ -290,7 +284,6 @@ const ProductManagement = () => {
             >
               Export Excel
             </Button>
-            {/* ===== ADDED CODE END ===== */}
 
             <Button
               icon={

@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { Spin, message } from "antd";
 import { useReactToPrint } from "react-to-print";
-import axios from "axios"; // Import thêm axios thuần
+import axios from "axios";
 import api from "../../../../../../api/axios";
 
 // Components
@@ -22,16 +22,13 @@ const InboundTicketDetails = () => {
   const [selectedStaffId, setSelectedStaffId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
-
-  // State quản lý loading cho nút Recommendation
+  const [isAssigning, setIsAssigning] = useState(false); // Thêm state cho nút Assign
   const [isCreatingRec, setIsCreatingRec] = useState(false);
 
   const companyId = localStorage.getItem("companyId");
+  const userId = localStorage.getItem("userId"); // Lấy managerId
 
-  // Ref dành cho bản in PDF
   const printRef = useRef(null);
-
-  // Cấu hình hàm in PDF
   const handlePrint = useReactToPrint({
     contentRef: printRef,
     documentTitle: `Ticket_${data?.referenceCode || id}`,
@@ -41,18 +38,15 @@ const InboundTicketDetails = () => {
     try {
       setLoading(true);
 
-      // 1. Lấy thông tin Ticket trước để có warehouseId
       const ticketRes = await api.get(
         `/InventoryInbound/tickets/${companyId}/${id}`,
       );
       const ticketData = ticketRes.data;
       setData(ticketData);
 
-      // 2. Lấy warehouseId từ dữ liệu ticket
       const warehouseId = ticketData.warehouseId;
 
       if (warehouseId) {
-        // 3. Gọi API lấy users dựa trên warehouseId của ticket
         const usersRes = await api.get(
           `/Users/get-users-by-warehouse/${warehouseId}`,
         );
@@ -96,13 +90,40 @@ const InboundTicketDetails = () => {
     }
   };
 
-  // Hàm xử lý gọi Webhook n8n
+  // ===== THÊM MỚI: HÀM CALL API ASSIGN STAFF =====
+  const handleAssignStaff = async () => {
+    if (!selectedStaffId) {
+      message.warning("Please select a staff member before assigning.");
+      return;
+    }
+
+    if (!userId || !companyId) {
+      message.error("Missing User ID or Company ID. Please log in again.");
+      return;
+    }
+
+    try {
+      setIsAssigning(true);
+      const payload = {
+        companyId: Number(companyId),
+        managerId: Number(userId),
+        staffId: Number(selectedStaffId),
+      };
+
+      await api.post(`/InventoryInbound/tickets/${id}/assign-staff`, payload);
+      message.success("Staff assigned successfully!");
+      fetchData(); // Load lại data để cập nhật status mới
+    } catch (error) {
+      console.error("Assign error:", error);
+      message.error(error.response?.data?.message || "Failed to assign staff");
+    } finally {
+      setIsAssigning(false);
+    }
+  };
+
   const handleCreateRecommendation = async () => {
-    const userId = localStorage.getItem("userId");
     const warehouseId =
       localStorage.getItem("warehouseId") || data?.warehouseId;
-
-    // LẤY ACCESSTOKEN TỪ LOCALSTORAGE
     const accessToken = localStorage.getItem("accessToken");
 
     if (!userId || !companyId || !warehouseId || !accessToken) {
@@ -114,7 +135,6 @@ const InboundTicketDetails = () => {
 
     try {
       setIsCreatingRec(true);
-
       const payload = {
         inboundTicketId: Number(id),
         userId: Number(userId),
@@ -122,7 +142,6 @@ const InboundTicketDetails = () => {
         warehouseId: Number(warehouseId),
       };
 
-      // TRUYỀN THÊM HEADER AUTHORIZATION
       await axios.post(`${VITE_N8N_API_URL}/storage-recommendation`, payload, {
         headers: {
           "x-api-token": `Bearer ${accessToken}`,
@@ -156,16 +175,22 @@ const InboundTicketDetails = () => {
         onApprove={handleUpdateTicket}
         isApproving={isUpdating}
         onExportPDF={() => handlePrint()}
-        // Truyền props mới xuống Header
         onCreateRecommendation={handleCreateRecommendation}
         isCreatingRec={isCreatingRec}
+        // Truyền hàm và state cho nút Assign
+        onAssign={handleAssignStaff}
+        isAssigning={isAssigning}
       />
 
       <div className="mt-8 pb-20">
         <div className="flex justify-center gap-x-6">
           <div className="w-[60%] space-y-6">
-            <DetailsProductList items={data.inboundOrderItems} />
-            <DetailsPayment data={data} />
+            <div>
+              <DetailsProductList items={data.inboundOrderItems} />
+            </div>
+            <div>
+              <DetailsPayment data={data} />
+            </div>
           </div>
 
           <div className="w-[30%] space-y-6">
@@ -174,6 +199,8 @@ const InboundTicketDetails = () => {
               users={users}
               selectedStaffId={selectedStaffId}
               onStaffChange={setSelectedStaffId}
+              // Truyền thêm status hiện tại để check
+              ticketStatus={data.status}
             />
             <DetailsNotes
               note={data.note || "No notes available for this ticket."}
@@ -182,7 +209,6 @@ const InboundTicketDetails = () => {
         </div>
       </div>
 
-      {/* Template ẩn dành cho việc in ấn */}
       <InboundPrintTemplate ref={printRef} data={data} />
     </div>
   );
