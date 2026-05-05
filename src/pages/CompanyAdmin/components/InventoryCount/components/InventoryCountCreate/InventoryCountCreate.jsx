@@ -119,7 +119,7 @@ const InventoryCountCreate = () => {
   const fetchZones = async () => {
     setLoadingZones(true);
     try {
-      const res = await api.get(`/get-zones-ids/${warehouseId}/zones`);
+      const res = await api.get(`/get-zone-ids/${warehouseId}/zones`);
       setZones(res.data || []);
     } catch (error) {
       message.error("Failed to load zones");
