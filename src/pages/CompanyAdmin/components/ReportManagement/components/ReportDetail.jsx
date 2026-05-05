@@ -27,6 +27,7 @@ import {
   Scale,
   Camera,
   Sparkles,
+  TrendingUp,
 } from "lucide-react";
 import dayjs from "dayjs";
 import api from "../../../../../api/axios";
@@ -171,6 +172,7 @@ const ReportDetail = () => {
       InventoryOverallLedger: "Inventory Overall Ledger",
       InventoryInOutBalance: "Inventory In/Out Balance",
       InventoryTracking: "Inventory Tracking (Stocktake)",
+      ReplenishmentRecommendation: "AI Replenishment Plan",
     };
     return types[type] || type?.replace(/([A-Z])/g, " $1").trim();
   };
@@ -205,10 +207,10 @@ const ReportDetail = () => {
         render: (text, record) => (
           <div className="flex flex-col">
             <Text className="font-bold text-slate-800 line-clamp-2">
-              {text}
+              {text || "Unknown Product"}
             </Text>
             <Text className="text-[10px] text-slate-400 font-mono tracking-tight">
-              {record.sku}
+              {record.sku || record.productSku || "N/A"}
             </Text>
           </div>
         ),
@@ -216,6 +218,96 @@ const ReportDetail = () => {
     ];
 
     switch (reportType) {
+      // ===== THÊM CỘT CHO REPLENISHMENT =====
+      case "ReplenishmentRecommendation":
+        return [
+          ...baseProductCols,
+          {
+            title: "Risk Level",
+            dataIndex: "riskLevel",
+            key: "riskLevel",
+            align: "center",
+            render: (val) => (
+              <Tag
+                color={val === "High" ? "error" : "success"}
+                className="!m-0 !font-bold uppercase"
+              >
+                {val}
+              </Tag>
+            ),
+          },
+          {
+            title: "On Hand",
+            dataIndex: "onHandQty",
+            key: "onHandQty",
+            align: "right",
+            render: (val) => (
+              <span className="font-bold text-slate-600">{val || 0}</span>
+            ),
+          },
+          {
+            title: "Avg Daily Demand",
+            dataIndex: "avgDailyDemand",
+            key: "avgDailyDemand",
+            align: "right",
+            render: (val) => (
+              <span className="text-slate-500">
+                {val ? Number(val).toFixed(2) : 0}
+              </span>
+            ),
+          },
+          {
+            title: "Forecast Demand",
+            dataIndex: "forecastDemandQty",
+            key: "forecastDemandQty",
+            align: "right",
+            render: (val) => (
+              <span className="font-bold text-slate-700">{val || 0}</span>
+            ),
+          },
+          {
+            title: "Reorder Point",
+            dataIndex: "reorderPoint",
+            key: "reorderPoint",
+            align: "right",
+            render: (val) => (
+              <span className="text-slate-500 font-medium">{val || 0}</span>
+            ),
+          },
+          {
+            title: "Recommended Qty",
+            dataIndex: "recommendedQty",
+            key: "recommendedQty",
+            align: "right",
+            render: (val) => (
+              <span
+                className={`font-black ${
+                  val > 0 ? "text-[#7C3AED]" : "text-slate-400"
+                }`}
+              >
+                {val > 0 ? `+${val}` : 0}
+              </span>
+            ),
+          },
+          {
+            title: "Reason Codes",
+            dataIndex: "reasonCodes",
+            key: "reasonCodes",
+            render: (codes) => (
+              <div className="flex flex-wrap gap-1">
+                {codes?.map((code) => (
+                  <Tag
+                    key={code}
+                    className="!text-[9px] !m-0 !border-slate-200 !text-slate-500"
+                  >
+                    {code.replace(/_/g, " ")}
+                  </Tag>
+                ))}
+              </div>
+            ),
+          },
+        ];
+
       case "InventoryLedger":
         return [
           {
@@ -360,9 +452,7 @@ const ReportDetail = () => {
           },
         ];
 
-      // ===== FIX LẠI BẢNG TRACKING (GROUPED HOẶC PHẲNG) =====
       case "InventoryTracking":
-        // 1. Dành cho Grouped Rows
         if (result?.data?.rows && result.data.rows.length > 0) {
           return [
             {
@@ -404,7 +494,6 @@ const ReportDetail = () => {
           ];
         }
 
-        // 2. Fallback: Flat Items
         return [
           ...baseProductCols,
           {
@@ -506,17 +595,18 @@ const ReportDetail = () => {
       return Array.isArray(result.data.rows) ? result.data.rows : [];
     if (reportType === "InventoryOverallLedger")
       return Array.isArray(result.data.byProduct) ? result.data.byProduct : [];
-
     if (reportType === "InventoryInOutBalance")
       return Array.isArray(result.data.rows) ? result.data.rows : [];
-
-    // ===== CẬP NHẬT: FALLBACK CHO INVENTORY TRACKING =====
     if (reportType === "InventoryTracking") {
       return Array.isArray(result.data.rows) && result.data.rows.length > 0
         ? result.data.rows
         : Array.isArray(result.data.items)
           ? result.data.items
           : [];
+    }
+    // ===== CẬP NHẬT TRẢ VỀ DATA CHO REPLENISHMENT =====
+    if (reportType === "ReplenishmentRecommendation") {
+      return Array.isArray(result.data.items) ? result.data.items : [];
     }
 
     return Array.isArray(result.data.items)
@@ -538,7 +628,7 @@ const ReportDetail = () => {
         const childColumns = [
           {
             title: "SKU",
-            dataIndex: "skuId", // Schema in/out balance dùng skuId
+            dataIndex: "skuId",
             key: "skuId",
             render: (val) => <Text className="font-mono text-xs">{val}</Text>,
           },
@@ -636,6 +726,63 @@ const ReportDetail = () => {
       },
       rowExpandable: (record) => record.items && record.items.length > 0,
     };
+  } else if (
+    reportType === "ReplenishmentRecommendation" &&
+    result?.data?.items?.length > 0
+  ) {
+    // ===== THÊM EXPANDABLE CHO REPLENISHMENT ĐỂ HIỂN THỊ CHI TIẾT AI =====
+    expandableConfig = {
+      expandedRowRender: (record) => (
+        <div className="bg-slate-50 p-5 rounded-xl border border-slate-200 shadow-inner grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="flex flex-col bg-white p-3 rounded-lg border border-slate-100">
+            <Text className="text-[10px] text-slate-400 uppercase font-bold tracking-widest mb-1">
+              Safety Stock
+            </Text>
+            <Text className="font-bold text-slate-700 text-lg">
+              {record.safetyStock || 0}
+            </Text>
+          </div>
+          <div className="flex flex-col bg-white p-3 rounded-lg border border-slate-100">
+            <Text className="text-[10px] text-slate-400 uppercase font-bold tracking-widest mb-1">
+              Lead Time
+            </Text>
+            <Text className="font-bold text-slate-700 text-lg">
+              {record.leadTimeDays || 0}{" "}
+              <span className="text-sm font-normal text-slate-400">days</span>
+            </Text>
+          </div>
+          <div className="flex flex-col bg-white p-3 rounded-lg border border-slate-100">
+            <Text className="text-[10px] text-slate-400 uppercase font-bold tracking-widest mb-1">
+              Days to Stockout
+            </Text>
+            <Text
+              className={`font-bold text-lg ${record.daysToStockout <= 7 ? "text-rose-500" : "text-slate-700"}`}
+            >
+              {record.daysToStockout ?? "N/A"}
+            </Text>
+          </div>
+          <div className="flex flex-col bg-white p-3 rounded-lg border border-slate-100">
+            <Text className="text-[10px] text-slate-400 uppercase font-bold tracking-widest mb-1">
+              Inbound Planned
+            </Text>
+            <Text className="font-bold text-[#38c6c6] text-lg">
+              {record.inboundPlannedQty || 0}
+            </Text>
+          </div>
+          {record.aiReasoning && (
+            <div className="col-span-full mt-2 p-4 bg-purple-50 rounded-xl border border-purple-100">
+              <Text className="text-xs text-[#7C3AED] uppercase font-bold flex items-center gap-2 mb-2">
+                <Sparkles size={14} /> AI Reasoning
+              </Text>
+              <Text className="text-sm text-slate-700 leading-relaxed">
+                {record.aiReasoning}
+              </Text>
+            </div>
+          )}
+        </div>
+      ),
+      rowExpandable: (record) => true,
+    };
   }
 
   const getTableIconAndTitle = () => {
@@ -660,15 +807,16 @@ const ReportDetail = () => {
           icon: <Activity size={18} className="text-[#38c6c6]" />,
           title: "Stocktake Variance Detail",
         };
+      case "ReplenishmentRecommendation":
+        return {
+          icon: <TrendingUp size={18} className="text-[#7C3AED]" />,
+          title: "Replenishment Plan & AI Analysis",
+        };
       case "InventorySnapshot":
+      default:
         return {
           icon: <Camera size={18} className="text-[#38c6c6]" />,
           title: "Current Stock Snapshot",
-        };
-      default:
-        return {
-          icon: <Package size={18} className="text-[#38c6c6]" />,
-          title: "Report Data",
         };
     }
   };
@@ -678,6 +826,62 @@ const ReportDetail = () => {
   // ==========================================
   const renderSummaryCards = () => {
     const summary = result?.summary || {};
+
+    // ===== THÊM CARD SUMMARY CHO REPLENISHMENT =====
+    if (reportType === "ReplenishmentRecommendation") {
+      return (
+        <Row gutter={24}>
+          <Col span={6}>
+            <Card className="!rounded-2xl !shadow-sm !border-slate-100">
+              <div className="flex flex-col">
+                <Text className="text-slate-400 text-[10px] uppercase font-bold tracking-widest">
+                  SKUs Analyzed
+                </Text>
+                <Text className="font-black text-2xl text-slate-800 mt-1">
+                  {summary.totalSkusAnalyzed || 0}
+                </Text>
+              </div>
+            </Card>
+          </Col>
+          <Col span={6}>
+            <Card className="!rounded-2xl !shadow-sm !border-slate-100">
+              <div className="flex flex-col">
+                <Text className="text-slate-400 text-[10px] uppercase font-bold tracking-widest">
+                  SKUs to Replenish
+                </Text>
+                <Text className="font-black text-2xl text-[#38c6c6] mt-1">
+                  {summary.totalSkusRecommended || 0}
+                </Text>
+              </div>
+            </Card>
+          </Col>
+          <Col span={6}>
+            <Card className="!rounded-2xl !shadow-sm !border-[#7C3AED]/20 !bg-purple-50/30">
+              <div className="flex flex-col">
+                <Text className="text-purple-400 text-[10px] uppercase font-bold tracking-widest">
+                  Total Reorder Qty
+                </Text>
+                <Text className="font-black text-2xl text-[#7C3AED] mt-1">
+                  {summary.totalRecommendedQty || 0}
+                </Text>
+              </div>
+            </Card>
+          </Col>
+          <Col span={6}>
+            <Card className="!rounded-2xl !shadow-sm !border-rose-100 !bg-rose-50/30">
+              <div className="flex flex-col">
+                <Text className="text-rose-400 text-[10px] uppercase font-bold tracking-widest">
+                  High Risk SKUs
+                </Text>
+                <Text className="font-black text-2xl text-rose-500 mt-1">
+                  {summary.highRiskSkus || 0}
+                </Text>
+              </div>
+            </Card>
+          </Col>
+        </Row>
+      );
+    }
 
     if (reportType === "InventoryLedger") {
       return (
@@ -993,9 +1197,12 @@ const ReportDetail = () => {
   };
 
   // ==========================================
-  // 7. AI RECOMMENDATIONS TABLE
+  // 7. AI RECOMMENDATIONS TABLE (FOR OLD SNAPSHOT LOGIC)
   // ==========================================
   const renderAiRecommendations = () => {
+    // Nếu là ReplenishmentRecommendation thì nó đã vẽ trong main table rồi
+    if (reportType === "ReplenishmentRecommendation") return null;
+
     const aiData = result?.data?.aiRecommendation;
     if (!aiData || !aiData.items || aiData.items.length === 0) return null;
 
@@ -1219,11 +1426,13 @@ const ReportDetail = () => {
               <Col span={24}>
                 <Card
                   title={
-                    <Space className="!text-slate-700 !uppercase !text-xs !tracking-wider !font-bold !py-2">
+                    <Space
+                      className={`uppercase text-xs tracking-wider font-bold py-2 ${reportType === "ReplenishmentRecommendation" ? "text-[#7C3AED]" : "text-slate-700"}`}
+                    >
                       {tableIcon} {tableTitle}
                     </Space>
                   }
-                  className="!rounded-2xl !shadow-sm !border-slate-100"
+                  className={`!rounded-2xl !shadow-sm ${reportType === "ReplenishmentRecommendation" ? "!border-purple-100" : "!border-slate-100"}`}
                 >
                   <Table
                     columns={getTableColumns()}
@@ -1251,7 +1460,7 @@ const ReportDetail = () => {
               </Col>
             </Row>
 
-            {/* AI RECOMMENDATIONS TABLE */}
+            {/* AI RECOMMENDATIONS TABLE (Chỉ dùng cho logic cũ của snapshot) */}
             {renderAiRecommendations()}
           </>
         ) : (

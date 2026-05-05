@@ -108,10 +108,8 @@ const CreateReport = () => {
     // Reset lại các trường đặc thù khi đổi loại báo cáo
     form.setFieldsValue({
       productId: null,
-      forecastHorizonDays: null,
-      defaultLeadTimeDays: null,
-      serviceLevel: null,
-      useAiExplanation: false,
+      forecastHorizonDays: 30, // Gán mặc định
+      useAiExplanation: true, // Theo payload mẫu
     });
   };
 
@@ -119,21 +117,24 @@ const CreateReport = () => {
     setIsSubmitting(true);
 
     try {
-      // DYNAMIC PAYLOAD CONSTRUCTION
+      // DYNAMIC PAYLOAD CONSTRUCTION (Chuẩn hoá theo yêu cầu mới)
       const payload = {
         reportType: values.reportType,
         companyId: parseInt(companyId),
-        warehouseId: values.warehouseId || null,
-        timeFrom: values.dateRange[0].format("YYYY-MM-DDTHH:mm:ss"),
-        timeTo: values.dateRange[1].format("YYYY-MM-DDTHH:mm:ss"),
+        // Nối thêm 'Z' vào cuối theo đúng định dạng Backend yêu cầu
+        timeFrom: values.dateRange[0].format("YYYY-MM-DDTHH:mm:ss[Z]"),
+        timeTo: values.dateRange[1].format("YYYY-MM-DDTHH:mm:ss[Z]"),
       };
+
+      // Chỉ truyền warehouseId nếu có chọn
+      if (values.warehouseId) {
+        payload.warehouseId = values.warehouseId;
+      }
 
       if (values.reportType === "InventoryLedger") {
         payload.productId = values.productId;
       } else if (values.reportType === "ReplenishmentRecommendation") {
         payload.forecastHorizonDays = values.forecastHorizonDays || 30;
-        payload.defaultLeadTimeDays = values.defaultLeadTimeDays || 7;
-        payload.serviceLevel = values.serviceLevel || 95;
         payload.useAiExplanation = values.useAiExplanation || false;
       }
 
@@ -334,6 +335,9 @@ const CreateReport = () => {
                         </span>
                       }
                       initialValue={30}
+                      rules={[
+                        { required: true, message: "Must be greater than 0" },
+                      ]}
                     >
                       <InputNumber
                         className="w-full custom-report-range"
@@ -344,42 +348,9 @@ const CreateReport = () => {
                     </Form.Item>
 
                     <Form.Item
-                      name="defaultLeadTimeDays"
-                      label={
-                        <span className="!text-slate-500 !font-bold !uppercase !text-[10px] !tracking-widest">
-                          Default Lead Time (Days)
-                        </span>
-                      }
-                      initialValue={7}
-                    >
-                      <InputNumber
-                        className="w-full custom-report-range"
-                        min={1}
-                        max={100}
-                        placeholder="e.g., 7"
-                      />
-                    </Form.Item>
-
-                    <Form.Item
-                      name="serviceLevel"
-                      label={
-                        <span className="!text-slate-500 !font-bold !uppercase !text-[10px] !tracking-widest">
-                          Service Level (%)
-                        </span>
-                      }
-                      initialValue={95}
-                    >
-                      <InputNumber
-                        className="w-full custom-report-range"
-                        min={1}
-                        max={100}
-                        placeholder="e.g., 95"
-                      />
-                    </Form.Item>
-
-                    <Form.Item
                       name="useAiExplanation"
                       valuePropName="checked"
+                      initialValue={true} // Bật AI mặc định theo payload
                       label={
                         <span className="!text-slate-500 !font-bold !uppercase !text-[10px] !tracking-widest">
                           Include AI Explanation

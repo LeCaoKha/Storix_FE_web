@@ -1,11 +1,31 @@
 import React from "react";
 import { Card, Table, Typography } from "antd";
-import { Package } from "lucide-react";
+import { Package, ImageIcon } from "lucide-react"; // Thêm ImageIcon để làm fallback nếu không có ảnh
 
 const { Text } = Typography;
 
 const DetailsProductList = ({ items = [] }) => {
   const columns = [
+    // ===== THÊM CỘT IMAGE Ở ĐÂY =====
+    {
+      title: "Image",
+      dataIndex: "productImage",
+      key: "productImage",
+      width: 70, // Đặt chiều rộng cố định cho cột ảnh
+      render: (imageUrl) =>
+        imageUrl ? (
+          <img
+            src={imageUrl}
+            alt="Product"
+            className="w-10 h-10 rounded-lg object-cover border border-slate-200 shadow-sm"
+          />
+        ) : (
+          <div className="w-10 h-10 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-center">
+            <ImageIcon size={16} className="text-slate-300" />
+          </div>
+        ),
+    },
+    // =================================
     {
       title: "Product Name",
       dataIndex: "productName",
@@ -48,7 +68,7 @@ const DetailsProductList = ({ items = [] }) => {
       <Table
         columns={columns}
         dataSource={items}
-        rowKey="id"
+        rowKey="id" // Ant Design dựa vào id trong items của ông để làm key
         pagination={false}
         className="custom-details-table"
       />
