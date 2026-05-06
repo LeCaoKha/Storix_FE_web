@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { Spin, message, Card, Typography, Input, Modal, Tag } from "antd";
 import { useReactToPrint } from "react-to-print";
-import { Route, MapPinned, Box, Navigation } from "lucide-react";
+import { MapPinned, Box, Navigation } from "lucide-react";
 import api from "../../../../../../api/axios";
 import axios from "axios";
 
@@ -17,7 +17,7 @@ const { TextArea } = Input;
 const VITE_N8N_API_URL = import.meta.env.VITE_N8N_API_URL;
 
 // ==========================================
-// COMPONENT VẼ BẢN ĐỒ KHO BẰNG SVG
+// COMPONENT VẼ BẢN ĐỒ KHO BẰNG SVG (ĐÃ FIX LỖI TỌA ĐỘ)
 // ==========================================
 const PathMapVisualizer = ({ structure, pathData }) => {
   if (!structure || !pathData || !pathData.payload?.[0]) return null;
@@ -32,12 +32,32 @@ const PathMapVisualizer = ({ structure, pathData }) => {
       item.locationData?.availableShelves?.map((s) => s.shelfCode),
     ) || [];
 
-  // Map các node để dễ dàng lấy tọa độ X, Y
-  const nodesMap = new Map((nodes || []).map((n) => [n.id, n]));
+  // -------------------------------------------------------------
+  // TÍNH TỌA ĐỘ TUYỆT ĐỐI ĐỂ SỬA LỖI ĐƯỜNG XÉO
+  // -------------------------------------------------------------
+  const absoluteNodesMap = new Map();
 
-  // Tạo chuỗi tọa độ cho Polyline
+  // 1. Đưa các Navigational Nodes vào (bọn này đã là tọa độ tuyệt đối chuẩn)
+  (nodes || []).forEach((n) => {
+    absoluteNodesMap.set(n.id, { x: n.x, y: n.y });
+  });
+
+  // 2. Duyệt qua các Zone -> Shelves -> Access Nodes để tính tọa độ thực tế
+  (zones || []).forEach((zone) => {
+    (zone.shelves || []).forEach((shelf) => {
+      (shelf.accessNodes || []).forEach((acc) => {
+        // Cộng tọa độ gốc của Zone với tọa độ tương đối của Access Node
+        absoluteNodesMap.set(acc.id, {
+          x: zone.x + acc.x,
+          y: zone.y + acc.y,
+        });
+      });
+    });
+  });
+
+  // Tạo chuỗi tọa độ cho Polyline sử dụng bản đồ tọa độ tuyệt đối vừa tính
   const pathPoints = optimizedPathIds
-    .map((id) => nodesMap.get(id))
+    .map((id) => absoluteNodesMap.get(id))
     .filter(Boolean)
     .map((n) => `${n.x},${n.y}`)
     .join(" ");
@@ -121,17 +141,21 @@ const PathMapVisualizer = ({ structure, pathData }) => {
         {optimizedPathIds.length > 0 && (
           <>
             <circle
-              cx={nodesMap.get(optimizedPathIds[0])?.x}
-              cy={nodesMap.get(optimizedPathIds[0])?.y}
+              cx={absoluteNodesMap.get(optimizedPathIds[0])?.x}
+              cy={absoluteNodesMap.get(optimizedPathIds[0])?.y}
               r="12"
               fill="#22c55e" // Điểm bắt đầu (Màu xanh)
             />
             <circle
               cx={
-                nodesMap.get(optimizedPathIds[optimizedPathIds.length - 1])?.x
+                absoluteNodesMap.get(
+                  optimizedPathIds[optimizedPathIds.length - 1],
+                )?.x
               }
               cy={
-                nodesMap.get(optimizedPathIds[optimizedPathIds.length - 1])?.y
+                absoluteNodesMap.get(
+                  optimizedPathIds[optimizedPathIds.length - 1],
+                )?.y
               }
               r="12"
               fill="#ef4444" // Điểm kết thúc (Màu đỏ)
