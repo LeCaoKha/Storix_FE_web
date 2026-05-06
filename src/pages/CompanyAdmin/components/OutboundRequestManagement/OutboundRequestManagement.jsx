@@ -197,7 +197,7 @@ const OutboundRequestManagement = () => {
             >
               Sync Data
             </Button>
-            {roleId === 4 && (
+            {roleId == 4 && (
               <Button
                 type="primary"
                 onClick={() => {

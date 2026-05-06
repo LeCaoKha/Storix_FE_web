@@ -1,18 +1,11 @@
 import React from "react";
-import { Button, Tag, Typography, Space, Switch } from "antd"; // Import Switch
-import { ArrowLeft, CheckCircle, Route } from "lucide-react"; // Import Route icon
+import { Button, Tag, Typography, Space } from "antd";
+import { ArrowLeft, CheckCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const { Title, Text } = Typography;
 
-const DetailsHeader = ({
-  data,
-  onApprove,
-  isApproving,
-  // Props cho AI Toggle
-  useAi,
-  onToggleAi,
-}) => {
+const DetailsHeader = ({ data, onApprove, isApproving }) => {
   const navigate = useNavigate();
 
   return (
@@ -44,24 +37,6 @@ const DetailsHeader = ({
       </div>
 
       <Space size="middle">
-        {/* ===== THÊM MỚI: AI PATH OPTIMIZATION TOGGLE ===== */}
-        <div className="flex items-center gap-2 mr-2 px-3 py-1.5 bg-white border border-slate-200 rounded-xl transition-all shadow-sm">
-          <Route
-            size={16}
-            className={useAi ? "text-[#f59e0b]" : "text-slate-400"}
-          />
-          <Text
-            className={`!font-bold !text-sm ${useAi ? "!text-[#f59e0b]" : "!text-slate-500"}`}
-          >
-            Path Optimization
-          </Text>
-          <Switch
-            checked={useAi}
-            onChange={onToggleAi}
-            className={`${useAi ? "!bg-[#f59e0b]" : "bg-slate-300"}`}
-          />
-        </div>
-
         <Button
           type="primary"
           icon={<CheckCircle size={18} />}
