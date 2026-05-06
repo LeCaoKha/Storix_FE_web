@@ -6,7 +6,8 @@ import {
   CheckCircle2,
   FileText,
   Sparkles,
-  UserCheck, // Import thêm icon UserCheck
+  UserCheck,
+  Eye, // Import thêm icon Eye
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 
@@ -21,9 +22,9 @@ const DetailsHeader = ({
   isCreatingRec,
   useAi,
   onToggleAi,
-  // Thêm 2 props này để điều khiển nút Assign
   onAssign,
   isAssigning,
+  onViewRecommendation, // Prop mới để mở modal xem AI
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -71,7 +72,7 @@ const DetailsHeader = ({
                   data.status === "Approved" || data.status === "Completed"
                     ? "green"
                     : data.status === "Waiting Assign Staff"
-                      ? "blue" // Thêm màu riêng cho Waiting
+                      ? "blue"
                       : "orange"
                 }
                 className="!rounded-md !px-3 !py-1 !border-none !font-bold !m-0 !text-xs uppercase tracking-wider"
@@ -103,7 +104,7 @@ const DetailsHeader = ({
           </div>
         )}
 
-        {/* NÚT ASSIGN STAFF: Chỉ hiển thị khi status là "Waiting Assign Staff" */}
+        {/* NÚT ASSIGN STAFF */}
         {isTicketManagement &&
           isDetailsPage &&
           data?.status === "Waiting Assign Staff" && (
@@ -118,19 +119,32 @@ const DetailsHeader = ({
             </Button>
           )}
 
-        {/* NÚT TẠO GỢI Ý KHO (AI RECOMMENDATION): Hiện khi đang xử lý hàng (chưa Completed) */}
+        {/* CÁC NÚT LIÊN QUAN ĐẾN AI RECOMMENDATION */}
         {isTicketManagement &&
           isDetailsPage &&
-          data?.status !== "Completed" &&
-          data?.status !== "Waiting Assign Staff" && ( // Ẩn khi đang chờ Assign
-            <Button
-              icon={<Sparkles size={18} />}
-              onClick={onCreateRecommendation}
-              loading={isCreatingRec}
-              className="!flex !items-center !gap-2 !h-11 !px-6 !font-bold !text-[#7C3AED] !bg-[#7C3AED]/5 !border-[#7C3AED]/20 !rounded-xl shadow-sm hover:!border-[#7C3AED] hover:!text-[#7C3AED] hover:!bg-[#7C3AED]/10 transition-all"
-            >
-              Create Recommendation
-            </Button>
+          data?.status !== "Waiting Assign Staff" && (
+            <>
+              {/* Nút View Recommendation */}
+              <Button
+                icon={<Eye size={18} />}
+                onClick={onViewRecommendation}
+                className="!flex !items-center !gap-2 !h-11 !px-6 !font-bold !text-indigo-600 !bg-indigo-50 !border-indigo-200 !rounded-xl shadow-sm hover:!border-indigo-500 hover:!text-indigo-700 hover:!bg-indigo-100 transition-all"
+              >
+                View Recommendation
+              </Button>
+
+              {/* Nút Create Recommendation (Ẩn khi Completed) */}
+              {data?.status !== "Completed" && (
+                <Button
+                  icon={<Sparkles size={18} />}
+                  onClick={onCreateRecommendation}
+                  loading={isCreatingRec}
+                  className="!flex !items-center !gap-2 !h-11 !px-6 !font-bold !text-[#7C3AED] !bg-[#7C3AED]/5 !border-[#7C3AED]/20 !rounded-xl shadow-sm hover:!border-[#7C3AED] hover:!text-[#7C3AED] hover:!bg-[#7C3AED]/10 transition-all"
+                >
+                  Create Recommendation
+                </Button>
+              )}
+            </>
           )}
 
         {isDetailsPage && (
