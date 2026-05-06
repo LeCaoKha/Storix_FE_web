@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Spin, message, Card, Typography, Input, Modal } from "antd";
-import { Route, Loader2 } from "lucide-react";
+import { Route } from "lucide-react";
 import api from "../../../../../../api/axios";
-import axios from "axios"; // Đảm bảo import axios
+import axios from "axios";
 
 import DetailsHeader from "./components/DetailsHeader";
 import DetailsProductList from "./components/DetailsProductList";
@@ -24,11 +24,8 @@ const OutboundTicketCreate = () => {
   const [ticketNote, setTicketNote] = useState("");
 
   const [loading, setLoading] = useState(true);
-  const [isCreating, setIsCreating] = useState(false);
 
-  // ===== THÊM MỚI: State quản lý AI Path Optimization =====
-  const [usePathOptimization, setUsePathOptimization] = useState(false);
-  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  // ===== ĐÃ SỬA: State quản lý AI Path Optimization bắt buộc =====
   const [isAiProcessing, setIsAiProcessing] = useState(false);
 
   const companyId = localStorage.getItem("companyId");
@@ -81,23 +78,15 @@ const OutboundTicketCreate = () => {
       return;
     }
 
-    // Nếu CÓ bật Path Optimization -> Mở Modal xác nhận trước
-    if (usePathOptimization) {
-      setIsConfirmModalOpen(true);
-    } else {
-      // Nếu KHÔNG -> Gọi thẳng hàm tạo ticket
-      executeTicketCreation();
-    }
+    // Gọi thẳng hàm tạo ticket và tối ưu đường đi
+    executeTicketCreation();
   };
 
   // Hàm thực thi việc tạo ticket và webhook
   const executeTicketCreation = async () => {
     try {
-      if (usePathOptimization) {
-        setIsAiProcessing(true);
-      } else {
-        setIsCreating(true);
-      }
+      // Bật modal xoay vòng AI
+      setIsAiProcessing(true);
 
       const payload = {
         createdBy: Number(userId),
@@ -116,38 +105,36 @@ const OutboundTicketCreate = () => {
         const ticketData = res.data;
         const ticketId = ticketData.id;
 
-        // 2. NẾU USER CÓ BẬT TOGGLE -> GỌI API PATH OPTIMIZATION (n8n)
-        if (usePathOptimization) {
-          try {
-            // Lấy accessToken từ localStorage
-            const token = localStorage.getItem("accessToken");
+        // 2. BẮT BUỘC GỌI API PATH OPTIMIZATION (n8n)
+        try {
+          const token = localStorage.getItem("accessToken");
 
-            await axios.post(
-              `${VITE_N8N_API_URL}/path-optimization`,
-              {
-                outboundTicketId: Number(ticketId),
-                userId: Number(userId),
-                companyId: Number(companyId),
-                warehouseId: Number(warehouseId),
+          await axios.post(
+            `${VITE_N8N_API_URL}/path-optimization`,
+            {
+              outboundTicketId: Number(ticketId),
+              userId: Number(userId),
+              companyId: Number(companyId),
+              warehouseId: Number(warehouseId),
+            },
+            {
+              headers: {
+                "x-api-token": `Bearer ${token}`,
               },
-              {
-                // Truyền header Authorization chứa token
-                headers: {
-                  "x-api-token": `Bearer ${token}`,
-                },
-              },
-            );
-            message.success(
-              "Outbound Ticket created & Path optimized successfully!",
-            );
-          } catch (optError) {
-            console.error("Path optimization error:", optError);
-            message.warning(
-              "Ticket created successfully, but AI Path Optimization failed.",
-            );
-          }
-        } else {
-          message.success("Outbound Ticket created successfully!");
+            },
+          );
+          message.success(
+            "Outbound Ticket created & Path optimized successfully!",
+          );
+        } catch (optError) {
+          console.error("Path optimization error:", optError);
+          const aiErrorMessage =
+            optError.response?.data?.message ||
+            "AI Path Optimization failed due to server error.";
+          message.warning({
+            content: `Ticket created, but ${aiErrorMessage}`,
+            duration: 5,
+          });
         }
 
         // 3. ĐIỀU HƯỚNG VỀ TRANG QUẢN LÝ
@@ -156,9 +143,7 @@ const OutboundTicketCreate = () => {
     } catch (error) {
       console.error("Create ticket error:", error);
       message.error(error.response?.data?.message || "Failed to create ticket");
-      setIsConfirmModalOpen(false);
     } finally {
-      setIsCreating(false);
       setIsAiProcessing(false);
     }
   };
@@ -175,10 +160,7 @@ const OutboundTicketCreate = () => {
       <DetailsHeader
         data={data}
         onApprove={handleInitiateTicketCreation}
-        isApproving={isCreating}
-        // Props cho chức năng Path Optimization Toggle
-        useAi={usePathOptimization}
-        onToggleAi={setUsePathOptimization}
+        isApproving={isAiProcessing} // Chặn nút bấm nếu đang xử lý
       />
 
       <div className="mt-8 pb-20">
@@ -226,67 +208,28 @@ const OutboundTicketCreate = () => {
       </div>
 
       {/* ========================================== */}
-      {/* MODAL XÁC NHẬN KHI DÙNG PATH OPTIMIZATION  */}
+      {/* MODAL SPINNER CHO PATH OPTIMIZATION (Rút gọn) */}
       {/* ========================================== */}
       <Modal
-        open={isConfirmModalOpen}
-        closable={!isAiProcessing}
-        maskClosable={!isAiProcessing}
+        open={isAiProcessing}
+        closable={false}
+        maskClosable={false}
         footer={null}
         centered
         className="custom-ai-modal"
-        onCancel={() => setIsConfirmModalOpen(false)}
       >
-        <div className="flex flex-col items-center text-center py-6 px-4">
-          {isAiProcessing ? (
-            <div className="flex flex-col items-center animate-in fade-in zoom-in duration-500">
-              <div className="w-20 h-20 rounded-full bg-[#f59e0b]/10 flex items-center justify-center mb-6 relative">
-                <div className="absolute inset-0 border-4 border-transparent border-t-[#f59e0b] rounded-full animate-spin"></div>
-                <Route className="text-[#f59e0b] animate-pulse" size={32} />
-              </div>
-              <Title level={3} className="!text-[#f59e0b] !mb-2 !font-black">
-                Optimizing Route...
-              </Title>
-              <Text className="text-slate-500 text-base max-w-[300px]">
-                The AI is calculating the shortest path for staff to pick up all
-                items. This might take a few moments.
-              </Text>
-            </div>
-          ) : (
-            <div className="flex flex-col items-center">
-              <div className="w-16 h-16 rounded-full bg-[#f59e0b]/10 flex items-center justify-center mb-5">
-                <Route className="text-[#f59e0b]" size={28} />
-              </div>
-              <Title
-                level={3}
-                className="!text-slate-800 !mb-2 !font-extrabold"
-              >
-                Calculate Shortest Path?
-              </Title>
-              <Text className="text-slate-500 text-base mb-8 max-w-[350px]">
-                The system will analyze all item locations and generate the most
-                efficient walking route for warehouse staff. <br />
-                <span className="font-bold text-amber-600 mt-2 block">
-                  Please note: This process may take 10-20 seconds.
-                </span>
-              </Text>
-
-              <div className="flex gap-3 w-full">
-                <button
-                  onClick={() => setIsConfirmModalOpen(false)}
-                  className="flex-1 py-3 px-4 rounded-xl font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={executeTicketCreation}
-                  className="flex-1 py-3 px-4 rounded-xl font-bold text-white bg-[#f59e0b] hover:bg-[#d97706] transition-colors shadow-lg shadow-[#f59e0b]/30 flex justify-center items-center gap-2"
-                >
-                  <Route size={18} /> Yes, Proceed
-                </button>
-              </div>
-            </div>
-          )}
+        <div className="flex flex-col items-center text-center py-6 px-4 animate-in fade-in zoom-in duration-500">
+          <div className="w-20 h-20 rounded-full bg-[#f59e0b]/10 flex items-center justify-center mb-6 relative">
+            <div className="absolute inset-0 border-4 border-transparent border-t-[#f59e0b] rounded-full animate-spin"></div>
+            <Route className="text-[#f59e0b] animate-pulse" size={32} />
+          </div>
+          <Title level={3} className="!text-[#f59e0b] !mb-2 !font-black">
+            Optimizing Route...
+          </Title>
+          <Text className="text-slate-500 text-base max-w-[300px]">
+            The AI is calculating the shortest path for staff to pick up all
+            items. This might take a few moments.
+          </Text>
         </div>
       </Modal>
 
