@@ -11,6 +11,7 @@ import {
   ConfigProvider,
   Tag,
   Tooltip,
+  Avatar,
 } from "antd";
 import {
   ArrowLeft,
@@ -20,6 +21,7 @@ import {
   ShoppingCart,
   MapPin,
   Info,
+  Image as ImageIcon,
 } from "lucide-react";
 
 const { Title, Text } = Typography;
@@ -78,15 +80,32 @@ const InventoryDetails = () => {
         render: (text) => <span className="font-bold">{text}</span>,
       },
       {
-        title: "Bin ID",
-        dataIndex: "binCode",
-        key: "binCode",
-        render: (text) => (
-          <span className="font-mono text-slate-500">{text}</span>
-        ),
+        title: "Bins Breakdown",
+        key: "bins",
+        render: (_, loc) => {
+          if (!loc.bins || loc.bins.length === 0) {
+            return (
+              <span className="text-slate-400 italic">Unassigned Bins</span>
+            );
+          }
+          return (
+            <div className="flex flex-wrap gap-2">
+              {loc.bins.map((bin) => (
+                <Tooltip
+                  key={bin.binId}
+                  title={`Occupancy: ${bin.occupancyPercentage}%`}
+                >
+                  <Tag className="!m-0 !font-mono text-slate-600 bg-slate-100 border-slate-200">
+                    {bin.binCode}
+                  </Tag>
+                </Tooltip>
+              ))}
+            </div>
+          );
+        },
       },
       {
-        title: "Qty in Bin",
+        title: "Qty in Shelf",
         dataIndex: "quantity",
         key: "quantity",
         align: "right",
@@ -110,7 +129,7 @@ const InventoryDetails = () => {
           columns={subColumns}
           dataSource={record.locations}
           pagination={false}
-          rowKey={(loc) => `${record.productId}-${loc.binId}`}
+          rowKey={(loc) => `${record.productId}-${loc.shelfId}`}
           size="small"
         />
       </Card>
@@ -120,22 +139,30 @@ const InventoryDetails = () => {
   // --- MAIN TABLE COLUMNS ---
   const columns = [
     {
-      title: "SKU",
-      dataIndex: "productSku",
-      key: "productSku",
-      width: 150,
-      render: (sku) => (
-        <span className="!font-mono !text-slate-500 !bg-slate-100 !px-2 !py-1 !rounded !text-xs">
-          {sku}
-        </span>
-      ),
-    },
-    {
-      title: "Product Name",
-      dataIndex: "productName",
-      key: "productName",
-      render: (text) => (
-        <Text className="!font-bold !text-slate-800">{text}</Text>
+      title: "Product",
+      key: "productInfo",
+      render: (_, record) => (
+        <div className="flex items-center gap-3">
+          <Avatar
+            shape="square"
+            size={48}
+            src={record.productImage}
+            icon={<ImageIcon size={20} className="text-slate-400" />}
+            className="shrink-0 bg-slate-100 border border-slate-200"
+          />
+          <div className="flex flex-col min-w-0">
+            <Text
+              className="!font-bold !text-slate-800 truncate"
+              style={{ maxWidth: "300px" }}
+              title={record.productName}
+            >
+              {record.productName}
+            </Text>
+            <span className="!font-mono !text-slate-500 !bg-slate-100 !px-1.5 !py-0.5 !rounded !text-[10px] w-fit mt-1">
+              {record.productSku}
+            </span>
+          </div>
+        </div>
       ),
     },
     {
@@ -143,26 +170,14 @@ const InventoryDetails = () => {
       dataIndex: "quantity",
       key: "quantity",
       align: "center",
+      width: 120,
       render: (q) => <span className="font-semibold text-slate-600">{q}</span>,
     },
-    // {
-    //   title: "Reserved",
-    //   dataIndex: "reservedQuantity",
-    //   key: "reservedQuantity",
-    //   align: "center",
-    //   render: (r) => (
-    //     <span
-    //       className={r > 0 ? "text-orange-500 font-bold" : "text-slate-400"}
-    //     >
-    //       {r}
-    //     </span>
-    //   ),
-    // },
     {
       title: "Available",
       dataIndex: "availableQuantity",
       key: "availableQuantity",
-      width: 120,
+      width: 150,
       align: "right",
       render: (qty) => (
         <div className="flex flex-col items-end">

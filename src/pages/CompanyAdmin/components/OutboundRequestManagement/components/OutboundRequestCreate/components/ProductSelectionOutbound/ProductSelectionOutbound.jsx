@@ -11,7 +11,7 @@ import {
   Skeleton,
   Tooltip,
 } from "antd";
-import { Search, Package, Trash2, Plus } from "lucide-react";
+import { Search, Package, Trash2 } from "lucide-react";
 
 const { Text } = Typography;
 
@@ -25,8 +25,8 @@ const ProductSelectionOutbound = ({
   onSelectProduct,
   onUpdateQuantity,
   onRemoveProduct,
-  onOpenCreateModal,
   loading,
+  warehouseSelected,
 }) => {
   // --- Logic click outside để đóng dropdown ---
   useEffect(() => {
@@ -47,7 +47,8 @@ const ProductSelectionOutbound = ({
       <Card
         title={
           <Space className="!text-slate-700 !uppercase !text-xs !tracking-wider !font-bold !py-2">
-            <Search size={16} className="text-[#38c6c6]" /> Product Selection
+            <Search size={16} className="text-[#38c6c6]" /> Select Inventory
+            Items
           </Space>
         }
         className="!rounded-2xl !shadow-sm !border-slate-100 !overflow-visible"
@@ -55,67 +56,86 @@ const ProductSelectionOutbound = ({
         {/* 1. THANH TÌM KIẾM */}
         <div className="relative" ref={searchRef}>
           <Input
-            placeholder="Search products to ship (Name or SKU)..."
+            placeholder={
+              warehouseSelected
+                ? "Search available stock in selected warehouse..."
+                : "Please select an Origin Warehouse first..."
+            }
             prefix={<Search size={20} className="text-slate-300 mr-2" />}
-            className="!h-12 !rounded-2xl !bg-slate-50 !border-none focus:!bg-white focus:!ring-2 focus:!ring-[#38c6c6]/20 !transition-all"
-            onFocus={() => setIsSearching(true)}
+            disabled={!warehouseSelected}
+            className={`!h-12 !rounded-2xl !border-none !transition-all ${
+              warehouseSelected
+                ? "!bg-slate-50 focus:!bg-white focus:!ring-2 focus:!ring-[#38c6c6]/20"
+                : "!bg-slate-100 !cursor-not-allowed"
+            }`}
+            onFocus={() => {
+              if (warehouseSelected) setIsSearching(true);
+            }}
             onChange={handleSearch}
           />
 
           {/* 2. DROPDOWN KẾT QUẢ TÌM KIẾM */}
-          {isSearching && (
+          {isSearching && warehouseSelected && (
             <div className="absolute top-14 left-0 w-full bg-white z-[100] rounded-2xl shadow-2xl border border-slate-100 max-h-72 overflow-y-auto p-2">
-              <div
-                onClick={() => {
-                  setIsSearching(false);
-                  if (onOpenCreateModal) onOpenCreateModal();
-                }}
-                className="flex items-center gap-2 p-3 mb-2 bg-[#38c6c6]/5 hover:bg-[#38c6c6]/10 text-[#38c6c6] rounded-xl cursor-pointer transition-all border border-dashed border-[#38c6c6]/30"
-              >
-                <Plus size={16} />
-                <Text className="!font-bold !text-[#38c6c6]">
-                  Add Custom Product
-                </Text>
-              </div>
-
-              <Skeleton loading={loading} active className="p-2">
+              <Skeleton loading={loading} active className="!p-2">
                 {filteredProducts.length > 0 ? (
                   <List
                     dataSource={filteredProducts}
+                    className="!m-0"
                     renderItem={(item) => (
                       <div
-                        className="flex items-center justify-between p-3 hover:bg-slate-50 rounded-xl cursor-pointer transition-all group border border-transparent hover:border-slate-100 mb-1"
+                        className={`flex items-center justify-between p-3 rounded-xl cursor-pointer transition-all group border mb-1 ${
+                          item.availableQuantity > 0
+                            ? "hover:bg-slate-50 border-transparent hover:border-slate-100"
+                            : "opacity-50 cursor-not-allowed bg-slate-50 border-transparent"
+                        }`}
                         onClick={() => {
-                          onSelectProduct(item);
-                          setIsSearching(false);
+                          if (item.availableQuantity > 0) {
+                            onSelectProduct(item);
+                            setIsSearching(false);
+                          }
                         }}
                       >
-                        <Space size={12}>
+                        <Space className="!flex-1 !overflow-hidden" size={12}>
                           <Avatar
                             shape="square"
                             size={40}
                             src={item.imageUrl || item.image}
                             icon={<Package />}
-                            className="!bg-slate-100 !text-slate-400"
+                            className="!bg-slate-100 !text-slate-400 !shrink-0"
                           />
-                          <div className="flex flex-col">
+                          <div className="flex flex-col min-w-0">
                             <Tooltip title={item.name} mouseEnterDelay={0.5}>
-                              <Text className="block font-bold text-slate-800">
-                                {item.name.length > 20
-                                  ? `${item.name.substring(0, 20)}...`
-                                  : item.name}
+                              <Text
+                                className="!block !font-bold !text-slate-800 !truncate"
+                                style={{ maxWidth: "280px" }}
+                              >
+                                {item.name}
                               </Text>
                             </Tooltip>
-                            <Text className="text-[10px] text-slate-400 uppercase font-bold tracking-tight">
+                            <Text className="!text-[10px] !text-slate-400 !uppercase !font-bold !tracking-tight !mt-0.5">
                               SKU: {item.sku}
                             </Text>
                           </div>
                         </Space>
+
+                        {/* Hiển thị Available bên góc phải */}
+                        <div className="flex flex-col items-end pl-2 shrink-0">
+                          <Text
+                            className={`!text-[11px] !uppercase !tracking-tight ${
+                              item.availableQuantity > 0
+                                ? "!text-[#38c6c6]"
+                                : "!text-red-400"
+                            }`}
+                          >
+                            Available: {item.availableQuantity}
+                          </Text>
+                        </div>
                       </div>
                     )}
                   />
                 ) : (
-                  <Empty className="py-4" description="No products found" />
+                  <Empty className="!py-4" description="No inventory found" />
                 )}
               </Skeleton>
             </div>
@@ -137,7 +157,7 @@ const ProductSelectionOutbound = ({
                   key={item.id}
                   className="flex items-center justify-between p-4 bg-white border border-slate-100 rounded-2xl hover:shadow-md hover:border-[#38c6c6]/20 transition-all"
                 >
-                  <Space className="flex-1 min-w-0" size={12}>
+                  <Space className="!flex-1 !min-w-0" size={12}>
                     <Avatar
                       shape="square"
                       size={48}
@@ -147,25 +167,32 @@ const ProductSelectionOutbound = ({
                     />
                     <div className="flex flex-col min-w-0">
                       <Tooltip title={item.name} placement="topLeft">
-                        <Text className="!font-bold block text-slate-800 truncate">
+                        <Text className="!font-bold !block !text-slate-800 !truncate">
                           {item.name.length > 30
                             ? `${item.name.substring(0, 30)}...`
                             : item.name}
                         </Text>
                       </Tooltip>
-                      <Text className="text-xs text-slate-400 font-mono italic">
-                        {item.sku}
-                      </Text>
+                      <Space size="middle">
+                        <Text className="!text-xs !text-slate-400 !font-mono !italic">
+                          {item.sku}
+                        </Text>
+                        <Text className="!text-[10px] !bg-slate-100 !px-2 !py-0.5 !rounded !text-slate-500 !font-bold">
+                          Max: {item.availableQuantity}
+                        </Text>
+                      </Space>
                     </div>
                   </Space>
 
                   <div className="w-24 flex justify-center">
                     <Input
                       type="number"
+                      min={1}
+                      max={item.availableQuantity}
                       value={item.quantity}
                       className="!h-10 !rounded-lg !bg-slate-50 !border-none !w-16 !font-bold !text-center"
                       onChange={(e) =>
-                        onUpdateQuantity(item.id, Number(e.target.value) || 1)
+                        onUpdateQuantity(item.id, Number(e.target.value))
                       }
                     />
                   </div>
@@ -183,9 +210,11 @@ const ProductSelectionOutbound = ({
               ))}
             </div>
           ) : (
-            <div className="h-40 border-2 border-dashed border-slate-100 rounded-2xl flex flex-col items-center justify-center bg-slate-50/50 text-slate-400">
+            <div className="h-40 border-2 border-dashed border-slate-100 rounded-2xl flex flex-col items-center justify-center bg-slate-50/50 text-slate-400 mt-4">
               <Package size={32} className="mb-2 opacity-20" />
-              <Text className="text-xs">No products selected for outbound</Text>
+              <Text className="!text-xs">
+                No products selected for outbound
+              </Text>
             </div>
           )}
         </div>
