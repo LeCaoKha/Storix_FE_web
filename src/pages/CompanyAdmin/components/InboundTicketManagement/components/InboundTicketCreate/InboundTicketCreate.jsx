@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Spin, message, Modal, Typography } from "antd"; // Thêm Modal và Typography
-import { Sparkles, Loader2 } from "lucide-react"; // Thêm icon cho Modal
+import { Spin, message, Modal, Typography } from "antd";
+import { Sparkles, Loader2 } from "lucide-react";
 import api from "../../../../../../api/axios";
 import DetailsHeader from "./components/DetailsHeader/DetailsHeader";
 import DetailsProductList from "./components/DetailsProductList/DetailsProductList";
@@ -27,7 +27,7 @@ const InboundTicketCreate = () => {
   // State quản lý lựa chọn AI
   const [useAiRecommendation, setUseAiRecommendation] = useState(false);
 
-  // ===== THÊM MỚI: States cho AI Confirmation Modal =====
+  // States cho AI Confirmation Modal
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [isAiProcessing, setIsAiProcessing] = useState(false);
 
@@ -132,7 +132,6 @@ const InboundTicketCreate = () => {
                 warehouseId: ticketData.warehouseId,
               },
               {
-                // ĐÃ ĐỔI TÊN HEADER THÀNH x-api-token
                 headers: {
                   "x-api-token": `Bearer ${accessToken}`,
                 },
@@ -144,9 +143,16 @@ const InboundTicketCreate = () => {
             );
           } catch (webhookError) {
             console.error("Lỗi khi gọi n8n Webhook:", webhookError);
-            message.warning(
-              "Ticket created but AI recommendation trigger failed due to server timeout or error.",
-            );
+
+            // ===== ĐÃ SỬA: Lấy message lỗi chi tiết từ n8n trả về =====
+            const aiErrorMessage =
+              webhookError.response?.data?.message ||
+              "AI recommendation trigger failed due to server timeout or unknown error.";
+
+            message.warning({
+              content: `Ticket created, but AI Failed: ${aiErrorMessage}`,
+              duration: 5, // Cho hiển thị lâu hơn một chút (5 giây) để user kịp đọc
+            });
           }
         } else {
           // NẾU KHÔNG BẬT AI
@@ -221,7 +227,7 @@ const InboundTicketCreate = () => {
       {/* ========================================== */}
       <Modal
         open={isConfirmModalOpen}
-        closable={!isAiProcessing} // Không cho đóng khi đang process
+        closable={!isAiProcessing}
         maskClosable={!isAiProcessing}
         footer={null}
         centered
@@ -290,7 +296,7 @@ const InboundTicketCreate = () => {
         .custom-ai-modal .ant-modal-content {
           border-radius: 24px !important;
           padding: 24px !important;
-          border: 1px solid #ede9fe; /* Màu viền tím nhạt */
+          border: 1px solid #ede9fe;
         }
       `}</style>
     </div>

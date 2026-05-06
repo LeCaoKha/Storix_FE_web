@@ -22,11 +22,11 @@ const InboundTicketDetails = () => {
   const [selectedStaffId, setSelectedStaffId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
-  const [isAssigning, setIsAssigning] = useState(false); // Thêm state cho nút Assign
+  const [isAssigning, setIsAssigning] = useState(false);
   const [isCreatingRec, setIsCreatingRec] = useState(false);
 
   const companyId = localStorage.getItem("companyId");
-  const userId = localStorage.getItem("userId"); // Lấy managerId
+  const userId = localStorage.getItem("userId");
 
   const printRef = useRef(null);
   const handlePrint = useReactToPrint({
@@ -90,7 +90,6 @@ const InboundTicketDetails = () => {
     }
   };
 
-  // ===== THÊM MỚI: HÀM CALL API ASSIGN STAFF =====
   const handleAssignStaff = async () => {
     if (!selectedStaffId) {
       message.warning("Please select a staff member before assigning.");
@@ -112,7 +111,7 @@ const InboundTicketDetails = () => {
 
       await api.post(`/InventoryInbound/tickets/${id}/assign-staff`, payload);
       message.success("Staff assigned successfully!");
-      fetchData(); // Load lại data để cập nhật status mới
+      fetchData();
     } catch (error) {
       console.error("Assign error:", error);
       message.error(error.response?.data?.message || "Failed to assign staff");
@@ -151,9 +150,16 @@ const InboundTicketDetails = () => {
       message.success("AI Recommendation process started successfully!");
     } catch (error) {
       console.error("Webhook trigger error:", error);
-      message.warning(
-        "Recommendation triggered, but received an error from the webhook.",
-      );
+
+      // ===== ĐÃ SỬA: Lấy thông báo lỗi trực tiếp từ API trả về =====
+      const aiErrorMessage =
+        error.response?.data?.message ||
+        "Recommendation triggered, but received an error from the webhook.";
+
+      message.warning({
+        content: `${aiErrorMessage}`,
+        duration: 5, // Tăng thời gian hiển thị lên 5 giây để kịp đọc
+      });
     } finally {
       setIsCreatingRec(false);
     }
@@ -177,7 +183,6 @@ const InboundTicketDetails = () => {
         onExportPDF={() => handlePrint()}
         onCreateRecommendation={handleCreateRecommendation}
         isCreatingRec={isCreatingRec}
-        // Truyền hàm và state cho nút Assign
         onAssign={handleAssignStaff}
         isAssigning={isAssigning}
       />
@@ -199,7 +204,6 @@ const InboundTicketDetails = () => {
               users={users}
               selectedStaffId={selectedStaffId}
               onStaffChange={setSelectedStaffId}
-              // Truyền thêm status hiện tại để check
               ticketStatus={data.status}
             />
             <DetailsNotes

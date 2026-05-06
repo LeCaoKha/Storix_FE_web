@@ -108,8 +108,9 @@ const CreateReport = () => {
     // Reset lại các trường đặc thù khi đổi loại báo cáo
     form.setFieldsValue({
       productId: null,
-      forecastHorizonDays: 30, // Gán mặc định
-      useAiExplanation: true, // Theo payload mẫu
+      forecastHorizonDays: 60, // Cập nhật mặc định là 60
+      leadTimeDays: 15, // Thêm trường mới
+      useAiExplanation: true,
     });
   };
 
@@ -117,11 +118,10 @@ const CreateReport = () => {
     setIsSubmitting(true);
 
     try {
-      // DYNAMIC PAYLOAD CONSTRUCTION (Chuẩn hoá theo yêu cầu mới)
+      // DYNAMIC PAYLOAD CONSTRUCTION
       const payload = {
         reportType: values.reportType,
         companyId: parseInt(companyId),
-        // Nối thêm 'Z' vào cuối theo đúng định dạng Backend yêu cầu
         timeFrom: values.dateRange[0].format("YYYY-MM-DDTHH:mm:ss[Z]"),
         timeTo: values.dateRange[1].format("YYYY-MM-DDTHH:mm:ss[Z]"),
       };
@@ -134,14 +134,19 @@ const CreateReport = () => {
       if (values.reportType === "InventoryLedger") {
         payload.productId = values.productId;
       } else if (values.reportType === "ReplenishmentRecommendation") {
-        payload.forecastHorizonDays = values.forecastHorizonDays || 30;
-        payload.useAiExplanation = values.useAiExplanation || false;
+        // Bổ sung đầy đủ 3 trường theo payload mẫu
+        payload.forecastHorizonDays = values.forecastHorizonDays || 60;
+        payload.leadTimeDays = values.leadTimeDays || 15;
+        payload.useAiExplanation =
+          values.useAiExplanation !== undefined
+            ? values.useAiExplanation
+            : true;
       }
 
       await api.post("/Reports", payload);
       message.success("Report generation started successfully!");
 
-      // Trở về trang trước đó như luồng cũ
+      // Trở về trang trước đó
       navigate(-1);
     } catch (err) {
       console.error("Generate Report Error:", err);
@@ -334,7 +339,7 @@ const CreateReport = () => {
                           Forecast Horizon (Days)
                         </span>
                       }
-                      initialValue={30}
+                      initialValue={60} // Theo như yêu cầu
                       rules={[
                         { required: true, message: "Must be greater than 0" },
                       ]}
@@ -343,14 +348,36 @@ const CreateReport = () => {
                         className="w-full custom-report-range"
                         min={1}
                         max={365}
-                        placeholder="e.g., 30"
+                        placeholder="e.g., 60"
+                      />
+                    </Form.Item>
+
+                    {/* TRƯỜNG MỚI ĐƯỢC THÊM VÀO: Lead Time */}
+                    <Form.Item
+                      name="leadTimeDays"
+                      label={
+                        <span className="!text-slate-500 !font-bold !uppercase !text-[10px] !tracking-widest">
+                          Lead Time (Days)
+                        </span>
+                      }
+                      initialValue={15} // Mặc định 15
+                      rules={[
+                        { required: true, message: "Must be greater than 0" },
+                      ]}
+                    >
+                      <InputNumber
+                        className="w-full custom-report-range"
+                        min={1}
+                        max={365}
+                        placeholder="e.g., 15"
                       />
                     </Form.Item>
 
                     <Form.Item
                       name="useAiExplanation"
                       valuePropName="checked"
-                      initialValue={true} // Bật AI mặc định theo payload
+                      initialValue={true}
+                      className="col-span-2"
                       label={
                         <span className="!text-slate-500 !font-bold !uppercase !text-[10px] !tracking-widest">
                           Include AI Explanation

@@ -27,6 +27,7 @@ const OutboundRequestManagement = () => {
   // Lấy thông tin từ localStorage
   const companyId = localStorage.getItem("companyId");
   const warehouseId = localStorage.getItem("warehouseId");
+  const roleId = localStorage.getItem("roleId");
 
   const fetchOutboundRequests = async () => {
     // Kiểm tra xem User đã được gán kho chưa
@@ -196,26 +197,28 @@ const OutboundRequestManagement = () => {
             >
               Sync Data
             </Button>
-            <Button
-              type="primary"
-              onClick={() => {
-                if (
-                  !warehouseId ||
-                  warehouseId === "undefined" ||
-                  warehouseId === "null"
-                ) {
-                  message.warning(
-                    "You must be assigned to a warehouse to create a request.",
-                  );
-                  return;
-                }
-                navigate("create");
-              }}
-              icon={<Plus size={20} />}
-              className="!h-12 !px-8 !bg-[#39C6C6] !border-none !rounded-2xl !font-bold hover:!bg-[#2eb1b1] !shadow-lg !shadow-[#39C6C6]/20 !flex !items-center"
-            >
-              Create Request
-            </Button>
+            {roleId === 4 && (
+              <Button
+                type="primary"
+                onClick={() => {
+                  if (
+                    !warehouseId ||
+                    warehouseId === "undefined" ||
+                    warehouseId === "null"
+                  ) {
+                    message.warning(
+                      "You must be assigned to a warehouse to create a request.",
+                    );
+                    return;
+                  }
+                  navigate("create");
+                }}
+                icon={<Plus size={20} />}
+                className="!h-12 !px-8 !bg-[#39C6C6] !border-none !rounded-2xl !font-bold hover:!bg-[#2eb1b1] !shadow-lg !shadow-[#39C6C6]/20 !flex !items-center"
+              >
+                Create Request
+              </Button>
+            )}
           </Space>
         </div>
 
